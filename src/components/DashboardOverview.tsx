@@ -319,6 +319,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   {stockItems
                     .filter((stk) => stk.category !== 'bahan_saus' && stk.category !== 'kemasan')
                     .map((stk) => {
+                      // Strict matching: Match by ingredient stockItemId or exact name match (no loose substring .includes())
                       const linkedMenu = menuItems.find(
                         (m) =>
                           m.category !== 'kemasan' &&
@@ -326,8 +327,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                           !m.name.toLowerCase().includes('paket') &&
                           !m.name.toLowerCase().includes('combo') &&
                           (m.ingredients.some((ing) => ing.stockItemId === stk.id) ||
-                            m.name.toLowerCase().includes(stk.name.toLowerCase()) ||
-                            stk.name.toLowerCase().includes(m.name.toLowerCase()))
+                            m.name.trim().toLowerCase() === stk.name.trim().toLowerCase())
                       );
                       const optVal = linkedMenu ? `menu::${linkedMenu.id}` : `stock::${stk.id}`;
                       const unitDisplay = (linkedMenu && linkedMenu.unitName)
@@ -341,9 +341,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         : Math.max(Math.ceil((stk.unitCostPrice * 1.5) / 500) * 500, 3000);
 
                       const soldCount = linkedMenu ? (linkedMenu.soldQty || 0) : 0;
-                      const label = `${stk.name} — Rp ${formatRp(sellPrice)} / ${unitDisplay}${
-                        soldCount > 0 ? ` [Terjual: ${soldCount}]` : ''
-                      }`;
+                      const preparedCount = linkedMenu ? (linkedMenu.preparedQty || Math.max(soldCount + 10, 30)) : stk.currentStock;
+                      const remainingCount = Math.max(0, preparedCount - soldCount);
+
+                      const label = `${stk.name} — Rp ${formatRp(sellPrice)} / ${unitDisplay} [Stok Siap: ${preparedCount} | Terjual: ${soldCount} | Sisa: ${remainingCount} ${unitDisplay}]`;
 
                       return (
                         <option key={stk.id} value={optVal}>
@@ -387,7 +388,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         const existingMenu = menuItems.find(
                           (m) =>
                             m.ingredients.some((i) => i.stockItemId === stk.id) ||
-                            m.name.toLowerCase() === stk.name.toLowerCase()
+                            m.name.trim().toLowerCase() === stk.name.trim().toLowerCase()
                         );
                         if (existingMenu && onUpdateMenuItem) {
                           onUpdateMenuItem({
@@ -441,6 +442,85 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 </button>
               </div>
             </div>
+
+            {/* Live Preview of Stock Difference / Reduction when item is selected */}
+            {(() => {
+              if (!addSoldItemId) return null;
+              let selectedName = '';
+              let prepared = 0;
+              let currentSold = 0;
+              let unitStr = 'pcs';
+              let linkedStockItem: StockItem | undefined;
+
+              if (addSoldItemId.startsWith('menu::')) {
+                const targetId = addSoldItemId.replace('menu::', '');
+                const m = menuItems.find((item) => item.id === targetId);
+                if (m) {
+                  selectedName = m.name;
+                  currentSold = m.soldQty || 0;
+                  prepared = m.preparedQty || Math.max(currentSold + 10, 30);
+                  unitStr = m.unitName || 'pcs';
+                  if (m.ingredients && m.ingredients.length > 0) {
+                    linkedStockItem = stockItems.find((s) => s.id === m.ingredients[0].stockItemId);
+                  }
+                }
+              } else if (addSoldItemId.startsWith('stock::')) {
+                const stockId = addSoldItemId.replace('stock::', '');
+                const s = stockItems.find((item) => item.id === stockId);
+                if (s) {
+                  selectedName = s.name;
+                  prepared = s.currentStock;
+                  currentSold = 0;
+                  unitStr = s.unit === 'kg' ? 'porsi' : s.unit || 'pcs';
+                  linkedStockItem = s;
+                }
+              }
+
+              if (!selectedName) return null;
+
+              const additionalQty = addSoldQty || 1;
+              const newTotalSold = currentSold + additionalQty;
+              const currentRemaining = Math.max(0, prepared - currentSold);
+              const estNewRemaining = Math.max(0, prepared - newTotalSold);
+
+              return (
+                <div className="bg-stone-950/90 border border-amber-500/30 rounded-xl p-3 text-xs space-y-1.5 mt-2">
+                  <div className="flex items-center justify-between font-bold text-amber-300 border-b border-stone-800 pb-1">
+                    <span>📊 Informasi Selisih Stok untuk "{selectedName}":</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">
+                      Penambahan: +{additionalQty} {unitStr}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    <div className="bg-stone-900 p-2 rounded-lg border border-stone-800">
+                      <span className="text-[10px] text-stone-400 block">Stok Siap / Awal:</span>
+                      <span className="font-bold text-stone-200">{prepared} {unitStr}</span>
+                    </div>
+                    <div className="bg-stone-900 p-2 rounded-lg border border-stone-800">
+                      <span className="text-[10px] text-stone-400 block">Terjual Hari Ini:</span>
+                      <span className="font-bold text-amber-400">
+                        {currentSold} ➔ <span className="text-emerald-400 font-extrabold">{newTotalSold} {unitStr}</span>
+                      </span>
+                    </div>
+                    <div className="bg-stone-900 p-2 rounded-lg border border-amber-900/50">
+                      <span className="text-[10px] text-rose-300 block font-semibold">Selisih Pengurangan:</span>
+                      <span className="font-extrabold text-rose-400">-{newTotalSold} {unitStr}</span>
+                    </div>
+                    <div className="bg-stone-900 p-2 rounded-lg border border-teal-800/80">
+                      <span className="text-[10px] text-teal-300 block font-semibold">Sisa Stok Setelah Terjual:</span>
+                      <span className="font-black text-teal-400 text-sm">
+                        {estNewRemaining} {unitStr}
+                      </span>
+                    </div>
+                  </div>
+                  {linkedStockItem && (
+                    <div className="text-[11px] text-stone-400 pt-1 flex items-center gap-1.5">
+                      <span>🌾 <strong className="text-stone-300">Stok Bahan Baku ({linkedStockItem.name}):</strong> Sisa {linkedStockItem.currentStock} {linkedStockItem.unit}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* List of items that have soldQty > 0 */}
@@ -472,71 +552,96 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
             return (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {soldItemsToday.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-stone-900/90 border border-emerald-800/80 hover:border-emerald-600 rounded-xl p-3 flex items-center justify-between gap-2 transition-all shadow-sm"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="font-bold text-xs text-stone-100 truncate">{item.name}</div>
-                      <div className="text-[10px] text-stone-400 mt-0.5">
-                        Harga: <span className="text-emerald-400 font-bold">{formatRp(item.price)}</span> / {item.unitName}
+                {soldItemsToday.map((item) => {
+                  const soldQty = item.soldQty || 0;
+                  const preparedQty = item.preparedQty || Math.max(soldQty + 10, 30);
+                  const remainingQty = Math.max(0, preparedQty - soldQty);
+                  const unitNameStr = item.unitName || 'pcs';
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-stone-900/90 border border-emerald-800/80 hover:border-emerald-600 rounded-xl p-3 space-y-2.5 transition-all shadow-sm"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-xs text-stone-100 truncate">{item.name}</div>
+                          <div className="text-[10px] text-stone-400 mt-0.5">
+                            Harga: <span className="text-emerald-400 font-bold">{formatRp(item.price)}</span> / {unitNameStr}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0 bg-stone-950 p-1 rounded-lg border border-stone-800">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onUpdateMenuItem && (item.soldQty || 0) > 0) {
+                                onUpdateMenuItem({ ...item, soldQty: item.soldQty - 1 });
+                              }
+                            }}
+                            disabled={(item.soldQty || 0) <= 0}
+                            className="w-6 h-6 rounded bg-stone-800 hover:bg-stone-700 disabled:opacity-30 text-stone-200 font-bold text-xs flex items-center justify-center border border-stone-700 transition-colors"
+                            title="Kurangi 1 unit"
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            min="0"
+                            value={item.soldQty || 0}
+                            onChange={(e) => {
+                              const val = Math.max(0, parseInt(e.target.value) || 0);
+                              if (onUpdateMenuItem) {
+                                onUpdateMenuItem({ ...item, soldQty: val });
+                              }
+                            }}
+                            className="w-12 h-6 bg-transparent text-center text-xs font-black text-amber-300 focus:outline-none focus:bg-stone-900 rounded"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onUpdateMenuItem) {
+                                onUpdateMenuItem({ ...item, soldQty: (item.soldQty || 0) + 1 });
+                              }
+                            }}
+                            className="w-6 h-6 rounded bg-emerald-950 hover:bg-emerald-900 text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-700 transition-colors"
+                            title="Tambah 1 unit"
+                          >
+                            +
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (onUpdateMenuItem) {
+                                onUpdateMenuItem({ ...item, soldQty: 0 });
+                              }
+                            }}
+                            className="w-6 h-6 rounded bg-rose-950 hover:bg-rose-900 text-rose-300 font-bold text-xs flex items-center justify-center border border-rose-800 transition-colors ml-0.5"
+                            title="Hapus item dari laporan terjual hari ini"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Detailed Stock Difference Panel */}
+                      <div className="bg-stone-950 p-2 rounded-lg border border-stone-800/90 grid grid-cols-3 gap-1 text-[11px]">
+                        <div>
+                          <span className="text-[9px] text-stone-500 uppercase tracking-tight block">Stok Siap:</span>
+                          <span className="font-semibold text-stone-300">{preparedQty} {unitNameStr}</span>
+                        </div>
+                        <div className="text-center">
+                          <span className="text-[9px] text-rose-400 uppercase tracking-tight block font-bold">Selisih:</span>
+                          <span className="font-extrabold text-rose-400">-{soldQty} {unitNameStr}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[9px] text-teal-400 uppercase tracking-tight block font-bold">Sisa Stok:</span>
+                          <span className="font-black text-teal-300">{remainingQty} {unitNameStr}</span>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-1 shrink-0 bg-stone-950 p-1 rounded-lg border border-stone-800">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (onUpdateMenuItem && (item.soldQty || 0) > 0) {
-                            onUpdateMenuItem({ ...item, soldQty: item.soldQty - 1 });
-                          }
-                        }}
-                        disabled={(item.soldQty || 0) <= 0}
-                        className="w-6 h-6 rounded bg-stone-800 hover:bg-stone-700 disabled:opacity-30 text-stone-200 font-bold text-xs flex items-center justify-center border border-stone-700 transition-colors"
-                        title="Kurangi 1 unit"
-                      >
-                        -
-                      </button>
-                      <input
-                        type="number"
-                        min="0"
-                        value={item.soldQty || 0}
-                        onChange={(e) => {
-                          const val = Math.max(0, parseInt(e.target.value) || 0);
-                          if (onUpdateMenuItem) {
-                            onUpdateMenuItem({ ...item, soldQty: val });
-                          }
-                        }}
-                        className="w-12 h-6 bg-transparent text-center text-xs font-black text-amber-300 focus:outline-none focus:bg-stone-900 rounded"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (onUpdateMenuItem) {
-                            onUpdateMenuItem({ ...item, soldQty: (item.soldQty || 0) + 1 });
-                          }
-                        }}
-                        className="w-6 h-6 rounded bg-emerald-950 hover:bg-emerald-900 text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-700 transition-colors"
-                        title="Tambah 1 unit"
-                      >
-                        +
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (onUpdateMenuItem) {
-                            onUpdateMenuItem({ ...item, soldQty: 0 });
-                          }
-                        }}
-                        className="w-6 h-6 rounded bg-rose-950 hover:bg-rose-900 text-rose-300 font-bold text-xs flex items-center justify-center border border-rose-800 transition-colors ml-0.5"
-                        title="Hapus item dari laporan terjual hari ini"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             );
           })()}

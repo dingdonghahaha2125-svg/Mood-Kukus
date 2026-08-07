@@ -156,23 +156,31 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
                 <span>Rincian Item Laku Terjual ({totalItemsSold} unit total):</span>
               </label>
               <div className="max-h-52 overflow-y-auto border border-stone-800 rounded-xl bg-stone-950 p-2 space-y-1.5">
-                {reportItems.map((item) => (
-                  <div
-                    key={item.menuItemId}
-                    className="flex items-center justify-between text-xs p-2 bg-stone-900 rounded-lg border border-stone-800/80"
-                  >
-                    <div>
-                      <div className="font-bold text-stone-200">{item.menuName}</div>
-                      <div className="text-[11px] text-stone-400 mt-0.5">
-                        {item.soldQty} {item.unitName} × {formatRp(item.pricePerUnit)}
+                {reportItems.map((item) => {
+                  const menuItem = menuItems.find((m) => m.id === item.menuItemId);
+                  const preparedQty = menuItem?.preparedQty || Math.max(item.soldQty + 10, 30);
+                  const remainingQty = Math.max(0, preparedQty - item.soldQty);
+
+                  return (
+                    <div
+                      key={item.menuItemId}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between text-xs p-2.5 bg-stone-900 rounded-lg border border-stone-800/80 gap-2"
+                    >
+                      <div>
+                        <div className="font-bold text-stone-200">{item.menuName}</div>
+                        <div className="text-[11px] text-stone-400 mt-0.5 flex items-center gap-2 flex-wrap">
+                          <span>{item.soldQty} {item.unitName} × {formatRp(item.pricePerUnit)}</span>
+                          <span className="text-rose-400 font-semibold">(Selisih: -{item.soldQty} {item.unitName})</span>
+                          <span className="text-teal-300 font-semibold">(Sisa Stok: {remainingQty} {item.unitName})</span>
+                        </div>
+                      </div>
+                      <div className="text-left sm:text-right shrink-0">
+                        <div className="font-bold text-emerald-400">{formatRp(item.totalRevenue)}</div>
+                        <div className="text-[10px] text-teal-300">Profit: +{formatRp(item.totalProfit)}</div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-emerald-400">{formatRp(item.totalRevenue)}</div>
-                      <div className="text-[10px] text-teal-300">Profit: +{formatRp(item.totalProfit)}</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
