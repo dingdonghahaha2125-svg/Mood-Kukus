@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { QrCode, Copy, Check, Smartphone, Laptop, RefreshCw, Upload, Download, Info, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { QrCode, Copy, Check, Smartphone, RefreshCw, Download, Info, CheckCircle2, Share2, ExternalLink } from 'lucide-react';
+import QRCode from 'qrcode';
 import { StockItem, MenuItem, SauceItem, Expense, Transaction, DailyReport } from '../types';
 
 interface DeviceSyncModalProps {
@@ -33,10 +34,16 @@ export const DeviceSyncModal: React.FC<DeviceSyncModalProps> = ({
   onImportData,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [copiedPartner, setCopiedPartner] = useState(false);
   const [importInput, setImportInput] = useState('');
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
-  if (!isOpen) return null;
+  // Public shared application URL for business partners
+  const sharedAppUrl = 'https://ais-pre-3alefjxescgudgbjlrcrij-15418315132.asia-east1.run.app';
+
+  // Current page URL for sync
+  const currentUrl = window.location.origin + window.location.pathname;
 
   // Build current JSON payload
   const currentPayload = {
@@ -51,9 +58,6 @@ export const DeviceSyncModal: React.FC<DeviceSyncModalProps> = ({
 
   const jsonString = JSON.stringify(currentPayload);
 
-  // Generate a shareable URL with encoded data (for QR code scan or direct link)
-  const currentUrl = window.location.origin + window.location.pathname;
-  // Encode data using encodeURIComponent & btoa safely for URL length
   let syncLink = currentUrl;
   try {
     const encoded = btoa(encodeURIComponent(jsonString));
@@ -62,8 +66,19 @@ export const DeviceSyncModal: React.FC<DeviceSyncModalProps> = ({
     syncLink = currentUrl;
   }
 
-  // QR Code Image URL using public QR Server API
-  const qrCodeImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(syncLink)}`;
+  // Generate QR Code on client-side reliably
+  useEffect(() => {
+    if (!isOpen) return;
+    QRCode.toDataURL(syncLink, { margin: 1, width: 220 })
+      .then((url) => setQrDataUrl(url))
+      .catch((err) => {
+        console.error('Error generating QR code', err);
+        // Fallback to simple QR code URL if needed
+        setQrDataUrl(`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(syncLink)}`);
+      });
+  }, [isOpen, syncLink]);
+
+  if (!isOpen) return null;
 
   const handleCopySyncCode = () => {
     navigator.clipboard.writeText(jsonString);
@@ -75,6 +90,12 @@ export const DeviceSyncModal: React.FC<DeviceSyncModalProps> = ({
     navigator.clipboard.writeText(syncLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopyPartnerLink = () => {
+    navigator.clipboard.writeText(sharedAppUrl);
+    setCopiedPartner(true);
+    setTimeout(() => setCopiedPartner(false), 2000);
   };
 
   const handlePerformImport = () => {
@@ -122,10 +143,10 @@ export const DeviceSyncModal: React.FC<DeviceSyncModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-base sm:text-lg text-stone-100 flex items-center gap-2">
-                Sinkronisasi Data (Laptop ⇄ Handphone)
+                Akses Perangkat HP & Rekan Bisnis
               </h3>
               <p className="text-xs text-stone-400">
-                Satu akun untuk dua perangkat: Bawa data stok & penjualan dari laptop ke HP secara instan.
+                Buka aplikasi di HP Anda atau bagikan link ke rekan bisnis.
               </p>
             </div>
           </div>
@@ -137,14 +158,55 @@ export const DeviceSyncModal: React.FC<DeviceSyncModalProps> = ({
           </button>
         </div>
 
+        {/* Section 1: Kirim Aplikasi ke Rekan Bisnis */}
+        <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-xs text-emerald-300 flex items-center gap-1.5">
+              <Share2 className="w-4 h-4 text-emerald-400" />
+              1. Kirim Aplikasi ke Rekan Bisnis (Bisa Dibuka di HP Siapapun)
+            </span>
+            <span className="text-[10px] bg-emerald-900/80 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-700">
+              Link Publik
+            </span>
+          </div>
+
+          <p className="text-xs text-stone-300">
+            Cukup kirimkan link di bawah ini melalui WhatsApp/Telegram ke rekan bisnis Anda. Rekan Anda bisa langsung membuka aplikasi ini di browser HP (Chrome/Safari) tanpa perlu install apapun.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+            <div className="w-full bg-stone-950 border border-stone-700 rounded-lg px-3 py-2 text-xs font-mono text-emerald-300 truncate">
+              {sharedAppUrl}
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handleCopyPartnerLink}
+                className="flex-1 sm:flex-none whitespace-nowrap py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+              >
+                {copiedPartner ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedPartner ? 'Link Disalin!' : 'Salin Link WA'}</span>
+              </button>
+              <a
+                href={sharedAppUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="py-2 px-3 bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 rounded-lg font-bold text-xs flex items-center justify-center gap-1"
+                title="Buka di Tab Baru"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* Explanation Alert */}
         <div className="bg-amber-950/40 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-200 flex items-start gap-2.5">
           <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
           <div>
-            <p className="font-bold">Mengapa HP & Laptop berbeda?</p>
+            <p className="font-bold">2. Pindah Data Stok & Penjualan Hari Ini dari Laptop ke HP</p>
             <p className="text-amber-300/90 text-[11px] mt-0.5">
-              Sistem menyimpan data secara cepat dan aman di memori lokal masing-masing browser. Gunakan metode
-              <strong> Scan QR Code</strong> di bawah atau <strong>Salin Kode Sync</strong> untuk menyamakan data jualan terkini dari Laptop ke Handphone Anda!
+              Gunakan <strong>Scan QR Code</strong> atau <strong>Salin Kode Sync</strong> di bawah untuk memindahkan isi stok dan penjualan dari laptop ke HP Anda.
             </p>
           </div>
         </div>
@@ -153,27 +215,33 @@ export const DeviceSyncModal: React.FC<DeviceSyncModalProps> = ({
         <div className="bg-stone-950 p-4 rounded-xl border border-stone-800 space-y-3">
           <div className="flex items-center justify-between">
             <span className="font-bold text-xs text-emerald-400 flex items-center gap-1.5">
-              <QrCode className="w-4 h-4" /> Cara 1: Scan QR Code di HP Anda (Paling Praktis)
+              <QrCode className="w-4 h-4" /> Scan QR Code dengan HP Anda
             </span>
             <span className="text-[10px] bg-stone-800 text-stone-300 px-2 py-0.5 rounded-full border border-stone-700">
-              Update Otomatis
+              Generated Real-Time
             </span>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 bg-stone-900 p-3 rounded-lg border border-stone-850">
-            <div className="bg-white p-2 rounded-xl border border-stone-300 shrink-0">
-              <img
-                src={qrCodeImageUrl}
-                alt="QR Code Sync Data Laptop to HP"
-                className="w-36 h-36 object-contain"
-              />
+            <div className="bg-white p-2 rounded-xl border border-stone-300 shrink-0 flex items-center justify-center">
+              {qrDataUrl ? (
+                <img
+                  src={qrDataUrl}
+                  alt="QR Code Sync Data Laptop to HP"
+                  className="w-36 h-36 object-contain"
+                />
+              ) : (
+                <div className="w-36 h-36 flex items-center justify-center text-stone-600 text-xs font-medium">
+                  Memuat Barcode...
+                </div>
+              )}
             </div>
             <div className="space-y-2 text-xs">
               <p className="text-stone-300 font-medium">
-                1. Buka kamera HP Anda, lalu <strong>Scan QR Code</strong> ini.
+                1. Buka kamera HP Anda, lalu <strong>Arahkan & Scan QR Code</strong> ini.
               </p>
               <p className="text-stone-400 text-[11px]">
-                2. Buka link hasil scan di browser HP Anda. Semua data stok, harga menu, dan penjualan hari ini akan otomatis tersinkronisasi.
+                2. Buka link hasil scan di browser HP Anda. Semua data stok, harga menu, dan penjualan hari ini akan langsung tersimpan di HP.
               </p>
               <button
                 type="button"
@@ -181,7 +249,7 @@ export const DeviceSyncModal: React.FC<DeviceSyncModalProps> = ({
                 className="w-full py-1.5 px-3 bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 rounded-lg font-semibold text-[11px] flex items-center justify-center gap-1.5 transition-all"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? 'Link Disalin!' : 'Salin Link Sync Perangkat'}</span>
+                <span>{copied ? 'Link Sync Disalin!' : 'Salin Link Sync Manual'}</span>
               </button>
             </div>
           </div>
@@ -190,7 +258,7 @@ export const DeviceSyncModal: React.FC<DeviceSyncModalProps> = ({
         {/* Method 2: Copy & Paste Sync Code */}
         <div className="bg-stone-950 p-4 rounded-xl border border-stone-800 space-y-3 text-xs">
           <span className="font-bold text-emerald-400 flex items-center gap-1.5">
-            <Smartphone className="w-4 h-4" /> Cara 2: Salin & Tempel Kode Sync Manual
+            <Smartphone className="w-4 h-4" /> Salin & Tempel Kode Sync Manual
           </span>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -252,3 +320,4 @@ export const DeviceSyncModal: React.FC<DeviceSyncModalProps> = ({
     </div>
   );
 };
+
