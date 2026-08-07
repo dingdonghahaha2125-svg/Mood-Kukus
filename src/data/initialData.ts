@@ -341,36 +341,6 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
       { stockItemId: 'stk-14', amount: 1 },
     ],
   },
-
-  // WADAH / TEMPAT PACKING EKSTRA
-  {
-    id: 'menu-wadah-besek',
-    name: 'Wadah Besek Bambu Tradisional (Ekstra Packing)',
-    category: 'kemasan',
-    price: 4000,
-    unitName: 'pcs',
-    preparedQty: 30,
-    soldQty: 0,
-    description: 'Wadah besek bambu khas Sulawesi untuk kemasan oleh-oleh / hampers cantik.',
-    isAvailable: true,
-    ingredients: [
-      { stockItemId: 'stk-9', amount: 1 },
-    ],
-  },
-  {
-    id: 'menu-wadah-paperbox',
-    name: 'Wadah Paper Box Foodgrade (Ekstra Packing)',
-    category: 'kemasan',
-    price: 2000,
-    unitName: 'box',
-    preparedQty: 50,
-    soldQty: 0,
-    description: 'Wadah kotak kertas ramah lingkungan tahan panas untuk takeaway.',
-    isAvailable: true,
-    ingredients: [
-      { stockItemId: 'stk-11', amount: 1 },
-    ],
-  },
 ];
 
 export const INITIAL_EXPENSES: Expense[] = [];

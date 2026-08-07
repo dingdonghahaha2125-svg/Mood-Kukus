@@ -314,45 +314,74 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               >
                 <option value="">-- Pilih Item / Bahan Stok Terjual --</option>
                 
-                {/* Stock Items Group */}
-                <optgroup label="📦 Bahan & Stok Terkoneksi (Dari Menu Stok)">
-                  {stockItems.map((stk) => {
-                    const linkedMenu = menuItems.find(
-                      (m) =>
-                        m.ingredients.some((ing) => ing.stockItemId === stk.id) ||
-                        m.name.toLowerCase() === stk.name.toLowerCase()
-                    );
-                    const optVal = linkedMenu ? `menu::${linkedMenu.id}` : `stock::${stk.id}`;
-                    const unitDisplay = (linkedMenu && linkedMenu.unitName) ? linkedMenu.unitName : (stk.unit || 'pcs');
-                    const label = linkedMenu
-                      ? `${stk.name} (${formatRp(linkedMenu.price)}/${unitDisplay})${(linkedMenu.soldQty || 0) > 0 ? ` — [Terjual: ${linkedMenu.soldQty} ${unitDisplay}]` : ''}`
-                      : `[Stok] ${stk.name} (Modal: ${formatRp(stk.unitCostPrice)}/${stk.unit || 'pcs'})`;
-                    return (
-                      <option key={stk.id} value={optVal}>
-                        {label}
-                      </option>
-                    );
-                  })}
+                {/* Sellable Main Items Group */}
+                <optgroup label="🍌 Produk & Bahan Terjual (Dari Stok Input)">
+                  {stockItems
+                    .filter((stk) => stk.category !== 'bahan_saus' && stk.category !== 'kemasan')
+                    .map((stk) => {
+                      const linkedMenu = menuItems.find(
+                        (m) =>
+                          m.category !== 'kemasan' &&
+                          (m.ingredients.some((ing) => ing.stockItemId === stk.id) ||
+                            m.name.toLowerCase().includes(stk.name.toLowerCase()) ||
+                            stk.name.toLowerCase().includes(m.name.toLowerCase()))
+                      );
+                      const optVal = linkedMenu ? `menu::${linkedMenu.id}` : `stock::${stk.id}`;
+                      const unitDisplay = (linkedMenu && linkedMenu.unitName)
+                        ? linkedMenu.unitName
+                        : stk.unit === 'kg'
+                        ? 'porsi'
+                        : stk.unit || 'pcs';
+
+                      const sellPrice = linkedMenu
+                        ? linkedMenu.price
+                        : Math.max(Math.ceil((stk.unitCostPrice * 1.5) / 500) * 500, 3000);
+
+                      const soldCount = linkedMenu ? (linkedMenu.soldQty || 0) : 0;
+                      const label = `${stk.name} — Rp ${formatRp(sellPrice)} / ${unitDisplay}${
+                        soldCount > 0 ? ` [Terjual: ${soldCount}]` : ''
+                      }`;
+
+                      return (
+                        <option key={stk.id} value={optVal}>
+                          {label}
+                        </option>
+                      );
+                    })}
                 </optgroup>
 
-                {/* Additional Standalone Menu Items */}
+                {/* Additional Combo / Package Menu Items */}
                 {(() => {
-                  const standalone = menuItems.filter(
-                    (m) =>
-                      !stockItems.some(
-                        (stk) =>
-                          m.ingredients.some((ing) => ing.stockItemId === stk.id) ||
-                          m.name.toLowerCase() === stk.name.toLowerCase()
-                      )
-                  );
-                  if (standalone.length === 0) return null;
+                  const packageMenus = menuItems.filter((m) => {
+                    if (m.category === 'kemasan') return false;
+                    // Ensure ingredients in package menu exist in stockItems
+                    if (m.ingredients && m.ingredients.length > 0) {
+                      const hasValidStock = m.ingredients.some((ing) =>
+                        stockItems.some((s) => s.id === ing.stockItemId)
+                      );
+                      if (!hasValidStock) return false;
+                    }
+                    // Exclude items that were already mapped directly in group 1
+                    const isAlreadyInGroup1 = stockItems.some(
+                      (stk) =>
+                        stk.category !== 'bahan_saus' &&
+                        stk.category !== 'kemasan' &&
+                        (m.ingredients.some((ing) => ing.stockItemId === stk.id) ||
+                          m.name.toLowerCase().includes(stk.name.toLowerCase()) ||
+                          stk.name.toLowerCase().includes(m.name.toLowerCase()))
+                    );
+                    return !isAlreadyInGroup1;
+                  });
+
+                  if (packageMenus.length === 0) return null;
                   return (
-                    <optgroup label="🍱 Menu Paket & Olahan Lainnya">
-                      {standalone.map((m) => {
-                        const uStr = m.unitName || 'pcs';
+                    <optgroup label="🍱 Paket Combo & Olahan Spesial">
+                      {packageMenus.map((m) => {
+                        const uStr = m.unitName || 'porsi';
                         return (
                           <option key={m.id} value={`menu::${m.id}`}>
-                            {m.name} ({formatRp(m.price)}/{uStr}){(m.soldQty || 0) > 0 ? ` — [Terjual: ${m.soldQty} ${uStr}]` : ''}
+                            {m.name} — Rp {formatRp(m.price)} / {uStr}
+                            {(m.soldQty || 0) > 0 ? ` [Terjual: ${m.soldQty}]` : ''}
                           </option>
                         );
                       })}
@@ -452,7 +481,17 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
           {/* List of items that have soldQty > 0 */}
           {(() => {
-            const soldItemsToday = menuItems.filter((item) => (item.soldQty || 0) > 0);
+            const soldItemsToday = menuItems.filter((item) => {
+              if ((item.soldQty || 0) <= 0) return false;
+              if (item.category === 'kemasan') return false;
+              if (item.ingredients && item.ingredients.length > 0) {
+                const hasValidStock = item.ingredients.some((ing) =>
+                  stockItems.some((s) => s.id === ing.stockItemId)
+                );
+                if (!hasValidStock) return false;
+              }
+              return true;
+            });
 
             if (soldItemsToday.length === 0) {
               return (

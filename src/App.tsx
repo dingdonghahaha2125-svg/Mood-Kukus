@@ -86,6 +86,24 @@ export default function App() {
     localStorage.setItem('kukuslokal_daily_reports', JSON.stringify(dailyReports));
   }, [dailyReports]);
 
+  // Auto-sanitize menu items against current stock items (removes items not matching stock input)
+  useEffect(() => {
+    const validStockIds = new Set(stockItems.map((s) => s.id));
+    setMenuItems((prevMenu) => {
+      const sanitized = prevMenu.filter((m) => {
+        if (m.category === 'kemasan') return false;
+        if (m.ingredients && m.ingredients.length > 0) {
+          return m.ingredients.some((ing) => validStockIds.has(ing.stockItemId));
+        }
+        return true;
+      });
+      if (sanitized.length !== prevMenu.length) {
+        return sanitized;
+      }
+      return prevMenu;
+    });
+  }, [stockItems]);
+
   // Derived financial calculation
   const financialSummary = calculateFinancialSummary(transactions, expenses, menuItems, sauces, stockItems);
   const lowStockItems = stockItems.filter((i) => i.currentStock <= i.minStock);
@@ -144,7 +162,19 @@ export default function App() {
 
   const handleDeleteStockItem = (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus item bahan baku ini?')) {
-      setStockItems((prev) => prev.filter((item) => item.id !== id));
+      const nextStock = stockItems.filter((item) => item.id !== id);
+      const remainingStockIds = new Set(nextStock.map((s) => s.id));
+      setStockItems(nextStock);
+
+      setMenuItems((prevMenu) =>
+        prevMenu.filter((m) => {
+          if (m.category === 'kemasan') return false;
+          if (m.ingredients && m.ingredients.length > 0) {
+            return m.ingredients.some((ing) => remainingStockIds.has(ing.stockItemId));
+          }
+          return true;
+        })
+      );
     }
   };
 
