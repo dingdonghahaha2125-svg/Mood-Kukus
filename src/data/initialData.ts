@@ -27,18 +27,6 @@ export const INITIAL_STOCK_ITEMS: StockItem[] = [
     notes: 'Ubi manis alami leleh karamel',
   },
   {
-    id: 'stk-3',
-    name: 'Jagung Manis Segar Mamuju',
-    category: 'bahan_utama',
-    currentStock: 35.0,
-    minStock: 10.0,
-    unit: 'pcs',
-    unitCostPrice: 3000,
-    lastUpdated: new Date().toISOString(),
-    supplier: 'Kebun Jagung Mamuju',
-    notes: 'Tongkol jagung renyah manis alami',
-  },
-  {
     id: 'stk-4',
     name: 'Telur Ayam Kampung Fresh',
     category: 'bahan_utama',
@@ -255,21 +243,6 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     defaultSauceId: 'sauce-2',
     ingredients: [
       { stockItemId: 'stk-4', amount: 1 },
-    ],
-  },
-  {
-    id: 'menu-item-jagung',
-    name: 'Jagung Manis Kukus (Per Tongkol)',
-    category: 'satuan',
-    price: 4000,
-    unitName: 'tongkol',
-    preparedQty: 30,
-    soldQty: 0,
-    description: '1 tongkol jagung manis Mamuju kukus hangat renyah dan gurih.',
-    isAvailable: true,
-    defaultSauceId: 'sauce-1',
-    ingredients: [
-      { stockItemId: 'stk-3', amount: 1 },
     ],
   },
 

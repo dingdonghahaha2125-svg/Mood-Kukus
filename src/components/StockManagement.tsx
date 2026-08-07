@@ -488,7 +488,6 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                       { name: 'Ubi Cilembu Sweet', cat: 'bahan_utama', unit: 'kg', price: 16000 },
                       { name: 'Ubi Ungu Organik', cat: 'bahan_utama', unit: 'kg', price: 15000 },
                       { name: 'Telur Kampung Kukus', cat: 'bahan_utama', unit: 'pcs', price: 3000 },
-                      { name: 'Jagung Manis Pipil', cat: 'bahan_utama', unit: 'kg', price: 14000 },
                       { name: 'Singkong Keju Kukus', cat: 'bahan_utama', unit: 'kg', price: 12000 },
                       { name: 'Ayam Suwir Kukus', cat: 'bahan_utama', unit: 'kg', price: 38000 },
                       { name: 'Santan Kelapa Murni', cat: 'bahan_saus', unit: 'liter', price: 15000 },

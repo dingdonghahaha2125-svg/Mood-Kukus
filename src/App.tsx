@@ -26,12 +26,14 @@ export default function App() {
   // Load state from LocalStorage with fallback to initialData
   const [stockItems, setStockItems] = useState<StockItem[]>(() => {
     const saved = localStorage.getItem('kukuslokal_stock_items');
-    return saved ? JSON.parse(saved) : INITIAL_STOCK_ITEMS;
+    const items: StockItem[] = saved ? JSON.parse(saved) : INITIAL_STOCK_ITEMS;
+    return items.filter((s) => s.id !== 'stk-3' && !s.name.toLowerCase().includes('jagung'));
   });
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>(() => {
     const saved = localStorage.getItem('kukuslokal_menu_items');
-    return saved ? JSON.parse(saved) : INITIAL_MENU_ITEMS;
+    const items: MenuItem[] = saved ? JSON.parse(saved) : INITIAL_MENU_ITEMS;
+    return items.filter((m) => m.id !== 'menu-item-jagung' && !m.name.toLowerCase().includes('jagung'));
   });
 
   const [sauces, setSauces] = useState<SauceItem[]>(() => {
@@ -86,14 +88,14 @@ export default function App() {
     localStorage.setItem('kukuslokal_daily_reports', JSON.stringify(dailyReports));
   }, [dailyReports]);
 
-  // Auto-sanitize menu items against current stock items (removes items not matching stock input or paket/combo)
+  // Auto-sanitize menu items against current stock items (removes items not matching stock input or paket/combo/jagung)
   useEffect(() => {
     const validStockIds = new Set(stockItems.map((s) => s.id));
     setMenuItems((prevMenu) => {
       const sanitized = prevMenu.filter((m) => {
         if (m.category === 'kemasan' || m.category === 'paket') return false;
         const nameLower = m.name.toLowerCase();
-        if (nameLower.includes('paket') || nameLower.includes('combo')) return false;
+        if (nameLower.includes('paket') || nameLower.includes('combo') || nameLower.includes('jagung')) return false;
         if (m.ingredients && m.ingredients.length > 0) {
           return m.ingredients.some((ing) => validStockIds.has(ing.stockItemId));
         }
