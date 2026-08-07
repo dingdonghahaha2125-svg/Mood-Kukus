@@ -139,6 +139,29 @@ export const INITIAL_STOCK_ITEMS: StockItem[] = [
     unitCostPrice: 350,
     lastUpdated: new Date().toISOString(),
   },
+  // Minuman & Wadah Packing
+  {
+    id: 'stk-13',
+    name: 'Air Mineral Botol 600ml (Kardus)',
+    category: 'operasional',
+    currentStock: 48.0,
+    minStock: 12.0,
+    unit: 'pcs',
+    unitCostPrice: 2000,
+    lastUpdated: new Date().toISOString(),
+    supplier: 'Distributor Air Mineral Mamuju',
+  },
+  {
+    id: 'stk-14',
+    name: 'Air Mineral Cup Gelas 220ml',
+    category: 'operasional',
+    currentStock: 96.0,
+    minStock: 24.0,
+    unit: 'pcs',
+    unitCostPrice: 400,
+    lastUpdated: new Date().toISOString(),
+    supplier: 'Distributor Air Mineral Mamuju',
+  },
 ];
 
 export const INITIAL_SAUCES: SauceItem[] = [
@@ -285,6 +308,66 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     ingredients: [
       { stockItemId: 'stk-1', amount: 0.24 },
       { stockItemId: 'stk-2', amount: 0.20 },
+      { stockItemId: 'stk-11', amount: 1 },
+    ],
+  },
+
+  // MINUMAN SEGAR & AIR BOTOL MINERAL
+  {
+    id: 'menu-air-botol',
+    name: 'Air Mineral Botol 600ml Segar',
+    category: 'minuman',
+    price: 4000,
+    unitName: 'botol',
+    preparedQty: 48,
+    soldQty: 25,
+    description: 'Air mineral dingin/segar botol 600ml teman santap kukusan hangat.',
+    isAvailable: true,
+    ingredients: [
+      { stockItemId: 'stk-13', amount: 1 },
+    ],
+  },
+  {
+    id: 'menu-air-cup',
+    name: 'Air Mineral Cup Gelas 220ml',
+    category: 'minuman',
+    price: 1000,
+    unitName: 'cup',
+    preparedQty: 96,
+    soldQty: 40,
+    description: 'Air mineral kemasan cup gelas hemat & praktis.',
+    isAvailable: true,
+    ingredients: [
+      { stockItemId: 'stk-14', amount: 1 },
+    ],
+  },
+
+  // WADAH / TEMPAT PACKING EKSTRA
+  {
+    id: 'menu-wadah-besek',
+    name: 'Wadah Besek Bambu Tradisional (Ekstra Packing)',
+    category: 'kemasan',
+    price: 4000,
+    unitName: 'pcs',
+    preparedQty: 30,
+    soldQty: 12,
+    description: 'Wadah besek bambu khas Sulawesi untuk kemasan oleh-oleh / hampers cantik.',
+    isAvailable: true,
+    ingredients: [
+      { stockItemId: 'stk-9', amount: 1 },
+    ],
+  },
+  {
+    id: 'menu-wadah-paperbox',
+    name: 'Wadah Paper Box Foodgrade (Ekstra Packing)',
+    category: 'kemasan',
+    price: 2000,
+    unitName: 'box',
+    preparedQty: 50,
+    soldQty: 20,
+    description: 'Wadah kotak kertas ramah lingkungan tahan panas untuk takeaway.',
+    isAvailable: true,
+    ingredients: [
       { stockItemId: 'stk-11', amount: 1 },
     ],
   },

@@ -25,6 +25,7 @@ interface PosCashierProps {
   stockItems: StockItem[];
   onProcessSale: (transaction: Transaction) => void;
   onOpenReceipt: (transaction: Transaction) => void;
+  onOpenMenuEditor?: () => void;
 }
 
 export const PosCashier: React.FC<PosCashierProps> = ({
@@ -33,6 +34,7 @@ export const PosCashier: React.FC<PosCashierProps> = ({
   stockItems,
   onProcessSale,
   onOpenReceipt,
+  onOpenMenuEditor,
 }) => {
   const [cart, setCart] = useState<{
     menuItem: MenuItem;
@@ -216,19 +218,34 @@ export const PosCashier: React.FC<PosCashierProps> = ({
       <div className="lg:col-span-2 space-y-4">
         {/* Header & Category Pills */}
         <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-emerald-400" />
-              Katalog Menu Kukusan Alami
-            </h2>
-            <span className="text-xs text-stone-400">Pilih menu untuk menambahkan ke keranjang</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-bold text-stone-100 flex items-center gap-2">
+                <Utensils className="w-5 h-5 text-emerald-400" />
+                Katalog Kasir & Produk Jualan
+              </h2>
+              <p className="text-xs text-stone-400">
+                Pilih makanan kukusan, air botol mineral, atau wadah packing
+              </p>
+            </div>
+
+            {onOpenMenuEditor && (
+              <button
+                onClick={onOpenMenuEditor}
+                className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 self-start sm:self-auto"
+              >
+                <span>✏️ Edit Harga & Tambah Menu</span>
+              </button>
+            )}
           </div>
 
           <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-none">
             {[
-              { id: 'all', label: 'Semua Menu' },
-              { id: 'paket', label: 'Paket Besek Lengkap' },
-              { id: 'satuan', label: 'Menu Satuan' },
+              { id: 'all', label: 'Semua Produk' },
+              { id: 'satuan', label: '🍌 Kukusan Satuan' },
+              { id: 'paket', label: '📦 Paket Combo Besek' },
+              { id: 'minuman', label: '🥤 Air Botol Mineral' },
+              { id: 'kemasan', label: '🍱 Wadah Packing' },
             ].map((cat) => (
               <button
                 key={cat.id}
@@ -250,7 +267,14 @@ export const PosCashier: React.FC<PosCashierProps> = ({
           {filteredMenuItems.map((item) => {
             const hpp = calculateMenuItemHpp(item, item.defaultSauceId, sauces, stockItems);
             const profitPerItem = item.price - hpp;
-            const marginPct = Math.round((profitPerItem / item.price) * 100);
+            const marginPct = item.price > 0 ? Math.round((profitPerItem / item.price) * 100) : 0;
+
+            const getBadge = () => {
+              if (item.category === 'satuan') return '🍌 Kukusan Satuan';
+              if (item.category === 'paket') return '📦 Paket Besek';
+              if (item.category === 'minuman') return '🥤 Air Mineral';
+              return '🍱 Wadah Packing';
+            };
 
             return (
               <div
@@ -260,10 +284,10 @@ export const PosCashier: React.FC<PosCashierProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 uppercase">
-                      {item.category === 'paket' ? 'Paket Besek' : 'Menu Kukus'}
+                      {getBadge()}
                     </span>
-                    <span className="text-xs font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded-md">
-                      Margin {marginPct}%
+                    <span className="text-[11px] font-extrabold text-amber-300 bg-amber-950/80 border border-amber-800/80 px-2 py-0.5 rounded-md">
+                      Untung: +{formatRp(profitPerItem)}/unit ({marginPct}%)
                     </span>
                   </div>
 
@@ -274,11 +298,11 @@ export const PosCashier: React.FC<PosCashierProps> = ({
                 <div className="space-y-3 pt-2 border-t border-stone-800">
                   <div className="flex items-center justify-between text-xs">
                     <div>
-                      <span className="text-[10px] text-stone-500">Estimasi HPP Bahan:</span>
+                      <span className="text-[10px] text-stone-500 block">Modal (HPP):</span>
                       <div className="text-stone-400 font-medium">{formatRp(hpp)}</div>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] text-stone-500">Harga Jual:</span>
+                      <span className="text-[10px] text-stone-500 block">Harga Jual:</span>
                       <div className="font-bold text-emerald-400 text-base">{formatRp(item.price)}</div>
                     </div>
                   </div>

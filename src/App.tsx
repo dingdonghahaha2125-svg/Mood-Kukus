@@ -17,6 +17,7 @@ import { HppCalculator } from './components/HppCalculator';
 import { FlyerGenerator } from './components/FlyerGenerator';
 import { AiBusinessAdvisor } from './components/AiBusinessAdvisor';
 import { DigitalReceiptModal } from './components/DigitalReceiptModal';
+import { MenuPriceEditorModal } from './components/MenuPriceEditorModal';
 import { exportToExcel, exportToPdf } from './utils/exportUtils';
 
 export default function App() {
@@ -49,6 +50,7 @@ export default function App() {
   // UI state
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isAiAdvisorOpen, setIsAiAdvisorOpen] = useState<boolean>(false);
+  const [isMenuEditorOpen, setIsMenuEditorOpen] = useState<boolean>(false);
   const [activeReceiptTransaction, setActiveReceiptTransaction] = useState<Transaction | null>(null);
 
   // Sync to LocalStorage on change
@@ -75,6 +77,15 @@ export default function App() {
   // Derived financial calculation
   const financialSummary = calculateFinancialSummary(transactions, expenses);
   const lowStockItems = stockItems.filter((i) => i.currentStock <= i.minStock);
+
+  // HANDLERS FOR MENU ITEMS & PRICES
+  const handleUpdateMenuItem = (updated: MenuItem) => {
+    setMenuItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+  };
+
+  const handleAddMenuItem = (newItem: MenuItem) => {
+    setMenuItems((prev) => [...prev, newItem]);
+  };
 
   // HANDLERS FOR INVENTORY
   const handleAddStockItem = (item: StockItem) => {
@@ -235,6 +246,7 @@ export default function App() {
         lowStockItems={lowStockItems}
         onOpenAiAdvisor={() => setIsAiAdvisorOpen(true)}
         onResetDemoData={handleResetDemoData}
+        onOpenMenuEditor={() => setIsMenuEditorOpen(true)}
         onExportExcel={handleExportExcel}
         onExportPdf={handleExportPdf}
       />
@@ -248,10 +260,13 @@ export default function App() {
             transactions={transactions}
             expenses={expenses}
             menuItems={menuItems}
+            sauces={sauces}
+            stockItems={stockItems}
             onNavigateToTab={setActiveTab}
             onOpenRestockModal={() => setActiveTab('stock')}
             onOpenReceipt={(tr) => setActiveReceiptTransaction(tr)}
             onOpenAiAdvisor={() => setIsAiAdvisorOpen(true)}
+            onOpenMenuEditor={() => setIsMenuEditorOpen(true)}
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
           />
@@ -264,6 +279,7 @@ export default function App() {
             stockItems={stockItems}
             onProcessSale={handleProcessSale}
             onOpenReceipt={(tr) => setActiveReceiptTransaction(tr)}
+            onOpenMenuEditor={() => setIsMenuEditorOpen(true)}
           />
         )}
 
@@ -316,6 +332,16 @@ export default function App() {
       <DigitalReceiptModal
         transaction={activeReceiptTransaction}
         onClose={() => setActiveReceiptTransaction(null)}
+      />
+
+      <MenuPriceEditorModal
+        isOpen={isMenuEditorOpen}
+        onClose={() => setIsMenuEditorOpen(false)}
+        menuItems={menuItems}
+        sauces={sauces}
+        stockItems={stockItems}
+        onUpdateMenuItem={handleUpdateMenuItem}
+        onAddMenuItem={handleAddMenuItem}
       />
 
       {/* Footer */}

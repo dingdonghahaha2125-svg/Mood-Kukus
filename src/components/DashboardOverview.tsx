@@ -33,7 +33,7 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { FinancialSummary, StockItem, Transaction, Expense, MenuItem } from '../types';
+import { FinancialSummary, StockItem, Transaction, Expense, MenuItem, SauceItem } from '../types';
 import { formatRp, formatDate, calculatePerItemSales } from '../utils/calculations';
 
 interface DashboardOverviewProps {
@@ -42,10 +42,13 @@ interface DashboardOverviewProps {
   transactions: Transaction[];
   expenses: Expense[];
   menuItems: MenuItem[];
+  sauces?: SauceItem[];
+  stockItems?: StockItem[];
   onNavigateToTab: (tab: string) => void;
   onOpenRestockModal: (stockItem?: StockItem) => void;
   onOpenReceipt: (transaction: Transaction) => void;
   onOpenAiAdvisor: () => void;
+  onOpenMenuEditor?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
 }
@@ -58,15 +61,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   transactions,
   expenses,
   menuItems,
+  sauces = [],
+  stockItems = [],
   onNavigateToTab,
   onOpenRestockModal,
   onOpenReceipt,
   onOpenAiAdvisor,
+  onOpenMenuEditor,
   onExportExcel,
   onExportPdf,
 }) => {
-  // Calculate per-item sales metrics
-  const perItemSales = calculatePerItemSales(menuItems, transactions);
+  // Calculate per-item sales metrics with unit profits
+  const perItemSales = calculatePerItemSales(menuItems, transactions, sauces, stockItems);
 
   // Prepare daily/transaction trend data
   const recentTransactions = [...transactions].reverse().slice(0, 5);
@@ -279,26 +285,37 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
       {/* DEDICATED SECTION: Per-Item Sales & Daily Prepared Stock Monitoring */}
       <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-800 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800 pb-3">
           <div>
             <div className="flex items-center gap-2">
               <Flame className="w-5 h-5 text-amber-400 animate-pulse" />
               <h3 className="font-bold text-stone-100 text-base sm:text-lg">
-                Bahan Jualan Laku Terjual & Stok Siap Jual (Per Item)
+                Keuntungan & Penjualan Laku Terjual (Per Item Unit)
               </h3>
             </div>
             <p className="text-xs text-stone-400 mt-0.5">
-              Pantau jumlah unit/biji/potong bahan kukusan yang disiapkan vs yang telah laku terjual
+              Lihat langsung keuntungan bersih per unit/biji/botol + jumlah laku terjual
             </p>
           </div>
 
-          <button
-            onClick={() => onNavigateToTab('stock')}
-            className="text-xs bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 font-semibold px-3 py-1.5 rounded-xl transition-colors self-start sm:self-auto flex items-center gap-1.5"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            Atur Batch Jualan / Stok
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {onOpenMenuEditor && (
+              <button
+                onClick={onOpenMenuEditor}
+                className="text-xs bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5"
+              >
+                <span>✏️ Edit Harga Jual</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => onNavigateToTab('stock')}
+              className="text-xs bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 font-semibold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>Stok & Batch</span>
+            </button>
+          </div>
         </div>
 
         {/* Per Item Table / Grid */}
@@ -307,23 +324,38 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             const isHighSeller = item.sellRatePct >= 70;
             const isSoldOut = item.remainingQty === 0;
 
+            const getCategoryLabel = () => {
+              if (item.category === 'satuan') return '🍌 Satuan';
+              if (item.category === 'paket') return '📦 Paket';
+              if (item.category === 'minuman') return '🥤 Air Mineral';
+              return '🍱 Packing';
+            };
+
             return (
               <div
                 key={item.menuItemId}
                 className="bg-stone-800/60 border border-stone-700/70 rounded-xl p-4 space-y-3 flex flex-col justify-between hover:border-emerald-500/50 transition-all shadow-sm"
               >
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-stone-700 text-stone-300">
-                      {item.category === 'satuan' ? 'Per-Item' : 'Paket'}
+                      {getCategoryLabel()}
                     </span>
                     <span className="text-xs font-bold text-emerald-400">{formatRp(item.pricePerUnit)}/{item.unitName}</span>
                   </div>
 
                   <h4 className="font-bold text-sm text-stone-100 leading-snug line-clamp-1">{item.itemName}</h4>
 
+                  {/* Per Unit Profit Badge */}
+                  <div className="bg-stone-900/90 border border-stone-700/80 rounded-lg p-2 flex items-center justify-between text-xs">
+                    <span className="text-[10px] text-stone-400">Untung / {item.unitName}:</span>
+                    <span className="font-black text-emerald-400 text-xs">
+                      +{formatRp(item.unitProfit)} ({item.profitMarginPct}%)
+                    </span>
+                  </div>
+
                   {/* Progress Bar for Sell Rate */}
-                  <div className="space-y-1 pt-1">
+                  <div className="space-y-1 pt-0.5">
                     <div className="flex justify-between text-[11px]">
                       <span className="text-stone-400">Laku Terjual:</span>
                       <span className="font-bold text-amber-400">
@@ -348,7 +380,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 {/* Footer details */}
                 <div className="pt-2 border-t border-stone-700/60 flex items-center justify-between text-xs">
                   <div>
-                    <span className="text-[10px] text-stone-500 block">Sisa Siap Jual:</span>
+                    <span className="text-[10px] text-stone-500 block">Sisa Stok Siap:</span>
                     <span
                       className={`font-bold ${
                         isSoldOut ? 'text-rose-400' : 'text-teal-300'
@@ -358,8 +390,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-stone-500 block">Total Omzet:</span>
-                    <span className="font-bold text-emerald-400">{formatRp(item.totalRevenue)}</span>
+                    <span className="text-[10px] text-stone-500 block">Total Untung Item:</span>
+                    <span className="font-extrabold text-emerald-400">{formatRp(item.totalProfit)}</span>
                   </div>
                 </div>
               </div>

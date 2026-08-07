@@ -126,7 +126,9 @@ export function formatDateOnly(dateString: string): string {
  */
 export function calculatePerItemSales(
   menuItems: MenuItem[],
-  transactions: Transaction[]
+  transactions: Transaction[],
+  sauces: SauceItem[] = [],
+  stockItems: StockItem[] = []
 ) {
   const itemMap = new Map<
     string,
@@ -161,6 +163,18 @@ export function calculatePerItemSales(
     const remainingQty = Math.max(0, preparedQty - soldQty);
     const sellRatePct = preparedQty > 0 ? Math.round((soldQty / preparedQty) * 100) : 0;
 
+    // Calculate estimated HPP per unit
+    const estimatedHppPerUnit = calculateMenuItemHpp(
+      menuItem,
+      menuItem.defaultSauceId,
+      sauces,
+      stockItems
+    );
+    const pricePerUnit = menuItem.price;
+    const unitProfit = pricePerUnit - estimatedHppPerUnit;
+    const profitMarginPct = pricePerUnit > 0 ? Math.round((unitProfit / pricePerUnit) * 100) : 0;
+    const totalProfit = unitProfit * soldQty;
+
     return {
       menuItemId: menuItem.id,
       itemName: menuItem.name,
@@ -169,8 +183,12 @@ export function calculatePerItemSales(
       preparedQty,
       soldQty,
       remainingQty,
-      pricePerUnit: menuItem.price,
+      pricePerUnit,
+      estimatedHppPerUnit,
+      unitProfit,
+      profitMarginPct,
       totalRevenue: revenue,
+      totalProfit,
       sellRatePct,
       isAvailable: menuItem.isAvailable,
     };

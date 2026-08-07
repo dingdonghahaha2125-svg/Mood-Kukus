@@ -30,14 +30,14 @@ export interface SauceItem {
 export interface MenuItem {
   id: string;
   name: string;
-  category: 'paket' | 'satuan' | 'minuman';
+  category: 'paket' | 'satuan' | 'minuman' | 'kemasan';
   price: number; // Selling price in IDR per item / portion
   description: string;
   image?: string;
   ingredients: RecipeIngredient[];
   defaultSauceId?: string;
   isAvailable: boolean;
-  unitName?: string; // 'biji', 'potong', 'tongkol', 'porsi'
+  unitName?: string; // 'biji', 'potong', 'tongkol', 'porsi', 'botol', 'box'
   preparedQty?: number; // Total units prepared/cooked for sale today (Stok Siap Jual)
   soldQty?: number; // Total units sold (Laku Terjual)
 }
@@ -104,7 +104,12 @@ export interface PerItemSalesSummary {
   soldQty: number;
   remainingQty: number;
   pricePerUnit: number;
+  estimatedHppPerUnit: number;
+  unitProfit: number;
+  profitMarginPct: number;
   totalRevenue: number;
+  totalProfit: number;
   sellRatePct: number;
+  isAvailable: boolean;
 }
 
