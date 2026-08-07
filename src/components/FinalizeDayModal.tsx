@@ -22,6 +22,7 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
 }) => {
   const [notes, setNotes] = useState<string>('');
   const [resetTodaySales, setResetTodaySales] = useState<boolean>(true);
+  const [reportDate, setReportDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
 
   if (!isOpen) return null;
 
@@ -65,15 +66,14 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
 
   const totalProfit = totalRevenue - totalHpp;
 
-  // Format today's date
-  const now = new Date();
-  const dateStr = now.toISOString().split('T')[0];
+  // Format selected report date
+  const parsedDate = new Date(reportDate + 'T12:00:00');
   const dateLabel = new Intl.DateTimeFormat('id-ID', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-  }).format(now);
+  }).format(parsedDate);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +85,7 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
 
     const report: DailyReport = {
       id: `rep-${Date.now()}`,
-      date: dateStr,
+      date: reportDate,
       dateLabel,
       totalRevenue,
       totalHpp,
@@ -93,7 +93,7 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
       totalItemsSold,
       items: reportItems,
       notes: notes.trim() || undefined,
-      finalizedAt: now.toISOString(),
+      finalizedAt: new Date().toISOString(),
     };
 
     onFinalizeDay(report, resetTodaySales);
@@ -110,7 +110,7 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-stone-100">Finalisasi Penjualan Hari Ini</h3>
+              <h3 className="text-base font-extrabold text-stone-100">Finalisasi & Simpan Laporan Penjualan</h3>
               <p className="text-xs text-amber-400 font-semibold">{dateLabel}</p>
             </div>
           </div>
@@ -133,6 +133,47 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Tanggal Hasil Penjualan Picker */}
+            <div className="bg-stone-950 p-3.5 rounded-xl border border-amber-500/30 space-y-2">
+              <label className="text-xs font-bold text-amber-300 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-amber-400" />
+                  <span>Tanggal Hasil Penjualan:</span>
+                </span>
+                <span className="text-[11px] text-amber-400 font-semibold">
+                  {dateLabel}
+                </span>
+              </label>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <input
+                  type="date"
+                  required
+                  value={reportDate}
+                  onChange={(e) => setReportDate(e.target.value)}
+                  className="flex-1 bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-xs font-bold text-stone-100 focus:outline-none focus:border-amber-500"
+                />
+                <div className="flex items-center gap-1 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setReportDate(new Date().toISOString().split('T')[0])}
+                    className="px-2.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg border border-stone-700 font-medium transition-colors"
+                  >
+                    Hari Ini
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date();
+                      d.setDate(d.getDate() - 1);
+                      setReportDate(d.toISOString().split('T')[0]);
+                    }}
+                    className="px-2.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg border border-stone-700 font-medium transition-colors"
+                  >
+                    Kemarin
+                  </button>
+                </div>
+              </div>
+            </div>
             {/* Quick Metrics Summary */}
             <div className="grid grid-cols-3 gap-3 bg-stone-950 p-4 rounded-xl border border-stone-800">
               <div className="space-y-0.5">

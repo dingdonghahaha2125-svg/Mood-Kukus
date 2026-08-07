@@ -223,8 +223,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     }
   };
 
-  const getStockStatusBadge = (item: StockItem) => {
-    if (item.currentStock <= 0) {
+  const getStockStatusBadge = (item: StockItem, effectiveStock: number) => {
+    if (effectiveStock <= 0) {
       return (
         <span className="flex items-center gap-1 text-[11px] font-bold text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded-full border border-rose-800">
           <XCircle className="w-3 h-3" />
@@ -232,7 +232,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         </span>
       );
     }
-    if (item.currentStock <= item.minStock) {
+    if (effectiveStock <= item.minStock) {
       return (
         <span className="flex items-center gap-1 text-[11px] font-bold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-800">
           <AlertTriangle className="w-3 h-3" />
@@ -372,14 +372,31 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       {/* Stock Items Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredItems.map((item) => {
-          const stockRatio = Math.min(100, Math.max(0, (item.currentStock / (item.minStock * 2)) * 100));
-          const totalValue = item.currentStock * item.unitCostPrice;
+          // Calculate amount sold today based on menu items soldQty and recipes
+          const soldDeductionToday = menuItems.reduce((sum, menu) => {
+            const qty = menu.soldQty || 0;
+            if (qty <= 0) return sum;
+
+            if (menu.ingredients && menu.ingredients.length > 0) {
+              const ing = menu.ingredients.find((i) => i.stockItemId === item.id);
+              if (ing) return sum + ing.amount * qty;
+            } else {
+              if (menu.name.trim().toLowerCase() === item.name.trim().toLowerCase()) {
+                return sum + qty;
+              }
+            }
+            return sum;
+          }, 0);
+
+          const effectiveStock = Math.max(0, Number((item.currentStock - soldDeductionToday).toFixed(2)));
+          const stockRatio = Math.min(100, Math.max(0, (effectiveStock / Math.max(1, item.minStock * 2)) * 100));
+          const totalValue = effectiveStock * item.unitCostPrice;
 
           return (
             <div
               key={item.id}
               className={`bg-stone-900 border rounded-2xl p-4 space-y-3 transition-all ${
-                item.currentStock <= item.minStock
+                effectiveStock <= item.minStock
                   ? 'border-amber-600/60 bg-amber-950/10 shadow-lg shadow-amber-950/20'
                   : 'border-stone-800 hover:border-stone-700'
               }`}
@@ -388,7 +405,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     {getCategoryBadge(item.category)}
-                    {getStockStatusBadge(item)}
+                    {getStockStatusBadge(item, effectiveStock)}
                   </div>
                   <h3 className="font-bold text-stone-100 text-sm sm:text-base">{item.name}</h3>
                   {item.supplier && <p className="text-[11px] text-stone-400">Supplier: {item.supplier}</p>}
@@ -398,18 +415,18 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               {/* Stock Quantity Gauge */}
               <div className="space-y-1.5 bg-stone-800/60 p-3 rounded-xl border border-stone-700/50">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-stone-400">Sisa Stok:</span>
-                  <span className="font-bold text-stone-100 text-sm">
-                    {item.currentStock} {item.unit}
+                  <span className="text-stone-400">Sisa Stok Real-Time:</span>
+                  <span className="font-bold text-emerald-400 text-sm">
+                    {effectiveStock} {item.unit}
                   </span>
                 </div>
 
                 <div className="w-full bg-stone-700 rounded-full h-2 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      item.currentStock <= 0
+                      effectiveStock <= 0
                         ? 'bg-rose-500'
-                        : item.currentStock <= item.minStock
+                        : effectiveStock <= item.minStock
                         ? 'bg-amber-500'
                         : 'bg-emerald-500'
                     }`}
@@ -417,9 +434,15 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] text-stone-400">
-                  <span>Batas Min: {item.minStock} {item.unit}</span>
-                  <span>HPP Unit: {formatRp(item.unitCostPrice)}</span>
+                <div className="flex items-center justify-between text-[10px] text-stone-400 pt-0.5">
+                  <span>Stok Gudang: {item.currentStock} {item.unit}</span>
+                  {soldDeductionToday > 0 ? (
+                    <span className="text-amber-400 font-bold bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-800/60">
+                      Terjual: -{soldDeductionToday} {item.unit}
+                    </span>
+                  ) : (
+                    <span>Batas Min: {item.minStock} {item.unit}</span>
+                  )}
                 </div>
               </div>
 

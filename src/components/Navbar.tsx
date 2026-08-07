@@ -54,7 +54,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       badge: lowStockItems.length > 0 ? lowStockItems.length : undefined,
     },
     { id: 'expenses', label: '💸 Catat Belanja & Pengeluaran', icon: Receipt },
-    { id: 'hpp', label: '🧮 Hitung Harga Jual', icon: Calculator },
     { id: 'flyer', label: '🎨 Buat Flyer Promosi', icon: Sparkles },
   ];
 

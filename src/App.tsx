@@ -164,6 +164,42 @@ export default function App() {
   const handleFinalizeDailyReport = (report: DailyReport, resetTodaySales: boolean) => {
     setDailyReports((prev) => [report, ...prev]);
 
+    // Otomatis kurangi stok bahan baku (stockItems) berdasarkan item yang laku terjual
+    setStockItems((prevStock) => {
+      const stockDeductionMap = new Map<string, number>();
+
+      report.items.forEach((repItem) => {
+        const menuItem = menuItems.find((m) => m.id === repItem.menuItemId);
+        if (menuItem) {
+          if (menuItem.ingredients && menuItem.ingredients.length > 0) {
+            menuItem.ingredients.forEach((ing) => {
+              const currentReq = stockDeductionMap.get(ing.stockItemId) || 0;
+              stockDeductionMap.set(ing.stockItemId, currentReq + ing.amount * repItem.soldQty);
+            });
+          } else {
+            // Fallback matching by name
+            const matchedStock = prevStock.find((s) => s.name.trim().toLowerCase() === menuItem.name.trim().toLowerCase());
+            if (matchedStock) {
+              const currentReq = stockDeductionMap.get(matchedStock.id) || 0;
+              stockDeductionMap.set(matchedStock.id, currentReq + repItem.soldQty);
+            }
+          }
+        }
+      });
+
+      return prevStock.map((s) => {
+        const deduct = stockDeductionMap.get(s.id);
+        if (deduct && deduct > 0) {
+          return {
+            ...s,
+            currentStock: Math.max(0, Number((s.currentStock - deduct).toFixed(2))),
+            lastUpdated: new Date().toISOString(),
+          };
+        }
+        return s;
+      });
+    });
+
     if (resetTodaySales) {
       setMenuItems((prev) =>
         prev.map((item) => ({
@@ -452,14 +488,6 @@ export default function App() {
             expenses={expenses}
             onAddExpense={handleAddExpense}
             onDeleteExpense={handleDeleteExpense}
-          />
-        )}
-
-        {activeTab === 'hpp' && (
-          <HppCalculator
-            menuItems={menuItems}
-            sauces={sauces}
-            stockItems={stockItems}
           />
         )}
 
