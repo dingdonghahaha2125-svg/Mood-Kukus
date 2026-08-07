@@ -20,20 +20,28 @@ import { AiBusinessAdvisor } from './components/AiBusinessAdvisor';
 import { DigitalReceiptModal } from './components/DigitalReceiptModal';
 import { MenuPriceEditorModal } from './components/MenuPriceEditorModal';
 import { FinalizeDayModal } from './components/FinalizeDayModal';
+import { DeviceSyncModal } from './components/DeviceSyncModal';
 import { exportToExcel, exportToPdf } from './utils/exportUtils';
 
 export default function App() {
+  // Helper to fix Singkos typo -> Singkong
+  const fixSingkos = (str: string) => str ? str.replace(/singkos/gi, 'Singkong') : str;
+
   // Load state from LocalStorage with fallback to initialData
   const [stockItems, setStockItems] = useState<StockItem[]>(() => {
     const saved = localStorage.getItem('kukuslokal_stock_items');
     const items: StockItem[] = saved ? JSON.parse(saved) : INITIAL_STOCK_ITEMS;
-    return items.filter((s) => s.id !== 'stk-3' && !s.name.toLowerCase().includes('jagung'));
+    return items
+      .filter((s) => s.id !== 'stk-3' && !s.name.toLowerCase().includes('jagung'))
+      .map((s) => ({ ...s, name: fixSingkos(s.name) }));
   });
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>(() => {
     const saved = localStorage.getItem('kukuslokal_menu_items');
     const items: MenuItem[] = saved ? JSON.parse(saved) : INITIAL_MENU_ITEMS;
-    return items.filter((m) => m.id !== 'menu-item-jagung' && !m.name.toLowerCase().includes('jagung'));
+    return items
+      .filter((m) => m.id !== 'menu-item-jagung' && !m.name.toLowerCase().includes('jagung'))
+      .map((m) => ({ ...m, name: fixSingkos(m.name) }));
   });
 
   const [sauces, setSauces] = useState<SauceItem[]>(() => {
@@ -61,7 +69,47 @@ export default function App() {
   const [isAiAdvisorOpen, setIsAiAdvisorOpen] = useState<boolean>(false);
   const [isMenuEditorOpen, setIsMenuEditorOpen] = useState<boolean>(false);
   const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState<boolean>(false);
+  const [isDeviceSyncOpen, setIsDeviceSyncOpen] = useState<boolean>(false);
   const [activeReceiptTransaction, setActiveReceiptTransaction] = useState<Transaction | null>(null);
+
+  // Auto-sync via URL parameter (e.g. from QR scan)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const syncData = urlParams.get('syncData');
+    if (syncData) {
+      try {
+        const decoded = JSON.parse(decodeURIComponent(atob(syncData)));
+        if (decoded && typeof decoded === 'object') {
+          if (decoded.stockItems) setStockItems(decoded.stockItems);
+          if (decoded.menuItems) setMenuItems(decoded.menuItems);
+          if (decoded.sauces) setSauces(decoded.sauces);
+          if (decoded.expenses) setExpenses(decoded.expenses);
+          if (decoded.transactions) setTransactions(decoded.transactions);
+          if (decoded.dailyReports) setDailyReports(decoded.dailyReports);
+          alert('📱 Data berhasil disinkronkan dari Laptop/HP!');
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch (err) {
+        console.error('Failed auto sync from URL', err);
+      }
+    }
+  }, []);
+
+  // Multi-tab / Broadcast sync
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!e.key) return;
+      if (e.key === 'kukuslokal_stock_items' && e.newValue) setStockItems(JSON.parse(e.newValue));
+      if (e.key === 'kukuslokal_menu_items' && e.newValue) setMenuItems(JSON.parse(e.newValue));
+      if (e.key === 'kukuslokal_sauces' && e.newValue) setSauces(JSON.parse(e.newValue));
+      if (e.key === 'kukuslokal_expenses' && e.newValue) setExpenses(JSON.parse(e.newValue));
+      if (e.key === 'kukuslokal_transactions' && e.newValue) setTransactions(JSON.parse(e.newValue));
+      if (e.key === 'kukuslokal_daily_reports' && e.newValue) setDailyReports(JSON.parse(e.newValue));
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Sync to LocalStorage on change
   useEffect(() => {
@@ -318,6 +366,22 @@ export default function App() {
     }
   };
 
+  const handleImportData = (imported: {
+    stockItems?: StockItem[];
+    menuItems?: MenuItem[];
+    sauces?: SauceItem[];
+    expenses?: Expense[];
+    transactions?: Transaction[];
+    dailyReports?: DailyReport[];
+  }) => {
+    if (imported.stockItems) setStockItems(imported.stockItems);
+    if (imported.menuItems) setMenuItems(imported.menuItems);
+    if (imported.sauces) setSauces(imported.sauces);
+    if (imported.expenses) setExpenses(imported.expenses);
+    if (imported.transactions) setTransactions(imported.transactions);
+    if (imported.dailyReports) setDailyReports(imported.dailyReports);
+  };
+
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 font-sans selection:bg-emerald-500 selection:text-stone-950 flex flex-col">
       {/* Top Navigation */}
@@ -329,6 +393,7 @@ export default function App() {
         onOpenAiAdvisor={() => setIsAiAdvisorOpen(true)}
         onResetDemoData={handleResetDemoData}
         onOpenMenuEditor={() => setIsMenuEditorOpen(true)}
+        onOpenDeviceSync={() => setIsDeviceSyncOpen(true)}
         onExportExcel={handleExportExcel}
         onExportPdf={handleExportPdf}
       />
@@ -437,6 +502,18 @@ export default function App() {
         sauces={sauces}
         stockItems={stockItems}
         onFinalizeDay={handleFinalizeDailyReport}
+      />
+
+      <DeviceSyncModal
+        isOpen={isDeviceSyncOpen}
+        onClose={() => setIsDeviceSyncOpen(false)}
+        stockItems={stockItems}
+        menuItems={menuItems}
+        sauces={sauces}
+        expenses={expenses}
+        transactions={transactions}
+        dailyReports={dailyReports}
+        onImportData={handleImportData}
       />
 
       {/* Footer */}

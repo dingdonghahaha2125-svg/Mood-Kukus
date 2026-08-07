@@ -521,9 +521,16 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="Misal: Pisang Kepok Kuning / Besek Bambu / Telur Kampung"
+                  autoCorrect="off"
+                  autoCapitalize="words"
+                  spellCheck={false}
+                  autoComplete="off"
+                  placeholder="Misal: Pisang Kepok Kuning / Singkong Keju / Besek Bambu"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => {
+                    const cleaned = e.target.value.replace(/singkos/gi, 'Singkong');
+                    setFormData({ ...formData, name: cleaned });
+                  }}
                   className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>

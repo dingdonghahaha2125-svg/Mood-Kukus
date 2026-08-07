@@ -158,10 +158,17 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: Air Mineral Cleo 600ml / Box Thinwall"
+                    autoCorrect="off"
+                    autoCapitalize="words"
+                    spellCheck={false}
+                    autoComplete="off"
+                    placeholder="Contoh: Singkong Keju Kukus / Air Mineral 600ml"
                     value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    className="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/singkos/gi, 'Singkong');
+                      setNewName(cleaned);
+                    }}
+                    className="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500 font-bold"
                   />
                 </div>
 
