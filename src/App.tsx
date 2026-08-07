@@ -282,6 +282,7 @@ export default function App() {
             onOpenAiAdvisor={() => setIsAiAdvisorOpen(true)}
             onOpenMenuEditor={() => setIsMenuEditorOpen(true)}
             onUpdateMenuItem={handleUpdateMenuItem}
+            onAddMenuItem={handleAddMenuItem}
             onResetSalesToday={handleResetSalesToday}
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}

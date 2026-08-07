@@ -21,6 +21,7 @@ import {
   RotateCcw,
   Trash2,
   Eye,
+  Plus,
 } from 'lucide-react';
 import {
   BarChart,
@@ -53,6 +54,7 @@ interface DashboardOverviewProps {
   onOpenAiAdvisor: () => void;
   onOpenMenuEditor?: () => void;
   onUpdateMenuItem?: (item: MenuItem) => void;
+  onAddMenuItem?: (newItem: MenuItem) => void;
   onResetSalesToday?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
@@ -74,12 +76,15 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onOpenAiAdvisor,
   onOpenMenuEditor,
   onUpdateMenuItem,
+  onAddMenuItem,
   onResetSalesToday,
   onExportExcel,
   onExportPdf,
 }) => {
   // State to filter per-item sales view (default: only show sold items today)
   const [itemFilter, setItemFilter] = React.useState<'sold_only' | 'all'>('sold_only');
+  const [addSoldItemId, setAddSoldItemId] = React.useState<string>('');
+  const [addSoldQty, setAddSoldQty] = React.useState<number>(1);
 
   // Calculate per-item sales metrics with unit profits
   const perItemSales = calculatePerItemSales(menuItems, transactions, sauces, stockItems);
@@ -265,74 +270,250 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
 
         {/* Quick Input Bar for Today's Sales per Item */}
-        <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-4 space-y-3">
+        <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-4 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
             <h4 className="text-xs font-bold text-stone-200 uppercase tracking-wider flex items-center gap-1.5">
               <Flame className="w-4 h-4 text-amber-400" />
-              <span>Input / Edit Laku Terjual Hari Ini (Per Item Unit)</span>
+              <span>Pencatatan Item Laku Terjual Hari Ini</span>
             </h4>
             <span className="text-[11px] text-stone-400">
-              Ketik angka / tekan tombol + - untuk langsung mencatat barang laku hari ini
+              Pilih item yang terjual di bawah ini untuk dimasukkan ke laporan harian
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {menuItems.map((item) => {
-              return (
-                <div
-                  key={item.id}
-                  className="bg-stone-900/90 border border-stone-800 hover:border-emerald-700/60 rounded-xl p-3 flex items-center justify-between gap-2 transition-all"
-                >
-                  <div className="min-w-0">
-                    <div className="font-bold text-xs text-stone-200 truncate">{item.name}</div>
-                    <div className="text-[10px] text-stone-400 mt-0.5">
-                      Harga: <span className="text-emerald-400 font-bold">{formatRp(item.price)}</span> / {item.unitName}
-                    </div>
-                  </div>
+          {/* Manual Add Form */}
+          <div className="bg-stone-900 border border-amber-500/30 p-3.5 rounded-xl space-y-2">
+            <label className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <PlusCircle className="w-4 h-4 text-amber-400" />
+              <span>Tambah Item Yang Terjual Hari Ini (Pilih Dari Stok & Menu):</span>
+            </label>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <select
+                value={addSoldItemId}
+                onChange={(e) => setAddSoldItemId(e.target.value)}
+                className="flex-1 bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs font-semibold text-stone-100 focus:outline-none focus:border-amber-500"
+              >
+                <option value="">-- Pilih Item / Bahan Stok Terjual --</option>
+                
+                {/* Stock Items Group */}
+                <optgroup label="📦 Bahan & Stok Terkoneksi (Dari Menu Stok)">
+                  {stockItems.map((stk) => {
+                    const linkedMenu = menuItems.find(
+                      (m) =>
+                        m.ingredients.some((ing) => ing.stockItemId === stk.id) ||
+                        m.name.toLowerCase() === stk.name.toLowerCase()
+                    );
+                    const optVal = linkedMenu ? `menu::${linkedMenu.id}` : `stock::${stk.id}`;
+                    const label = linkedMenu
+                      ? `${stk.name} (${formatRp(linkedMenu.price)}/${linkedMenu.unitName})${(linkedMenu.soldQty || 0) > 0 ? ` — [Terjual: ${linkedMenu.soldQty} ${linkedMenu.unitName}]` : ''}`
+                      : `[Stok] ${stk.name} (Modal: ${formatRp(stk.unitCostPrice)}/${stk.unit})`;
+                    return (
+                      <option key={stk.id} value={optVal}>
+                        {label}
+                      </option>
+                    );
+                  })}
+                </optgroup>
 
-                  <div className="flex items-center gap-1 shrink-0 bg-stone-950 p-1 rounded-lg border border-stone-800">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (onUpdateMenuItem && item.soldQty > 0) {
-                          onUpdateMenuItem({ ...item, soldQty: item.soldQty - 1 });
+                {/* Additional Standalone Menu Items */}
+                {(() => {
+                  const standalone = menuItems.filter(
+                    (m) =>
+                      !stockItems.some(
+                        (stk) =>
+                          m.ingredients.some((ing) => ing.stockItemId === stk.id) ||
+                          m.name.toLowerCase() === stk.name.toLowerCase()
+                      )
+                  );
+                  if (standalone.length === 0) return null;
+                  return (
+                    <optgroup label="🍱 Menu Paket & Olahan Lainnya">
+                      {standalone.map((m) => (
+                        <option key={m.id} value={`menu::${m.id}`}>
+                          {m.name} ({formatRp(m.price)}/{m.unitName}){(m.soldQty || 0) > 0 ? ` — [Terjual: ${m.soldQty} ${m.unitName}]` : ''}
+                        </option>
+                      ))}
+                    </optgroup>
+                  );
+                })()}
+              </select>
+
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 bg-stone-950 p-1.5 rounded-xl border border-stone-700">
+                  <span className="text-[11px] text-stone-400 pl-1 font-semibold">Jumlah:</span>
+                  <input
+                    type="number"
+                    min="1"
+                    value={addSoldQty || 1}
+                    onChange={(e) => setAddSoldQty(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-14 bg-stone-900 text-center text-xs font-black text-amber-300 py-1 rounded focus:outline-none"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!addSoldItemId) return;
+
+                    if (addSoldItemId.startsWith('menu::')) {
+                      const targetId = addSoldItemId.replace('menu::', '');
+                      const target = menuItems.find((m) => m.id === targetId);
+                      if (target && onUpdateMenuItem) {
+                        onUpdateMenuItem({
+                          ...target,
+                          soldQty: (target.soldQty || 0) + (addSoldQty || 1),
+                        });
+                      }
+                    } else if (addSoldItemId.startsWith('stock::')) {
+                      const stockId = addSoldItemId.replace('stock::', '');
+                      const stk = stockItems.find((s) => s.id === stockId);
+                      if (stk) {
+                        const existingMenu = menuItems.find(
+                          (m) =>
+                            m.ingredients.some((i) => i.stockItemId === stk.id) ||
+                            m.name.toLowerCase() === stk.name.toLowerCase()
+                        );
+                        if (existingMenu && onUpdateMenuItem) {
+                          onUpdateMenuItem({
+                            ...existingMenu,
+                            soldQty: (existingMenu.soldQty || 0) + (addSoldQty || 1),
+                          });
+                        } else {
+                          const estimatedSellPrice = Math.max(Math.ceil((stk.unitCostPrice * 1.5) / 500) * 500, 3000);
+                          const newMenu: MenuItem = {
+                            id: `menu-${Date.now()}`,
+                            name: stk.name,
+                            category:
+                              stk.category === 'operasional' || stk.category === 'minuman'
+                                ? 'minuman'
+                                : stk.category === 'kemasan'
+                                ? 'kemasan'
+                                : 'satuan',
+                            price: estimatedSellPrice,
+                            description: `Produk jualan ${stk.name}`,
+                            preparedQty: stk.currentStock,
+                            soldQty: addSoldQty || 1,
+                            isAvailable: true,
+                            unitName: stk.unit === 'kg' ? 'porsi' : stk.unit,
+                            ingredients: [{ stockItemId: stk.id, amount: 1 }],
+                          };
+                          if (onAddMenuItem) {
+                            onAddMenuItem(newMenu);
+                          } else if (onUpdateMenuItem) {
+                            onUpdateMenuItem(newMenu);
+                          }
                         }
-                      }}
-                      disabled={item.soldQty <= 0}
-                      className="w-6 h-6 rounded bg-stone-800 hover:bg-stone-700 disabled:opacity-30 text-stone-200 font-bold text-xs flex items-center justify-center border border-stone-700 transition-colors"
-                      title="Kurangi 1 unit"
-                    >
-                      -
-                    </button>
-                    <input
-                      type="number"
-                      min="0"
-                      value={item.soldQty}
-                      onChange={(e) => {
-                        const val = Math.max(0, parseInt(e.target.value) || 0);
-                        if (onUpdateMenuItem) {
-                          onUpdateMenuItem({ ...item, soldQty: val });
-                        }
-                      }}
-                      className="w-12 h-6 bg-transparent text-center text-xs font-black text-amber-300 focus:outline-none focus:bg-stone-900 rounded"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (onUpdateMenuItem) {
-                          onUpdateMenuItem({ ...item, soldQty: item.soldQty + 1 });
-                        }
-                      }}
-                      className="w-6 h-6 rounded bg-emerald-950 hover:bg-emerald-900 text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-700 transition-colors"
-                      title="Tambah 1 unit"
-                    >
-                      +
-                    </button>
-                  </div>
+                      }
+                    } else {
+                      const target = menuItems.find((m) => m.id === addSoldItemId);
+                      if (target && onUpdateMenuItem) {
+                        onUpdateMenuItem({
+                          ...target,
+                          soldQty: (target.soldQty || 0) + (addSoldQty || 1),
+                        });
+                      }
+                    }
+
+                    setAddSoldItemId('');
+                    setAddSoldQty(1);
+                  }}
+                  disabled={!addSoldItemId}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-stone-950 font-black text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Catat Laku</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* List of items that have soldQty > 0 */}
+          {(() => {
+            const soldItemsToday = menuItems.filter((item) => (item.soldQty || 0) > 0);
+
+            if (soldItemsToday.length === 0) {
+              return (
+                <div className="bg-stone-900/60 border border-dashed border-stone-800 rounded-xl p-5 text-center space-y-1">
+                  <p className="text-xs text-stone-300 font-medium">
+                    Belum ada item terjual yang dicantumkan hari ini.
+                  </p>
+                  <p className="text-[11px] text-stone-500">
+                    Pilih menu jualan pada form di atas lalu klik <span className="text-amber-400 font-bold">Catat Laku</span> untuk memasukkannya secara manual.
+                  </p>
                 </div>
               );
-            })}
-          </div>
+            }
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {soldItemsToday.map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-stone-900/90 border border-emerald-800/80 hover:border-emerald-600 rounded-xl p-3 flex items-center justify-between gap-2 transition-all shadow-sm"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-xs text-stone-100 truncate">{item.name}</div>
+                      <div className="text-[10px] text-stone-400 mt-0.5">
+                        Harga: <span className="text-emerald-400 font-bold">{formatRp(item.price)}</span> / {item.unitName}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0 bg-stone-950 p-1 rounded-lg border border-stone-800">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onUpdateMenuItem && (item.soldQty || 0) > 0) {
+                            onUpdateMenuItem({ ...item, soldQty: item.soldQty - 1 });
+                          }
+                        }}
+                        disabled={(item.soldQty || 0) <= 0}
+                        className="w-6 h-6 rounded bg-stone-800 hover:bg-stone-700 disabled:opacity-30 text-stone-200 font-bold text-xs flex items-center justify-center border border-stone-700 transition-colors"
+                        title="Kurangi 1 unit"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min="0"
+                        value={item.soldQty || 0}
+                        onChange={(e) => {
+                          const val = Math.max(0, parseInt(e.target.value) || 0);
+                          if (onUpdateMenuItem) {
+                            onUpdateMenuItem({ ...item, soldQty: val });
+                          }
+                        }}
+                        className="w-12 h-6 bg-transparent text-center text-xs font-black text-amber-300 focus:outline-none focus:bg-stone-900 rounded"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onUpdateMenuItem) {
+                            onUpdateMenuItem({ ...item, soldQty: (item.soldQty || 0) + 1 });
+                          }
+                        }}
+                        className="w-6 h-6 rounded bg-emerald-950 hover:bg-emerald-900 text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-700 transition-colors"
+                        title="Tambah 1 unit"
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onUpdateMenuItem) {
+                            onUpdateMenuItem({ ...item, soldQty: 0 });
+                          }
+                        }}
+                        className="w-6 h-6 rounded bg-rose-950 hover:bg-rose-900 text-rose-300 font-bold text-xs flex items-center justify-center border border-rose-800 transition-colors ml-0.5"
+                        title="Hapus item dari laporan terjual hari ini"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
