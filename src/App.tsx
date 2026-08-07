@@ -75,8 +75,22 @@ export default function App() {
   }, [transactions]);
 
   // Derived financial calculation
-  const financialSummary = calculateFinancialSummary(transactions, expenses);
+  const financialSummary = calculateFinancialSummary(transactions, expenses, menuItems, sauces, stockItems);
   const lowStockItems = stockItems.filter((i) => i.currentStock <= i.minStock);
+
+  // RESET SALES TODAY (Set soldQty = 0 & clear transactions)
+  const handleResetSalesToday = () => {
+    if (confirm('Apakah Anda yakin ingin mereset seluruh data penjualan hari ini menjadi 0 (kosong)?')) {
+      setTransactions([]);
+      setMenuItems((prev) =>
+        prev.map((item) => ({
+          ...item,
+          soldQty: 0,
+        }))
+      );
+      localStorage.setItem('kukuslokal_transactions', JSON.stringify([]));
+    }
+  };
 
   // HANDLERS FOR MENU ITEMS & PRICES
   const handleUpdateMenuItem = (updated: MenuItem) => {
@@ -267,6 +281,8 @@ export default function App() {
             onOpenReceipt={(tr) => setActiveReceiptTransaction(tr)}
             onOpenAiAdvisor={() => setIsAiAdvisorOpen(true)}
             onOpenMenuEditor={() => setIsMenuEditorOpen(true)}
+            onUpdateMenuItem={handleUpdateMenuItem}
+            onResetSalesToday={handleResetSalesToday}
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
           />

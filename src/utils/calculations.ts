@@ -46,10 +46,28 @@ export function calculateMenuItemHpp(
  */
 export function calculateFinancialSummary(
   transactions: Transaction[],
-  expenses: Expense[]
+  expenses: Expense[],
+  menuItems: MenuItem[] = [],
+  sauces: SauceItem[] = [],
+  stockItems: StockItem[] = []
 ): FinancialSummary {
-  const totalRevenue = transactions.reduce((sum, tr) => sum + tr.totalAmount, 0);
-  const totalHpp = transactions.reduce((sum, tr) => sum + tr.totalHpp, 0);
+  let totalRevenue = transactions.reduce((sum, tr) => sum + tr.totalAmount, 0);
+  let totalHpp = transactions.reduce((sum, tr) => sum + tr.totalHpp, 0);
+
+  // If there are no transactions OR if menu items have direct soldQty logged,
+  // ensure revenue & HPP reflect the sold items
+  const menuItemsRevenue = menuItems.reduce((sum, item) => sum + (item.soldQty || 0) * item.price, 0);
+  
+  if (transactions.length === 0 && menuItemsRevenue > 0) {
+    totalRevenue = menuItemsRevenue;
+    totalHpp = menuItems.reduce((sum, item) => {
+      const hpp = calculateMenuItemHpp(item, item.defaultSauceId, sauces, stockItems);
+      return sum + (item.soldQty || 0) * hpp;
+    }, 0);
+  } else if (transactions.length > 0 && menuItemsRevenue > totalRevenue) {
+    // Combine if user directly modified soldQty beyond recorded transactions
+    totalRevenue = Math.max(totalRevenue, menuItemsRevenue);
+  }
 
   const operationalExpenses = expenses
     .filter((e) => !e.isCapital)

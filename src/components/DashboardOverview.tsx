@@ -18,6 +18,7 @@ import {
   Flame,
   FileSpreadsheet,
   FileText,
+  RotateCcw,
 } from 'lucide-react';
 import {
   BarChart,
@@ -49,6 +50,8 @@ interface DashboardOverviewProps {
   onOpenReceipt: (transaction: Transaction) => void;
   onOpenAiAdvisor: () => void;
   onOpenMenuEditor?: () => void;
+  onUpdateMenuItem?: (item: MenuItem) => void;
+  onResetSalesToday?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
 }
@@ -68,11 +71,23 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onOpenReceipt,
   onOpenAiAdvisor,
   onOpenMenuEditor,
+  onUpdateMenuItem,
+  onResetSalesToday,
   onExportExcel,
   onExportPdf,
 }) => {
   // Calculate per-item sales metrics with unit profits
   const perItemSales = calculatePerItemSales(menuItems, transactions, sauces, stockItems);
+
+  // Today's Date String in Indonesian Full Format
+  const todayDateFull = new Date().toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const totalUnitsSold = menuItems.reduce((acc, item) => acc + (item.soldQty || 0), 0);
 
   // Prepare daily/transaction trend data
   const recentTransactions = [...transactions].reverse().slice(0, 5);
@@ -189,6 +204,132 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
       </div>
 
+      {/* DEDICATED DAILY REPORT CARD WITH FULL DATE & QUICK EDIT */}
+      <div className="bg-stone-900 border border-emerald-800/60 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-800 pb-4">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Laporan Penjualan Harian</span>
+              </span>
+              <span className="text-xs font-bold text-amber-300 bg-amber-950/80 border border-amber-800/80 px-2.5 py-0.5 rounded-full">
+                📅 Tanggal: {todayDateFull}
+              </span>
+            </div>
+            <h2 className="text-lg sm:text-xl font-bold text-stone-100 flex items-center gap-2 pt-1">
+              <span>Ringkasan Real-Time Laporan Hari Ini</span>
+            </h2>
+            <p className="text-xs text-stone-300">
+              {totalUnitsSold === 0 ? (
+                <span className="text-amber-400 font-medium">
+                  ⚠️ Status: Hari ini belum ada yang terjual (0 unit). Silakan masukkan data stok & jumlah laku terjual di bawah.
+                </span>
+              ) : (
+                <span className="text-emerald-400 font-semibold">
+                  ✅ Status: Terjual {totalUnitsSold} unit barang hari ini | Total Uang Masuk: {formatRp(financialSummary.totalRevenue)} | Untung Bersih: {formatRp(financialSummary.netProfit)}
+                </span>
+              )}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {onResetSalesToday && (
+              <button
+                onClick={onResetSalesToday}
+                className="px-3.5 py-2 bg-rose-950/80 hover:bg-rose-900/90 border border-rose-800/80 text-rose-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+                title="Reset/Kosongkan seluruh data penjualan hari ini menjadi 0"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+                <span>Kosongkan Penjualan (Set 0)</span>
+              </button>
+            )}
+
+            {onOpenMenuEditor && (
+              <button
+                onClick={onOpenMenuEditor}
+                className="px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+              >
+                <span>✏️ Atur Harga & Menu</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Input Bar for Today's Sales per Item */}
+        <div className="bg-stone-950/80 border border-stone-800 rounded-xl p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+            <h4 className="text-xs font-bold text-stone-200 uppercase tracking-wider flex items-center gap-1.5">
+              <Flame className="w-4 h-4 text-amber-400" />
+              <span>Input / Edit Laku Terjual Hari Ini (Per Item Unit)</span>
+            </h4>
+            <span className="text-[11px] text-stone-400">
+              Ketik angka / tekan tombol + - untuk langsung mencatat barang laku hari ini
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {menuItems.map((item) => {
+              return (
+                <div
+                  key={item.id}
+                  className="bg-stone-900/90 border border-stone-800 hover:border-emerald-700/60 rounded-xl p-3 flex items-center justify-between gap-2 transition-all"
+                >
+                  <div className="min-w-0">
+                    <div className="font-bold text-xs text-stone-200 truncate">{item.name}</div>
+                    <div className="text-[10px] text-stone-400 mt-0.5">
+                      Harga: <span className="text-emerald-400 font-bold">{formatRp(item.price)}</span> / {item.unitName}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0 bg-stone-950 p-1 rounded-lg border border-stone-800">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onUpdateMenuItem && item.soldQty > 0) {
+                          onUpdateMenuItem({ ...item, soldQty: item.soldQty - 1 });
+                        }
+                      }}
+                      disabled={item.soldQty <= 0}
+                      className="w-6 h-6 rounded bg-stone-800 hover:bg-stone-700 disabled:opacity-30 text-stone-200 font-bold text-xs flex items-center justify-center border border-stone-700 transition-colors"
+                      title="Kurangi 1 unit"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      value={item.soldQty}
+                      onChange={(e) => {
+                        const val = Math.max(0, parseInt(e.target.value) || 0);
+                        if (onUpdateMenuItem) {
+                          onUpdateMenuItem({ ...item, soldQty: val });
+                        }
+                      }}
+                      className="w-12 h-6 bg-transparent text-center text-xs font-black text-amber-300 focus:outline-none focus:bg-stone-900 rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onUpdateMenuItem) {
+                          onUpdateMenuItem({ ...item, soldQty: item.soldQty + 1 });
+                        }
+                      }}
+                      className="w-6 h-6 rounded bg-emerald-950 hover:bg-emerald-900 text-emerald-300 font-bold text-xs flex items-center justify-center border border-emerald-700 transition-colors"
+                      title="Tambah 1 unit"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       {/* Low Stock Warning Banner (If Any) */}
       {lowStockItems.length > 0 && (
         <div className="bg-amber-950/40 border border-amber-600/60 rounded-2xl p-4 text-amber-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -298,7 +439,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            {onResetSalesToday && (
+              <button
+                onClick={onResetSalesToday}
+                className="text-xs bg-rose-950/80 hover:bg-rose-900 border border-rose-800/80 text-rose-300 font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5"
+                title="Hapus / Reset seluruh data item terjual menjadi 0"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
+                <span>Reset Semua Terjual (Set 0)</span>
+              </button>
+            )}
+
             {onOpenMenuEditor && (
               <button
                 onClick={onOpenMenuEditor}
@@ -354,14 +506,69 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     </span>
                   </div>
 
-                  {/* Progress Bar for Sell Rate */}
+                  {/* Progress Bar for Sell Rate with +/- and Reset controls */}
                   <div className="space-y-1 pt-0.5">
-                    <div className="flex justify-between text-[11px]">
-                      <span className="text-stone-400">Laku Terjual:</span>
-                      <span className="font-bold text-amber-400">
-                        {item.soldQty} dari {item.preparedQty} {item.unitName} ({item.sellRatePct}%)
-                      </span>
+                    <div className="flex items-center justify-between text-[11px] gap-1">
+                      <span className="text-stone-400 font-medium">Laku Terjual:</span>
+                      
+                      <div className="flex items-center gap-1 font-bold text-amber-400">
+                        {/* Decrement button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const target = menuItems.find((m) => m.id === item.menuItemId);
+                            if (target && onUpdateMenuItem) {
+                              onUpdateMenuItem({ ...target, soldQty: Math.max(0, target.soldQty - 1) });
+                            }
+                          }}
+                          disabled={item.soldQty <= 0}
+                          className="w-5 h-5 rounded bg-stone-700 hover:bg-stone-600 disabled:opacity-20 text-stone-200 font-bold text-xs flex items-center justify-center transition-colors"
+                          title="Kurangi 1 item terjual"
+                        >
+                          -
+                        </button>
+
+                        <span className="px-0.5 text-[11px]">
+                          {item.soldQty} dari {item.preparedQty} {item.unitName} ({item.sellRatePct}%)
+                        </span>
+
+                        {/* Increment button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const target = menuItems.find((m) => m.id === item.menuItemId);
+                            if (target && onUpdateMenuItem) {
+                              onUpdateMenuItem({ ...target, soldQty: target.soldQty + 1 });
+                            }
+                          }}
+                          className="w-5 h-5 rounded bg-emerald-950 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 font-bold text-xs flex items-center justify-center transition-colors"
+                          title="Tambah 1 item terjual"
+                        >
+                          +
+                        </button>
+
+                        {/* Reset button */}
+                        {item.soldQty > 0 && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const target = menuItems.find((m) => m.id === item.menuItemId);
+                              if (target && onUpdateMenuItem) {
+                                onUpdateMenuItem({ ...target, soldQty: 0 });
+                              }
+                            }}
+                            className="ml-1 p-0.5 text-stone-400 hover:text-rose-400 transition-colors"
+                            title="Hapus / Reset jumlah terjual item ini menjadi 0"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
+
                     <div className="w-full h-2 bg-stone-700 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
