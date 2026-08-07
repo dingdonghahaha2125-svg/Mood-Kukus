@@ -1,0 +1,179 @@
+import { MenuItem, SauceItem, StockItem, Transaction, Expense, FinancialSummary } from '../types';
+
+/**
+ * Calculates the exact HPP (Harga Pokok Penjualan) for a menu item
+ * based on its raw ingredients & packaging stock cost prices.
+ */
+export function calculateMenuItemHpp(
+  menuItem: MenuItem,
+  sauceId: string | undefined,
+  sauces: SauceItem[],
+  stockItems: StockItem[]
+): number {
+  let totalHpp = 0;
+
+  const stockMap = new Map<string, StockItem>();
+  stockItems.forEach((stk) => stockMap.set(stk.id, stk));
+
+  // 1. Calculate menu ingredients cost
+  if (menuItem.ingredients) {
+    for (const ing of menuItem.ingredients) {
+      const stockItem = stockMap.get(ing.stockItemId);
+      if (stockItem) {
+        totalHpp += ing.amount * stockItem.unitCostPrice;
+      }
+    }
+  }
+
+  // 2. Add sauce ingredients cost if selected
+  if (sauceId) {
+    const sauce = sauces.find((s) => s.id === sauceId);
+    if (sauce && sauce.ingredients) {
+      for (const ing of sauce.ingredients) {
+        const stockItem = stockMap.get(ing.stockItemId);
+        if (stockItem) {
+          totalHpp += ing.amount * stockItem.unitCostPrice;
+        }
+      }
+    }
+  }
+
+  return Math.round(totalHpp);
+}
+
+/**
+ * Calculates financial summary metrics
+ */
+export function calculateFinancialSummary(
+  transactions: Transaction[],
+  expenses: Expense[]
+): FinancialSummary {
+  const totalRevenue = transactions.reduce((sum, tr) => sum + tr.totalAmount, 0);
+  const totalHpp = transactions.reduce((sum, tr) => sum + tr.totalHpp, 0);
+
+  const operationalExpenses = expenses
+    .filter((e) => !e.isCapital)
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const totalCapital = expenses
+    .filter((e) => e.isCapital)
+    .reduce((sum, e) => sum + e.amount, 0);
+
+  const totalExpenses = operationalExpenses + totalCapital;
+
+  const grossProfit = totalRevenue - totalHpp;
+  const netProfit = grossProfit - operationalExpenses;
+
+  const profitMargin = totalRevenue > 0 ? Math.round((netProfit / totalRevenue) * 100) : 0;
+
+  return {
+    totalRevenue,
+    totalExpenses,
+    totalCapital,
+    grossProfit,
+    netProfit,
+    profitMargin,
+  };
+}
+
+/**
+ * Format currency to IDR Rupiah string
+ */
+export function formatRp(amount: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+/**
+ * Format date string to Indonesian readable format with time
+ */
+export function formatDate(dateString: string): string {
+  try {
+    const d = new Date(dateString);
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(d);
+  } catch {
+    return dateString;
+  }
+}
+
+/**
+ * Format date string to Indonesian readable format (date only)
+ */
+export function formatDateOnly(dateString: string): string {
+  try {
+    const d = new Date(dateString);
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(d);
+  } catch {
+    return dateString;
+  }
+}
+
+/**
+ * Calculates per-item sales metrics comparing prepared stock vs actual sold items
+ */
+export function calculatePerItemSales(
+  menuItems: MenuItem[],
+  transactions: Transaction[]
+) {
+  const itemMap = new Map<
+    string,
+    {
+      menuItem: MenuItem;
+      soldQty: number;
+      revenue: number;
+    }
+  >();
+
+  menuItems.forEach((m) => {
+    itemMap.set(m.id, {
+      menuItem: m,
+      soldQty: m.soldQty || 0,
+      revenue: (m.soldQty || 0) * m.price,
+    });
+  });
+
+  // Calculate sold quantities from transaction items
+  transactions.forEach((tr) => {
+    tr.items.forEach((it) => {
+      const existing = itemMap.get(it.menuItemId);
+      if (existing) {
+        existing.soldQty += it.quantity;
+        existing.revenue += (it.pricePerUnit + (it.extraPrice || 0)) * it.quantity;
+      }
+    });
+  });
+
+  return Array.from(itemMap.values()).map(({ menuItem, soldQty, revenue }) => {
+    const preparedQty = menuItem.preparedQty || Math.max(soldQty + 10, 30);
+    const remainingQty = Math.max(0, preparedQty - soldQty);
+    const sellRatePct = preparedQty > 0 ? Math.round((soldQty / preparedQty) * 100) : 0;
+
+    return {
+      menuItemId: menuItem.id,
+      itemName: menuItem.name,
+      category: menuItem.category,
+      unitName: menuItem.unitName || (menuItem.category === 'paket' ? 'porsi' : 'biji'),
+      preparedQty,
+      soldQty,
+      remainingQty,
+      pricePerUnit: menuItem.price,
+      totalRevenue: revenue,
+      sellRatePct,
+      isAvailable: menuItem.isAvailable,
+    };
+  });
+}
+

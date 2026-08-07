@@ -1,0 +1,6 @@
+{
+  "name": "Mood Kukus Mamuju - Stok & Keuangan Kuliner",
+  "description": "Sistem Manajemen Stok Bahan Baku Per Item, Batch Jualan Harian, POS Kasir Item Kukusan, dan Keuangan Real-time untuk Usaha Mood Kukus Mamuju.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
