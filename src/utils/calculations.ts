@@ -213,3 +213,99 @@ export function calculatePerItemSales(
   });
 }
 
+/**
+ * Calculates stock item deductions from daily report items or sold menu items
+ */
+export function calculateStockDeductions(
+  reportItems: { menuItemId?: string; menuName: string; soldQty: number }[],
+  menuItems: MenuItem[],
+  stockItems: StockItem[]
+): Map<string, number> {
+  const stockDeductionMap = new Map<string, number>();
+
+  reportItems.forEach((repItem) => {
+    const qty = repItem.soldQty || 0;
+    if (qty <= 0) return;
+
+    // 1. Try exact or fuzzy menuItem match
+    const menuItem = menuItems.find(
+      (m) =>
+        (repItem.menuItemId && m.id === repItem.menuItemId) ||
+        m.name.trim().toLowerCase() === repItem.menuName.trim().toLowerCase() ||
+        (repItem.menuItemId && m.id.toLowerCase().includes(repItem.menuItemId.toLowerCase())) ||
+        (repItem.menuName && m.name.toLowerCase().includes(repItem.menuName.toLowerCase()))
+    );
+
+    let hasDeducted = false;
+
+    if (menuItem && menuItem.ingredients && menuItem.ingredients.length > 0) {
+      menuItem.ingredients.forEach((ing) => {
+        const currentReq = stockDeductionMap.get(ing.stockItemId) || 0;
+        stockDeductionMap.set(ing.stockItemId, currentReq + ing.amount * qty);
+        hasDeducted = true;
+      });
+    }
+
+    if (!hasDeducted) {
+      // Smart Keyword / Category Fallback matching directly to Stock Items
+      const nameLower = (repItem.menuName || '').toLowerCase();
+
+      if (nameLower.includes('pisang')) {
+        const pisangStock = stockItems.find((s) => s.name.toLowerCase().includes('pisang') || s.id === 'stk-1');
+        if (pisangStock) {
+          const unitDeduct = pisangStock.unit === 'kg' ? 0.08 : 1;
+          const curr = stockDeductionMap.get(pisangStock.id) || 0;
+          stockDeductionMap.set(pisangStock.id, curr + unitDeduct * qty);
+          hasDeducted = true;
+        }
+      } else if (nameLower.includes('ubi')) {
+        const ubiStock = stockItems.find((s) => s.name.toLowerCase().includes('ubi') || s.id === 'stk-2');
+        if (ubiStock) {
+          const unitDeduct = ubiStock.unit === 'kg' ? 0.10 : 1;
+          const curr = stockDeductionMap.get(ubiStock.id) || 0;
+          stockDeductionMap.set(ubiStock.id, curr + unitDeduct * qty);
+          hasDeducted = true;
+        }
+      } else if (nameLower.includes('telur')) {
+        const telurStock = stockItems.find((s) => s.name.toLowerCase().includes('telur') || s.id === 'stk-4');
+        if (telurStock) {
+          const curr = stockDeductionMap.get(telurStock.id) || 0;
+          stockDeductionMap.set(telurStock.id, curr + 1 * qty);
+          hasDeducted = true;
+        }
+      } else if (nameLower.includes('singkong')) {
+        const singkongStock = stockItems.find((s) => s.name.toLowerCase().includes('singkong'));
+        if (singkongStock) {
+          const unitDeduct = singkongStock.unit === 'kg' ? 0.12 : 1;
+          const curr = stockDeductionMap.get(singkongStock.id) || 0;
+          stockDeductionMap.set(singkongStock.id, curr + unitDeduct * qty);
+          hasDeducted = true;
+        }
+      } else if (nameLower.includes('botol') || nameLower.includes('600ml')) {
+        const botolStock = stockItems.find((s) => s.id === 'stk-13' || s.name.toLowerCase().includes('botol'));
+        if (botolStock) {
+          const curr = stockDeductionMap.get(botolStock.id) || 0;
+          stockDeductionMap.set(botolStock.id, curr + 1 * qty);
+          hasDeducted = true;
+        }
+      } else if (nameLower.includes('cup') || nameLower.includes('220ml') || nameLower.includes('gelas')) {
+        const cupStock = stockItems.find((s) => s.id === 'stk-14' || s.name.toLowerCase().includes('cup'));
+        if (cupStock) {
+          const curr = stockDeductionMap.get(cupStock.id) || 0;
+          stockDeductionMap.set(cupStock.id, curr + 1 * qty);
+          hasDeducted = true;
+        }
+      } else {
+        // Direct string match fallback
+        const exactStock = stockItems.find((s) => s.name.trim().toLowerCase() === repItem.menuName.trim().toLowerCase());
+        if (exactStock) {
+          const curr = stockDeductionMap.get(exactStock.id) || 0;
+          stockDeductionMap.set(exactStock.id, curr + 1 * qty);
+        }
+      }
+    }
+  });
+
+  return stockDeductionMap;
+}
+

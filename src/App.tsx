@@ -8,7 +8,7 @@ import {
   INITIAL_DAILY_REPORTS,
 } from './data/initialData';
 import { StockItem, MenuItem, SauceItem, Expense, Transaction, DailyReport } from './types';
-import { calculateFinancialSummary } from './utils/calculations';
+import { calculateFinancialSummary, calculateStockDeductions } from './utils/calculations';
 import { Navbar } from './components/Navbar';
 import { DashboardOverview } from './components/DashboardOverview';
 import { StockManagement } from './components/StockManagement';
@@ -156,36 +156,49 @@ export default function App() {
     });
   }, [stockItems]);
 
+  // Auto-reconcile stock deduction for finalized daily reports that haven't deducted stock yet
+  useEffect(() => {
+    let stockChanged = false;
+    let newStock = [...stockItems];
+    const updatedReports = dailyReports.map((report) => {
+      if (!report.isStockDeducted) {
+        const stockDeductionMap = calculateStockDeductions(report.items, menuItems, newStock);
+        if (stockDeductionMap.size > 0) {
+          newStock = newStock.map((s) => {
+            const deduct = stockDeductionMap.get(s.id);
+            if (deduct && deduct > 0) {
+              stockChanged = true;
+              return {
+                ...s,
+                currentStock: Math.max(0, Number((s.currentStock - deduct).toFixed(2))),
+                lastUpdated: new Date().toISOString(),
+              };
+            }
+            return s;
+          });
+        }
+        return { ...report, isStockDeducted: true };
+      }
+      return report;
+    });
+
+    if (stockChanged) {
+      setStockItems(newStock);
+      setDailyReports(updatedReports);
+    }
+  }, [dailyReports, menuItems]);
+
   // Derived financial calculation
   const financialSummary = calculateFinancialSummary(transactions, expenses, menuItems, sauces, stockItems);
   const lowStockItems = stockItems.filter((i) => i.currentStock <= i.minStock);
 
   // HANDLERS FOR DAILY REPORT FINALIZATION
   const handleFinalizeDailyReport = (report: DailyReport, resetTodaySales: boolean) => {
-    setDailyReports((prev) => [report, ...prev]);
+    const reportWithFlag: DailyReport = { ...report, isStockDeducted: true };
 
     // Otomatis kurangi stok bahan baku (stockItems) berdasarkan item yang laku terjual
     setStockItems((prevStock) => {
-      const stockDeductionMap = new Map<string, number>();
-
-      report.items.forEach((repItem) => {
-        const menuItem = menuItems.find((m) => m.id === repItem.menuItemId);
-        if (menuItem) {
-          if (menuItem.ingredients && menuItem.ingredients.length > 0) {
-            menuItem.ingredients.forEach((ing) => {
-              const currentReq = stockDeductionMap.get(ing.stockItemId) || 0;
-              stockDeductionMap.set(ing.stockItemId, currentReq + ing.amount * repItem.soldQty);
-            });
-          } else {
-            // Fallback matching by name
-            const matchedStock = prevStock.find((s) => s.name.trim().toLowerCase() === menuItem.name.trim().toLowerCase());
-            if (matchedStock) {
-              const currentReq = stockDeductionMap.get(matchedStock.id) || 0;
-              stockDeductionMap.set(matchedStock.id, currentReq + repItem.soldQty);
-            }
-          }
-        }
-      });
+      const stockDeductionMap = calculateStockDeductions(report.items, menuItems, prevStock);
 
       return prevStock.map((s) => {
         const deduct = stockDeductionMap.get(s.id);
@@ -199,6 +212,8 @@ export default function App() {
         return s;
       });
     });
+
+    setDailyReports((prev) => [reportWithFlag, ...prev]);
 
     if (resetTodaySales) {
       setMenuItems((prev) =>

@@ -136,5 +136,6 @@ export interface DailyReport {
   items: DailyReportItem[];
   notes?: string;
   finalizedAt: string;
+  isStockDeducted?: boolean;
 }
 
