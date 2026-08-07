@@ -53,6 +53,7 @@ interface DashboardOverviewProps {
   onOpenReceipt: (transaction: Transaction) => void;
   onOpenAiAdvisor: () => void;
   onOpenMenuEditor?: () => void;
+  onOpenFinalizeModal?: () => void;
   onUpdateMenuItem?: (item: MenuItem) => void;
   onAddMenuItem?: (newItem: MenuItem) => void;
   onResetSalesToday?: () => void;
@@ -75,6 +76,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onOpenReceipt,
   onOpenAiAdvisor,
   onOpenMenuEditor,
+  onOpenFinalizeModal,
   onUpdateMenuItem,
   onAddMenuItem,
   onResetSalesToday,
@@ -247,21 +249,38 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {onOpenFinalizeModal && (
+              <button
+                onClick={onOpenFinalizeModal}
+                className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-stone-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95"
+              >
+                <span>🏁 Finalisasi Penjualan Hari Ini</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => onNavigateToTab('daily_history')}
+              className="px-3 py-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5"
+            >
+              <Calendar className="w-3.5 h-3.5 text-amber-400" />
+              <span>📅 Histori Laporan Per Hari</span>
+            </button>
+
             {onResetSalesToday && (
               <button
                 onClick={onResetSalesToday}
-                className="px-3.5 py-2 bg-rose-950/80 hover:bg-rose-900/90 border border-rose-800/80 text-rose-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-2 bg-rose-950/80 hover:bg-rose-900/90 border border-rose-800/80 text-rose-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
                 title="Reset/Kosongkan seluruh data penjualan hari ini menjadi 0"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
-                <span>Kosongkan Penjualan (Set 0)</span>
+                <span>Reset (0)</span>
               </button>
             )}
 
             {onOpenMenuEditor && (
               <button
                 onClick={onOpenMenuEditor}
-                className="px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
               >
                 <span>✏️ Atur Harga & Menu</span>
               </button>

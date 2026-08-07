@@ -113,3 +113,28 @@ export interface PerItemSalesSummary {
   isAvailable: boolean;
 }
 
+export interface DailyReportItem {
+  menuItemId: string;
+  menuName: string;
+  unitName: string;
+  pricePerUnit: number;
+  costPricePerUnit: number;
+  soldQty: number;
+  totalRevenue: number;
+  totalHpp: number;
+  totalProfit: number;
+}
+
+export interface DailyReport {
+  id: string;
+  date: string; // ISO date string e.g. "2026-08-07"
+  dateLabel: string; // e.g. "Jumat, 7 Agustus 2026"
+  totalRevenue: number;
+  totalHpp: number;
+  totalProfit: number;
+  totalItemsSold: number;
+  items: DailyReportItem[];
+  notes?: string;
+  finalizedAt: string;
+}
+

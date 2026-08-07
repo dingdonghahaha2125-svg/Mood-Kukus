@@ -2,7 +2,7 @@ import React from 'react';
 import {
   LayoutDashboard,
   Boxes,
-  ShoppingCart,
+  Calendar,
   Receipt,
   Calculator,
   Bot,
@@ -42,7 +42,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const navItems = [
     { id: 'dashboard', label: '🏠 Ringkasan Usaha', icon: LayoutDashboard },
-    { id: 'pos', label: '🛒 Kasir Penjualan', icon: ShoppingCart },
+    { id: 'daily_history', label: '📅 Laporan Per Hari', icon: Calendar },
     {
       id: 'stock',
       label: '🍌 Stok & Bahan Kukusan',

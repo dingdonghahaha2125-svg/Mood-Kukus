@@ -5,19 +5,21 @@ import {
   INITIAL_SAUCES,
   INITIAL_EXPENSES,
   INITIAL_TRANSACTIONS,
+  INITIAL_DAILY_REPORTS,
 } from './data/initialData';
-import { StockItem, MenuItem, SauceItem, Expense, Transaction } from './types';
+import { StockItem, MenuItem, SauceItem, Expense, Transaction, DailyReport } from './types';
 import { calculateFinancialSummary } from './utils/calculations';
 import { Navbar } from './components/Navbar';
 import { DashboardOverview } from './components/DashboardOverview';
 import { StockManagement } from './components/StockManagement';
-import { PosCashier } from './components/PosCashier';
+import { DailyHistory } from './components/DailyHistory';
 import { ExpenseTracker } from './components/ExpenseTracker';
 import { HppCalculator } from './components/HppCalculator';
 import { FlyerGenerator } from './components/FlyerGenerator';
 import { AiBusinessAdvisor } from './components/AiBusinessAdvisor';
 import { DigitalReceiptModal } from './components/DigitalReceiptModal';
 import { MenuPriceEditorModal } from './components/MenuPriceEditorModal';
+import { FinalizeDayModal } from './components/FinalizeDayModal';
 import { exportToExcel, exportToPdf } from './utils/exportUtils';
 
 export default function App() {
@@ -47,10 +49,16 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
   });
 
+  const [dailyReports, setDailyReports] = useState<DailyReport[]>(() => {
+    const saved = localStorage.getItem('kukuslokal_daily_reports');
+    return saved ? JSON.parse(saved) : INITIAL_DAILY_REPORTS;
+  });
+
   // UI state
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isAiAdvisorOpen, setIsAiAdvisorOpen] = useState<boolean>(false);
   const [isMenuEditorOpen, setIsMenuEditorOpen] = useState<boolean>(false);
+  const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState<boolean>(false);
   const [activeReceiptTransaction, setActiveReceiptTransaction] = useState<Transaction | null>(null);
 
   // Sync to LocalStorage on change
@@ -74,9 +82,33 @@ export default function App() {
     localStorage.setItem('kukuslokal_transactions', JSON.stringify(transactions));
   }, [transactions]);
 
+  useEffect(() => {
+    localStorage.setItem('kukuslokal_daily_reports', JSON.stringify(dailyReports));
+  }, [dailyReports]);
+
   // Derived financial calculation
   const financialSummary = calculateFinancialSummary(transactions, expenses, menuItems, sauces, stockItems);
   const lowStockItems = stockItems.filter((i) => i.currentStock <= i.minStock);
+
+  // HANDLERS FOR DAILY REPORT FINALIZATION
+  const handleFinalizeDailyReport = (report: DailyReport, resetTodaySales: boolean) => {
+    setDailyReports((prev) => [report, ...prev]);
+
+    if (resetTodaySales) {
+      setMenuItems((prev) =>
+        prev.map((item) => ({
+          ...item,
+          soldQty: 0,
+        }))
+      );
+    }
+
+    setActiveTab('daily_history');
+  };
+
+  const handleDeleteDailyReport = (id: string) => {
+    setDailyReports((prev) => prev.filter((r) => r.id !== id));
+  };
 
   // RESET SALES TODAY (Set soldQty = 0 & clear transactions)
   const handleResetSalesToday = () => {
@@ -241,12 +273,14 @@ export default function App() {
       localStorage.removeItem('kukuslokal_sauces');
       localStorage.removeItem('kukuslokal_expenses');
       localStorage.removeItem('kukuslokal_transactions');
+      localStorage.removeItem('kukuslokal_daily_reports');
 
       setStockItems(INITIAL_STOCK_ITEMS);
       setMenuItems(INITIAL_MENU_ITEMS);
       setSauces(INITIAL_SAUCES);
       setExpenses(INITIAL_EXPENSES);
       setTransactions(INITIAL_TRANSACTIONS);
+      setDailyReports(INITIAL_DAILY_REPORTS);
     }
   };
 
@@ -281,6 +315,7 @@ export default function App() {
             onOpenReceipt={(tr) => setActiveReceiptTransaction(tr)}
             onOpenAiAdvisor={() => setIsAiAdvisorOpen(true)}
             onOpenMenuEditor={() => setIsMenuEditorOpen(true)}
+            onOpenFinalizeModal={() => setIsFinalizeModalOpen(true)}
             onUpdateMenuItem={handleUpdateMenuItem}
             onAddMenuItem={handleAddMenuItem}
             onResetSalesToday={handleResetSalesToday}
@@ -289,14 +324,13 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'pos' && (
-          <PosCashier
-            menuItems={menuItems}
-            sauces={sauces}
-            stockItems={stockItems}
-            onProcessSale={handleProcessSale}
-            onOpenReceipt={(tr) => setActiveReceiptTransaction(tr)}
-            onOpenMenuEditor={() => setIsMenuEditorOpen(true)}
+        {activeTab === 'daily_history' && (
+          <DailyHistory
+            dailyReports={dailyReports}
+            onOpenFinalizeModal={() => setIsFinalizeModalOpen(true)}
+            onDeleteDailyReport={handleDeleteDailyReport}
+            onExportExcel={handleExportExcel}
+            onExportPdf={handleExportPdf}
           />
         )}
 
@@ -360,6 +394,15 @@ export default function App() {
         stockItems={stockItems}
         onUpdateMenuItem={handleUpdateMenuItem}
         onAddMenuItem={handleAddMenuItem}
+      />
+
+      <FinalizeDayModal
+        isOpen={isFinalizeModalOpen}
+        onClose={() => setIsFinalizeModalOpen(false)}
+        menuItems={menuItems}
+        sauces={sauces}
+        stockItems={stockItems}
+        onFinalizeDay={handleFinalizeDailyReport}
       />
 
       {/* Footer */}
