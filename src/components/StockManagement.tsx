@@ -28,6 +28,7 @@ interface StockManagementProps {
   onDeleteStockItem: (id: string) => void;
   onRestock: (stockItemId: string, addedQty: number, purchaseCost: number, recordAsExpense: boolean) => void;
   onUpdateMenuRecipe: (updatedMenu: MenuItem) => void;
+  onAddMenuItem?: (newItem: MenuItem) => void;
 }
 
 export const StockManagement: React.FC<StockManagementProps> = ({
@@ -39,6 +40,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   onDeleteStockItem,
   onRestock,
   onUpdateMenuRecipe,
+  onAddMenuItem,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -46,6 +48,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [autoCreateMenuItem, setAutoCreateMenuItem] = useState(true);
   const [editingItem, setEditingItem] = useState<StockItem | null>(null);
   const [restockTargetItem, setRestockTargetItem] = useState<StockItem | null>(null);
   const [recipeMenuTarget, setRecipeMenuTarget] = useState<MenuItem | null>(null);
@@ -149,8 +152,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         lastUpdated: new Date().toISOString(),
       });
     } else {
+      const newStockId = `stk-${Date.now()}`;
       onAddStockItem({
-        id: `stk-${Date.now()}`,
+        id: newStockId,
         name: formData.name,
         category: formData.category,
         currentStock: Number(formData.currentStock),
@@ -161,6 +165,32 @@ export const StockManagement: React.FC<StockManagementProps> = ({
         notes: formData.notes,
         lastUpdated: new Date().toISOString(),
       });
+
+      // Automatically sync / create a corresponding sellable MenuItem if requested
+      if (autoCreateMenuItem && onAddMenuItem) {
+        const existingMenu = menuItems.find((m) => m.name.toLowerCase() === formData.name.toLowerCase());
+        if (!existingMenu) {
+          const estimatedSellPrice = Math.max(Math.ceil((formData.unitCostPrice * 1.6) / 500) * 500, 5000);
+          const newMenu: MenuItem = {
+            id: `menu-${Date.now()}`,
+            name: formData.name,
+            category: formData.category === 'minuman' ? 'minuman' : formData.category === 'kemasan' ? 'kemasan' : 'satuan',
+            price: estimatedSellPrice,
+            description: `Olahan ${formData.name} khas kukus lokal`,
+            preparedQty: Number(formData.currentStock),
+            soldQty: 0,
+            isAvailable: true,
+            unitName: formData.unit === 'kg' ? 'porsi' : formData.unit,
+            ingredients: [
+              {
+                stockItemId: newStockId,
+                amount: 1,
+              },
+            ],
+          };
+          onAddMenuItem(newMenu);
+        }
+      }
     }
 
     setIsAddModalOpen(false);
@@ -446,30 +476,71 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             </div>
 
             <form onSubmit={handleSaveStockItem} className="space-y-4 text-xs sm:text-sm">
+              {/* Quick Preset Choice Chips */}
+              {!editingItem && (
+                <div className="space-y-1.5 bg-stone-950 p-3 rounded-xl border border-stone-800">
+                  <label className="block text-[11px] font-bold text-amber-400">
+                    ⚡ Pilih Cepat Bahan Utama / Produk (Atau isi manual):
+                  </label>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {[
+                      { name: 'Pisang Kepok Kuning', cat: 'bahan_utama', unit: 'kg', price: 18000 },
+                      { name: 'Ubi Cilembu Sweet', cat: 'bahan_utama', unit: 'kg', price: 16000 },
+                      { name: 'Ubi Ungu Organik', cat: 'bahan_utama', unit: 'kg', price: 15000 },
+                      { name: 'Telur Kampung Kukus', cat: 'bahan_utama', unit: 'pcs', price: 3000 },
+                      { name: 'Jagung Manis Pipil', cat: 'bahan_utama', unit: 'kg', price: 14000 },
+                      { name: 'Singkong Keju Kukus', cat: 'bahan_utama', unit: 'kg', price: 12000 },
+                      { name: 'Ayam Suwir Kukus', cat: 'bahan_utama', unit: 'kg', price: 38000 },
+                      { name: 'Santan Kelapa Murni', cat: 'bahan_saus', unit: 'liter', price: 15000 },
+                      { name: 'Gula Aren Cocol', cat: 'bahan_saus', unit: 'kg', price: 22000 },
+                      { name: 'Air Mineral Botol 600ml', cat: 'operasional', unit: 'pcs', price: 2500 },
+                      { name: 'Besek Bambu Tradisional', cat: 'kemasan', unit: 'pcs', price: 2000 },
+                    ].map((preset) => (
+                      <button
+                        key={preset.name}
+                        type="button"
+                        onClick={() => {
+                          setFormData({
+                            ...formData,
+                            name: preset.name,
+                            category: preset.cat as StockCategory,
+                            unit: preset.unit as StockUnit,
+                            unitCostPrice: preset.price,
+                          });
+                        }}
+                        className="px-2.5 py-1 bg-stone-850 hover:bg-stone-750 text-stone-200 border border-stone-700/80 rounded-lg text-[11px] font-semibold transition-all hover:border-amber-500/60"
+                      >
+                        + {preset.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
-                <label className="block text-stone-400 mb-1 font-medium">Nama Bahan / Kemasan</label>
+                <label className="block text-stone-400 mb-1 font-medium">Nama Bahan / Stok Utama</label>
                 <input
                   type="text"
                   required
-                  placeholder="Misal: Pisang Kepok Kuning / Besek Bambu"
+                  placeholder="Misal: Pisang Kepok Kuning / Besek Bambu / Telur Kampung"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-stone-400 mb-1 font-medium">Kategori</label>
+                  <label className="block text-stone-400 mb-1 font-medium">Kategori Bahan</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value as StockCategory })}
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="bahan_utama">Bahan Utama Kukusan</option>
-                    <option value="bahan_saus">Bahan Saus & Bumbu</option>
-                    <option value="kemasan">Kemasan Eco-Friendly</option>
-                    <option value="operasional">Operasional</option>
+                    <option value="bahan_utama">🍌 Bahan Utama Kukusan</option>
+                    <option value="bahan_saus">🍯 Bahan Saus & Topping</option>
+                    <option value="kemasan">🍱 Kemasan Eco / Besek</option>
+                    <option value="operasional">🥤 Air Mineral & Lainnya</option>
                   </select>
                 </div>
 
@@ -481,9 +552,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   >
                     <option value="kg">Kilogram (kg)</option>
-                    <option value="pcs">Pieces (pcs)</option>
+                    <option value="pcs">Pieces / Biji (pcs)</option>
                     <option value="liter">Liter (liter)</option>
-                    <option value="pack">Pack</option>
+                    <option value="pack">Pack / Dus</option>
                     <option value="ikat">Ikat</option>
                     <option value="roll">Roll</option>
                   </select>
@@ -499,7 +570,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     required
                     value={formData.currentStock}
                     onChange={(e) => setFormData({ ...formData, currentStock: parseFloat(e.target.value) || 0 })}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500 font-bold"
                   />
                 </div>
 
@@ -526,6 +597,22 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   />
                 </div>
               </div>
+
+              {!editingItem && (
+                <div className="bg-emerald-950/70 border border-emerald-800/80 p-3 rounded-xl flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    id="autoCreateCheck"
+                    checked={autoCreateMenuItem}
+                    onChange={(e) => setAutoCreateMenuItem(e.target.checked)}
+                    className="w-4 h-4 mt-0.5 accent-emerald-500 shrink-0"
+                  />
+                  <label htmlFor="autoCreateCheck" className="text-xs text-emerald-200 leading-snug cursor-pointer">
+                    <span className="font-bold text-emerald-300 block">Hubungkan Otomatis ke Katalog Menu Jualan</span>
+                    Bahan ini akan langsung dicantumkan ke daftar menu jualan sehingga bisa diedit laku terjualnya di Laporan Hari Ini & Kasir.
+                  </label>
+                </div>
+              )}
 
               <div>
                 <label className="block text-stone-400 mb-1 font-medium">Supplier / Pemasok (Opsional)</label>

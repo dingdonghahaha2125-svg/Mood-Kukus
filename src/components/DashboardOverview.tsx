@@ -19,6 +19,8 @@ import {
   FileSpreadsheet,
   FileText,
   RotateCcw,
+  Trash2,
+  Eye,
 } from 'lucide-react';
 import {
   BarChart,
@@ -76,8 +78,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onExportExcel,
   onExportPdf,
 }) => {
+  // State to filter per-item sales view (default: only show sold items today)
+  const [itemFilter, setItemFilter] = React.useState<'sold_only' | 'all'>('sold_only');
+
   // Calculate per-item sales metrics with unit profits
   const perItemSales = calculatePerItemSales(menuItems, transactions, sauces, stockItems);
+  const displayedPerItemSales = itemFilter === 'sold_only' ? perItemSales.filter((i) => i.soldQty > 0) : perItemSales;
 
   // Today's Date String in Indonesian Full Format
   const todayDateFull = new Date().toLocaleDateString('id-ID', {
@@ -427,19 +433,49 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       {/* DEDICATED SECTION: Per-Item Sales & Daily Prepared Stock Monitoring */}
       <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800 pb-3">
-          <div>
+          <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Flame className="w-5 h-5 text-amber-400 animate-pulse" />
               <h3 className="font-bold text-stone-100 text-base sm:text-lg">
                 Keuntungan & Penjualan Laku Terjual (Per Item Unit)
               </h3>
             </div>
-            <p className="text-xs text-stone-400 mt-0.5">
-              Lihat langsung keuntungan bersih per unit/biji/botol + jumlah laku terjual
+            <p className="text-xs text-stone-400">
+              Lihat langsung keuntungan bersih per unit + jumlah laku terjual
             </p>
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+            {/* Filter Mode Toggle */}
+            <div className="flex items-center gap-1 bg-stone-950 p-1 rounded-xl border border-stone-800">
+              <button
+                type="button"
+                onClick={() => setItemFilter('sold_only')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  itemFilter === 'sold_only'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                    : 'text-stone-400 hover:text-stone-200'
+                }`}
+                title="Tampilkan hanya item yang sudah laku terjual hari ini"
+              >
+                <Flame className="w-3.5 h-3.5 text-amber-400" />
+                <span>Terjual ({perItemSales.filter((i) => i.soldQty > 0).length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setItemFilter('all')}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  itemFilter === 'all'
+                    ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/80 shadow-sm'
+                    : 'text-stone-400 hover:text-stone-200'
+                }`}
+                title="Tampilkan seluruh katalog menu produk"
+              >
+                <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Semua ({perItemSales.length})</span>
+              </button>
+            </div>
+
             {onResetSalesToday && (
               <button
                 onClick={onResetSalesToday}
@@ -447,7 +483,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 title="Hapus / Reset seluruh data item terjual menjadi 0"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
-                <span>Reset Semua Terjual (Set 0)</span>
+                <span>Reset Semua</span>
               </button>
             )}
 
@@ -456,154 +492,190 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 onClick={onOpenMenuEditor}
                 className="text-xs bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5"
               >
-                <span>✏️ Edit Harga Jual</span>
+                <span>✏️ Edit Harga</span>
               </button>
             )}
-
-            <button
-              onClick={() => onNavigateToTab('stock')}
-              className="text-xs bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 font-semibold px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5"
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Stok & Batch</span>
-            </button>
           </div>
         </div>
 
         {/* Per Item Table / Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {perItemSales.map((item) => {
-            const isHighSeller = item.sellRatePct >= 70;
-            const isSoldOut = item.remainingQty === 0;
+          {displayedPerItemSales.length === 0 ? (
+            <div className="col-span-full bg-stone-950/80 border border-dashed border-stone-800 rounded-2xl p-8 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mx-auto">
+                <Flame className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-stone-200 text-sm">Belum Ada Item Terjual Hari Ini</h4>
+                <p className="text-xs text-stone-400 max-w-md mx-auto leading-relaxed">
+                  Tampilan awal laporan per item ini masih kosong. Ketika Anda menginput item yang terjual hari ini pada form di atas atau transaksi kasir, laporannya akan muncul otomatis di sini tanpa mengubah format.
+                </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  onClick={() => setItemFilter('all')}
+                  className="text-xs bg-stone-800 hover:bg-stone-700 text-stone-300 font-semibold px-3.5 py-2 rounded-xl border border-stone-700 transition-colors inline-flex items-center gap-1.5"
+                >
+                  <Eye className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Tampilkan Semua Katalog Menu ({perItemSales.length} Menu)</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            displayedPerItemSales.map((item) => {
+              const isHighSeller = item.sellRatePct >= 70;
+              const isSoldOut = item.remainingQty === 0;
 
-            const getCategoryLabel = () => {
-              if (item.category === 'satuan') return '🍌 Satuan';
-              if (item.category === 'paket') return '📦 Paket';
-              if (item.category === 'minuman') return '🥤 Air Mineral';
-              return '🍱 Packing';
-            };
+              const getCategoryLabel = () => {
+                if (item.category === 'satuan') return '🍌 Satuan';
+                if (item.category === 'paket') return '📦 Paket';
+                if (item.category === 'minuman') return '🥤 Air Mineral';
+                return '🍱 Packing';
+              };
 
-            return (
-              <div
-                key={item.menuItemId}
-                className="bg-stone-800/60 border border-stone-700/70 rounded-xl p-4 space-y-3 flex flex-col justify-between hover:border-emerald-500/50 transition-all shadow-sm"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-stone-700 text-stone-300">
-                      {getCategoryLabel()}
-                    </span>
-                    <span className="text-xs font-bold text-emerald-400">{formatRp(item.pricePerUnit)}/{item.unitName}</span>
-                  </div>
-
-                  <h4 className="font-bold text-sm text-stone-100 leading-snug line-clamp-1">{item.itemName}</h4>
-
-                  {/* Per Unit Profit Badge */}
-                  <div className="bg-stone-900/90 border border-stone-700/80 rounded-lg p-2 flex items-center justify-between text-xs">
-                    <span className="text-[10px] text-stone-400">Untung / {item.unitName}:</span>
-                    <span className="font-black text-emerald-400 text-xs">
-                      +{formatRp(item.unitProfit)} ({item.profitMarginPct}%)
-                    </span>
-                  </div>
-
-                  {/* Progress Bar for Sell Rate with +/- and Reset controls */}
-                  <div className="space-y-1 pt-0.5">
-                    <div className="flex items-center justify-between text-[11px] gap-1">
-                      <span className="text-stone-400 font-medium">Laku Terjual:</span>
+              return (
+                <div
+                  key={item.menuItemId}
+                  className="bg-stone-800/60 border border-stone-700/70 rounded-xl p-4 space-y-3 flex flex-col justify-between hover:border-emerald-500/50 transition-all shadow-sm relative group"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-stone-700 text-stone-300">
+                        {getCategoryLabel()}
+                      </span>
                       
-                      <div className="flex items-center gap-1 font-bold text-amber-400">
-                        {/* Decrement button */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-emerald-400">{formatRp(item.pricePerUnit)}/{item.unitName}</span>
+                        
+                        {/* Hapus / Remove button on card */}
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             const target = menuItems.find((m) => m.id === item.menuItemId);
                             if (target && onUpdateMenuItem) {
-                              onUpdateMenuItem({ ...target, soldQty: Math.max(0, target.soldQty - 1) });
+                              if (confirm(`Hapus "${item.itemName}" dari laporan terjual (set ke 0)?`)) {
+                                onUpdateMenuItem({ ...target, soldQty: 0 });
+                              }
                             }
                           }}
-                          disabled={item.soldQty <= 0}
-                          className="w-5 h-5 rounded bg-stone-700 hover:bg-stone-600 disabled:opacity-20 text-stone-200 font-bold text-xs flex items-center justify-center transition-colors"
-                          title="Kurangi 1 item terjual"
+                          className="p-1 text-stone-400 hover:text-rose-400 hover:bg-rose-950/80 border border-transparent hover:border-rose-800/80 rounded-lg transition-colors"
+                          title="Hapus item ini dari laporan terjual (Set 0)"
                         >
-                          -
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
+                      </div>
+                    </div>
 
-                        <span className="px-0.5 text-[11px]">
-                          {item.soldQty} dari {item.preparedQty} {item.unitName} ({item.sellRatePct}%)
-                        </span>
+                    <h4 className="font-bold text-sm text-stone-100 leading-snug line-clamp-1">{item.itemName}</h4>
 
-                        {/* Increment button */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const target = menuItems.find((m) => m.id === item.menuItemId);
-                            if (target && onUpdateMenuItem) {
-                              onUpdateMenuItem({ ...target, soldQty: target.soldQty + 1 });
-                            }
-                          }}
-                          className="w-5 h-5 rounded bg-emerald-950 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 font-bold text-xs flex items-center justify-center transition-colors"
-                          title="Tambah 1 item terjual"
-                        >
-                          +
-                        </button>
+                    {/* Per Unit Profit Badge */}
+                    <div className="bg-stone-900/90 border border-stone-700/80 rounded-lg p-2 flex items-center justify-between text-xs">
+                      <span className="text-[10px] text-stone-400">Untung / {item.unitName}:</span>
+                      <span className="font-black text-emerald-400 text-xs">
+                        +{formatRp(item.unitProfit)} ({item.profitMarginPct}%)
+                      </span>
+                    </div>
 
-                        {/* Reset button */}
-                        {item.soldQty > 0 && (
+                    {/* Progress Bar for Sell Rate with +/- and Reset controls */}
+                    <div className="space-y-1 pt-0.5">
+                      <div className="flex items-center justify-between text-[11px] gap-1">
+                        <span className="text-stone-400 font-medium">Laku Terjual:</span>
+                        
+                        <div className="flex items-center gap-1 font-bold text-amber-400">
+                          {/* Decrement button */}
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               const target = menuItems.find((m) => m.id === item.menuItemId);
                               if (target && onUpdateMenuItem) {
-                                onUpdateMenuItem({ ...target, soldQty: 0 });
+                                onUpdateMenuItem({ ...target, soldQty: Math.max(0, target.soldQty - 1) });
                               }
                             }}
-                            className="ml-1 p-0.5 text-stone-400 hover:text-rose-400 transition-colors"
-                            title="Hapus / Reset jumlah terjual item ini menjadi 0"
+                            disabled={item.soldQty <= 0}
+                            className="w-5 h-5 rounded bg-stone-700 hover:bg-stone-600 disabled:opacity-20 text-stone-200 font-bold text-xs flex items-center justify-center transition-colors"
+                            title="Kurangi 1 item terjual"
                           >
-                            <RotateCcw className="w-3.5 h-3.5" />
+                            -
                           </button>
-                        )}
+
+                          <span className="px-0.5 text-[11px]">
+                            {item.soldQty} dari {item.preparedQty} {item.unitName} ({item.sellRatePct}%)
+                          </span>
+
+                          {/* Increment button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const target = menuItems.find((m) => m.id === item.menuItemId);
+                              if (target && onUpdateMenuItem) {
+                                onUpdateMenuItem({ ...target, soldQty: target.soldQty + 1 });
+                              }
+                            }}
+                            className="w-5 h-5 rounded bg-emerald-950 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 font-bold text-xs flex items-center justify-center transition-colors"
+                            title="Tambah 1 item terjual"
+                          >
+                            +
+                          </button>
+
+                          {/* Reset button */}
+                          {item.soldQty > 0 && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const target = menuItems.find((m) => m.id === item.menuItemId);
+                                if (target && onUpdateMenuItem) {
+                                  onUpdateMenuItem({ ...target, soldQty: 0 });
+                                }
+                              }}
+                              className="ml-1 p-0.5 text-stone-400 hover:text-rose-400 transition-colors"
+                              title="Hapus / Reset jumlah terjual item ini menjadi 0"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="w-full h-2 bg-stone-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            isSoldOut
+                              ? 'bg-rose-500'
+                              : isHighSeller
+                              ? 'bg-amber-400'
+                              : 'bg-emerald-500'
+                          }`}
+                          style={{ width: `${Math.min(100, isNaN(item.sellRatePct) ? 0 : item.sellRatePct)}%` }}
+                        />
                       </div>
                     </div>
+                  </div>
 
-                    <div className="w-full h-2 bg-stone-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          isSoldOut
-                            ? 'bg-rose-500'
-                            : isHighSeller
-                            ? 'bg-amber-400'
-                            : 'bg-emerald-500'
+                  {/* Footer details */}
+                  <div className="pt-2 border-t border-stone-700/60 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="text-[10px] text-stone-500 block">Sisa Stok Siap:</span>
+                      <span
+                        className={`font-bold ${
+                          isSoldOut ? 'text-rose-400' : 'text-teal-300'
                         }`}
-                        style={{ width: `${Math.min(100, item.sellRatePct)}%` }}
-                      />
+                      >
+                        {item.remainingQty} {item.unitName}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-stone-500 block">Total Untung Item:</span>
+                      <span className="font-extrabold text-emerald-400">{formatRp(item.totalProfit)}</span>
                     </div>
                   </div>
                 </div>
-
-                {/* Footer details */}
-                <div className="pt-2 border-t border-stone-700/60 flex items-center justify-between text-xs">
-                  <div>
-                    <span className="text-[10px] text-stone-500 block">Sisa Stok Siap:</span>
-                    <span
-                      className={`font-bold ${
-                        isSoldOut ? 'text-rose-400' : 'text-teal-300'
-                      }`}
-                    >
-                      {item.remainingQty} {item.unitName}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-stone-500 block">Total Untung Item:</span>
-                    <span className="font-extrabold text-emerald-400">{formatRp(item.totalProfit)}</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
 

@@ -309,6 +309,7 @@ export default function App() {
             onDeleteStockItem={handleDeleteStockItem}
             onRestock={handleRestock}
             onUpdateMenuRecipe={handleUpdateMenuRecipe}
+            onAddMenuItem={handleAddMenuItem}
           />
         )}
 
