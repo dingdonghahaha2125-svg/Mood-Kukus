@@ -273,45 +273,6 @@ export const INITIAL_MENU_ITEMS: MenuItem[] = [
     ],
   },
 
-  // PAKET COMBO & PORSI BERBAGI
-  {
-    id: 'menu-paket-besek',
-    name: 'Paket Besek Mood Kukus Complete (Isi 6 Item)',
-    category: 'paket',
-    price: 25000,
-    unitName: 'porsi',
-    preparedQty: 15,
-    soldQty: 0,
-    description: 'Kombinasi 2 Pisang Kepok, 2 Ubi Kukus, 1 Telur Kampung, 1 Jagung Kukus + Besek Bambu & Saus Pilihan.',
-    isAvailable: true,
-    defaultSauceId: 'sauce-1',
-    ingredients: [
-      { stockItemId: 'stk-1', amount: 0.16 },
-      { stockItemId: 'stk-2', amount: 0.20 },
-      { stockItemId: 'stk-3', amount: 1 },
-      { stockItemId: 'stk-4', amount: 1 },
-      { stockItemId: 'stk-9', amount: 1 }, // Besek bambu
-      { stockItemId: 'stk-10', amount: 0.1 },
-    ],
-  },
-  {
-    id: 'menu-porsi-pisang-ubi',
-    name: 'Porsi Duo Pisang & Ubi Cocol Aren',
-    category: 'paket',
-    price: 15000,
-    unitName: 'porsi',
-    preparedQty: 20,
-    soldQty: 0,
-    description: '3 biji pisang kepok + 2 potong ubi cilembu kukus hangat dalam kemasan paper box.',
-    isAvailable: true,
-    defaultSauceId: 'sauce-1',
-    ingredients: [
-      { stockItemId: 'stk-1', amount: 0.24 },
-      { stockItemId: 'stk-2', amount: 0.20 },
-      { stockItemId: 'stk-11', amount: 1 },
-    ],
-  },
-
   // MINUMAN SEGAR & AIR BOTOL MINERAL
   {
     id: 'menu-air-botol',

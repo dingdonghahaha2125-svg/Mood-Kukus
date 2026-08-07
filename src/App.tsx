@@ -86,12 +86,14 @@ export default function App() {
     localStorage.setItem('kukuslokal_daily_reports', JSON.stringify(dailyReports));
   }, [dailyReports]);
 
-  // Auto-sanitize menu items against current stock items (removes items not matching stock input)
+  // Auto-sanitize menu items against current stock items (removes items not matching stock input or paket/combo)
   useEffect(() => {
     const validStockIds = new Set(stockItems.map((s) => s.id));
     setMenuItems((prevMenu) => {
       const sanitized = prevMenu.filter((m) => {
-        if (m.category === 'kemasan') return false;
+        if (m.category === 'kemasan' || m.category === 'paket') return false;
+        const nameLower = m.name.toLowerCase();
+        if (nameLower.includes('paket') || nameLower.includes('combo')) return false;
         if (m.ingredients && m.ingredients.length > 0) {
           return m.ingredients.some((ing) => validStockIds.has(ing.stockItemId));
         }

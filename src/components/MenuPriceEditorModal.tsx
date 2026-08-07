@@ -42,7 +42,7 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
   // New Menu Item Form state
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newName, setNewName] = useState('');
-  const [newCategory, setNewCategory] = useState<'satuan' | 'paket' | 'minuman' | 'kemasan'>('minuman');
+  const [newCategory, setNewCategory] = useState<'satuan' | 'minuman' | 'kemasan'>('satuan');
   const [newPrice, setNewPrice] = useState<number>(5000);
   const [newUnitName, setNewUnitName] = useState('botol');
   const [newDescription, setNewDescription] = useState('');
@@ -173,7 +173,6 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
                     className="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   >
                     <option value="satuan">🍌 Kukusan Satuan (Per Biji)</option>
-                    <option value="paket">📦 Paket Combo (Porsi)</option>
                     <option value="minuman">🥤 Air Botol & Minuman</option>
                     <option value="kemasan">🍱 Wadah Packing / Tempat</option>
                   </select>
@@ -217,7 +216,14 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
 
           {/* Menu Items Table List */}
           <div className="space-y-3">
-            {menuItems.map((item) => {
+            {menuItems
+              .filter(
+                (item) =>
+                  item.category !== 'paket' &&
+                  !item.name.toLowerCase().includes('paket') &&
+                  !item.name.toLowerCase().includes('combo')
+              )
+              .map((item) => {
               const hpp = calculateMenuItemHpp(item, item.defaultSauceId, sauces, stockItems);
               const isEditing = editingId === item.id;
               const currentPrice = isEditing ? tempPrice : item.price;

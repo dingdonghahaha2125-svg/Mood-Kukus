@@ -322,6 +322,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                       const linkedMenu = menuItems.find(
                         (m) =>
                           m.category !== 'kemasan' &&
+                          m.category !== 'paket' &&
+                          !m.name.toLowerCase().includes('paket') &&
+                          !m.name.toLowerCase().includes('combo') &&
                           (m.ingredients.some((ing) => ing.stockItemId === stk.id) ||
                             m.name.toLowerCase().includes(stk.name.toLowerCase()) ||
                             stk.name.toLowerCase().includes(m.name.toLowerCase()))
@@ -349,45 +352,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                       );
                     })}
                 </optgroup>
-
-                {/* Additional Combo / Package Menu Items */}
-                {(() => {
-                  const packageMenus = menuItems.filter((m) => {
-                    if (m.category === 'kemasan') return false;
-                    // Ensure ingredients in package menu exist in stockItems
-                    if (m.ingredients && m.ingredients.length > 0) {
-                      const hasValidStock = m.ingredients.some((ing) =>
-                        stockItems.some((s) => s.id === ing.stockItemId)
-                      );
-                      if (!hasValidStock) return false;
-                    }
-                    // Exclude items that were already mapped directly in group 1
-                    const isAlreadyInGroup1 = stockItems.some(
-                      (stk) =>
-                        stk.category !== 'bahan_saus' &&
-                        stk.category !== 'kemasan' &&
-                        (m.ingredients.some((ing) => ing.stockItemId === stk.id) ||
-                          m.name.toLowerCase().includes(stk.name.toLowerCase()) ||
-                          stk.name.toLowerCase().includes(m.name.toLowerCase()))
-                    );
-                    return !isAlreadyInGroup1;
-                  });
-
-                  if (packageMenus.length === 0) return null;
-                  return (
-                    <optgroup label="🍱 Paket Combo & Olahan Spesial">
-                      {packageMenus.map((m) => {
-                        const uStr = m.unitName || 'porsi';
-                        return (
-                          <option key={m.id} value={`menu::${m.id}`}>
-                            {m.name} — Rp {formatRp(m.price)} / {uStr}
-                            {(m.soldQty || 0) > 0 ? ` [Terjual: ${m.soldQty}]` : ''}
-                          </option>
-                        );
-                      })}
-                    </optgroup>
-                  );
-                })()}
               </select>
 
               <div className="flex items-center gap-2">

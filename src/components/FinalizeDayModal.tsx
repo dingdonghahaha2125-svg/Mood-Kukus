@@ -26,7 +26,13 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
   if (!isOpen) return null;
 
   // Filter items that have soldQty > 0
-  const soldItemsToday = menuItems.filter((m) => (m.soldQty || 0) > 0);
+  const soldItemsToday = menuItems.filter((m) => {
+    if ((m.soldQty || 0) <= 0) return false;
+    if (m.category === 'kemasan' || m.category === 'paket') return false;
+    const nameLower = m.name.toLowerCase();
+    if (nameLower.includes('paket') || nameLower.includes('combo')) return false;
+    return true;
+  });
 
   // Calculate breakdown
   let totalRevenue = 0;
