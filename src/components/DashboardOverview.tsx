@@ -304,9 +304,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         m.name.toLowerCase() === stk.name.toLowerCase()
                     );
                     const optVal = linkedMenu ? `menu::${linkedMenu.id}` : `stock::${stk.id}`;
+                    const unitDisplay = (linkedMenu && linkedMenu.unitName) ? linkedMenu.unitName : (stk.unit || 'pcs');
                     const label = linkedMenu
-                      ? `${stk.name} (${formatRp(linkedMenu.price)}/${linkedMenu.unitName})${(linkedMenu.soldQty || 0) > 0 ? ` — [Terjual: ${linkedMenu.soldQty} ${linkedMenu.unitName}]` : ''}`
-                      : `[Stok] ${stk.name} (Modal: ${formatRp(stk.unitCostPrice)}/${stk.unit})`;
+                      ? `${stk.name} (${formatRp(linkedMenu.price)}/${unitDisplay})${(linkedMenu.soldQty || 0) > 0 ? ` — [Terjual: ${linkedMenu.soldQty} ${unitDisplay}]` : ''}`
+                      : `[Stok] ${stk.name} (Modal: ${formatRp(stk.unitCostPrice)}/${stk.unit || 'pcs'})`;
                     return (
                       <option key={stk.id} value={optVal}>
                         {label}
@@ -328,11 +329,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   if (standalone.length === 0) return null;
                   return (
                     <optgroup label="🍱 Menu Paket & Olahan Lainnya">
-                      {standalone.map((m) => (
-                        <option key={m.id} value={`menu::${m.id}`}>
-                          {m.name} ({formatRp(m.price)}/{m.unitName}){(m.soldQty || 0) > 0 ? ` — [Terjual: ${m.soldQty} ${m.unitName}]` : ''}
-                        </option>
-                      ))}
+                      {standalone.map((m) => {
+                        const uStr = m.unitName || 'pcs';
+                        return (
+                          <option key={m.id} value={`menu::${m.id}`}>
+                            {m.name} ({formatRp(m.price)}/{uStr}){(m.soldQty || 0) > 0 ? ` — [Terjual: ${m.soldQty} ${uStr}]` : ''}
+                          </option>
+                        );
+                      })}
                     </optgroup>
                   );
                 })()}

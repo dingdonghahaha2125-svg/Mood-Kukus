@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   ShoppingCart,
   Plus,
+  PlusCircle,
   Minus,
   Trash2,
   CheckCircle2,
@@ -47,29 +48,41 @@ export const PosCashier: React.FC<PosCashierProps> = ({
   const [customerName, setCustomerName] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedMenuId, setSelectedMenuId] = useState<string>('');
+  const [selectedQty, setSelectedQty] = useState<number>(1);
 
   const filteredMenuItems = menuItems.filter(
     (item) => selectedCategory === 'all' || item.category === selectedCategory
   );
 
-  const handleAddToCart = (item: MenuItem) => {
+  const handleAddToCart = (item: MenuItem, qty: number = 1) => {
     setCart((prevCart) => {
       const existingIdx = prevCart.findIndex((c) => c.menuItem.id === item.id);
       if (existingIdx > -1) {
         const updated = [...prevCart];
-        updated[existingIdx].quantity += 1;
+        updated[existingIdx].quantity += qty;
         return updated;
       }
       return [
         ...prevCart,
         {
           menuItem: item,
-          quantity: 1,
+          quantity: qty,
           selectedSauceId: item.defaultSauceId || sauces[0]?.id,
           packagingType: item.category === 'paket' ? 'Besek Bambu' : 'Paper Box Eco',
         },
       ];
     });
+  };
+
+  const handleAddDropdownToCart = () => {
+    if (!selectedMenuId) return;
+    const targetItem = menuItems.find((m) => m.id === selectedMenuId);
+    if (targetItem) {
+      handleAddToCart(targetItem, selectedQty);
+      setSelectedMenuId('');
+      setSelectedQty(1);
+    }
   };
 
   const handleUpdateQty = (index: number, newQty: number) => {
@@ -225,7 +238,7 @@ export const PosCashier: React.FC<PosCashierProps> = ({
                 <span>Kasir Penjualan Produk</span>
               </h2>
               <p className="text-xs text-stone-400">
-                Pilih menu jualan di bawah ini untuk dimasukkan ke keranjang kasir
+                Pilih menu terjual melalui dropdown atau tombol di bawah ini
               </p>
             </div>
 
@@ -261,6 +274,91 @@ export const PosCashier: React.FC<PosCashierProps> = ({
             ))}
           </div>
         </div>
+
+        {/* Dropdown Quick Item Selector */}
+        {(() => {
+          const activeItem = menuItems.find((m) => m.id === selectedMenuId);
+          return (
+            <div className="bg-stone-900 border border-emerald-500/50 rounded-2xl p-4 space-y-3 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-stone-800/80 pb-2.5">
+                <label className="text-xs font-bold text-emerald-400 flex items-center gap-1.5 uppercase tracking-wide">
+                  <PlusCircle className="w-4 h-4 text-emerald-400" />
+                  <span>Pilih Menu Terjual (Satuan Atau Paketan):</span>
+                </label>
+                {activeItem && (
+                  <span className="text-xs font-extrabold text-amber-300 bg-amber-950/80 px-2.5 py-0.5 rounded-lg border border-amber-800/80">
+                    Harga Jual: {formatRp(activeItem.price)} / {activeItem.unitName || 'porsi'}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <select
+                  value={selectedMenuId}
+                  onChange={(e) => setSelectedMenuId(e.target.value)}
+                  className="flex-1 bg-stone-950 border border-stone-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-stone-100 focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="">-- Klik Untuk Pilih Item Terjual (Satuan / Paketan) --</option>
+                  
+                  <optgroup label="🍌 Kukusan Satuan & Minuman">
+                    {menuItems
+                      .filter((m) => m.category === 'satuan' || m.category === 'minuman')
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} — Harga: {formatRp(item.price)} / {item.unitName || 'biji'}
+                        </option>
+                      ))}
+                  </optgroup>
+
+                  <optgroup label="📦 Paket Combo & Besek">
+                    {menuItems
+                      .filter((m) => m.category === 'paket')
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name} — Harga: {formatRp(item.price)} / {item.unitName || 'porsi'}
+                        </option>
+                      ))}
+                  </optgroup>
+
+                  {menuItems.some((m) => m.category !== 'satuan' && m.category !== 'minuman' && m.category !== 'paket') && (
+                    <optgroup label="🍱 Kemasan & Lainnya">
+                      {menuItems
+                        .filter((m) => m.category !== 'satuan' && m.category !== 'minuman' && m.category !== 'paket')
+                        .map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name} — Harga: {formatRp(item.price)} / {item.unitName || 'pcs'}
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
+                </select>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 bg-stone-950 px-2.5 py-1.5 rounded-xl border border-stone-700">
+                    <span className="text-[11px] text-stone-400 font-semibold">Qty:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={selectedQty || 1}
+                      onChange={(e) => setSelectedQty(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-12 bg-stone-900 text-center text-xs font-black text-amber-300 py-1 rounded focus:outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddDropdownToCart}
+                    disabled={!selectedMenuId}
+                    className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-extrabold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 active:scale-95"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>+ Masukkan Pesanan</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Menu Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
