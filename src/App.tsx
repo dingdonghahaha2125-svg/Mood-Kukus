@@ -448,6 +448,7 @@ export default function App() {
       stockItems,
       expenses,
       menuItems,
+      dailyReports,
     });
   };
 
@@ -458,6 +459,7 @@ export default function App() {
       stockItems,
       expenses,
       menuItems,
+      dailyReports,
     });
   };
 
