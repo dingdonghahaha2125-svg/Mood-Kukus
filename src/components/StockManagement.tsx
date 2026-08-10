@@ -743,7 +743,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     required
                     value={restockDate}
                     onChange={(e) => setRestockDate(e.target.value)}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500 text-xs sm:text-sm"
+                    onClick={(e) => {
+                      try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                    }}
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500 text-xs sm:text-sm cursor-pointer"
                   />
                   <button
                     type="button"

@@ -203,14 +203,28 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 <span>Laporan Penjualan Harian</span>
               </span>
 
-              {/* Clean Date Selector */}
-              <div className="flex items-center gap-2 bg-amber-950/80 border border-amber-500/40 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold shadow-sm">
-                <span>Tanggal:</span>
+              {/* Clean Date Selector with direct calendar popup on click */}
+              <div 
+                onClick={(e) => {
+                  const input = e.currentTarget.querySelector('input');
+                  if (input) {
+                    try { input.showPicker(); } catch {}
+                  }
+                }}
+                className="flex items-center gap-2 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
+                title="Klik untuk membuka kalender pilih tanggal"
+              >
+                <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>Tanggal Laporan:</span>
                 <input
                   type="date"
                   value={selectedReportDate}
                   onChange={(e) => setSelectedReportDate(e.target.value)}
-                  className="bg-stone-900 text-amber-200 border border-amber-700/80 rounded px-2 py-0.5 text-xs font-bold focus:outline-none focus:border-amber-400 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                  }}
+                  className="bg-stone-900 text-amber-200 border border-amber-700/80 rounded px-2.5 py-1 text-xs font-bold focus:outline-none focus:border-amber-400 cursor-pointer"
                 />
               </div>
             </div>
