@@ -19,6 +19,14 @@ import { DigitalReceiptModal } from './components/DigitalReceiptModal';
 import { MenuPriceEditorModal } from './components/MenuPriceEditorModal';
 import { FinalizeDayModal } from './components/FinalizeDayModal';
 import { exportToExcel, exportToPdf } from './utils/exportUtils';
+import { testConnection } from './lib/firebase';
+import {
+  subscribeToCollection,
+  saveDocument,
+  deleteDocument,
+  seedCollectionIfEmpty,
+  COLLECTIONS,
+} from './lib/firestoreService';
 
 export default function App() {
   // Helper to fix Singkos typo -> Singkong
@@ -73,6 +81,49 @@ export default function App() {
     setFinalizeModalDate(date || new Date().toISOString().split('T')[0]);
     setIsFinalizeModalOpen(true);
   };
+
+  // Firebase Firestore Connection & Realtime Sync
+  useEffect(() => {
+    // 1. Verify Firestore Connection
+    testConnection();
+
+    // 2. Seed initial collections if empty
+    seedCollectionIfEmpty(COLLECTIONS.STOCK_ITEMS, INITIAL_STOCK_ITEMS);
+    seedCollectionIfEmpty(COLLECTIONS.SAUCE_ITEMS, INITIAL_SAUCES);
+    seedCollectionIfEmpty(COLLECTIONS.MENU_ITEMS, INITIAL_MENU_ITEMS);
+    seedCollectionIfEmpty(COLLECTIONS.EXPENSES, INITIAL_EXPENSES);
+    seedCollectionIfEmpty(COLLECTIONS.TRANSACTIONS, INITIAL_TRANSACTIONS);
+    seedCollectionIfEmpty(COLLECTIONS.DAILY_REPORTS, INITIAL_DAILY_REPORTS);
+
+    // 3. Subscribe to Firestore real-time updates
+    const unsubStock = subscribeToCollection<StockItem>(COLLECTIONS.STOCK_ITEMS, (items) => {
+      if (items.length > 0) setStockItems(items);
+    });
+    const unsubSauce = subscribeToCollection<SauceItem>(COLLECTIONS.SAUCE_ITEMS, (items) => {
+      if (items.length > 0) setSauces(items);
+    });
+    const unsubMenu = subscribeToCollection<MenuItem>(COLLECTIONS.MENU_ITEMS, (items) => {
+      if (items.length > 0) setMenuItems(items);
+    });
+    const unsubExpense = subscribeToCollection<Expense>(COLLECTIONS.EXPENSES, (items) => {
+      if (items.length > 0) setExpenses(items);
+    });
+    const unsubTx = subscribeToCollection<Transaction>(COLLECTIONS.TRANSACTIONS, (items) => {
+      if (items.length > 0) setTransactions(items);
+    });
+    const unsubReport = subscribeToCollection<DailyReport>(COLLECTIONS.DAILY_REPORTS, (items) => {
+      if (items.length > 0) setDailyReports(items);
+    });
+
+    return () => {
+      unsubStock();
+      unsubSauce();
+      unsubMenu();
+      unsubExpense();
+      unsubTx();
+      unsubReport();
+    };
+  }, []);
 
   // Multi-tab / Broadcast sync
   useEffect(() => {
@@ -182,24 +233,28 @@ export default function App() {
       return prevStock.map((s) => {
         const deduct = stockDeductionMap.get(s.id);
         if (deduct && deduct > 0) {
-          return {
+          const updated = {
             ...s,
             currentStock: Math.max(0, Number((s.currentStock - deduct).toFixed(2))),
             lastUpdated: new Date().toISOString(),
           };
+          saveDocument(COLLECTIONS.STOCK_ITEMS, updated);
+          return updated;
         }
         return s;
       });
     });
 
     setDailyReports((prev) => [reportWithFlag, ...prev]);
+    saveDocument(COLLECTIONS.DAILY_REPORTS, reportWithFlag);
 
     if (resetTodaySales) {
       setMenuItems((prev) =>
-        prev.map((item) => ({
-          ...item,
-          soldQty: 0,
-        }))
+        prev.map((item) => {
+          const updated = { ...item, soldQty: 0 };
+          saveDocument(COLLECTIONS.MENU_ITEMS, updated);
+          return updated;
+        })
       );
     }
 
@@ -208,17 +263,20 @@ export default function App() {
 
   const handleDeleteDailyReport = (id: string) => {
     setDailyReports((prev) => prev.filter((r) => r.id !== id));
+    deleteDocument(COLLECTIONS.DAILY_REPORTS, id);
   };
 
   // RESET SALES TODAY (Set soldQty = 0 & clear transactions)
   const handleResetSalesToday = () => {
     if (confirm('Apakah Anda yakin ingin mereset seluruh data penjualan hari ini menjadi 0 (kosong)?')) {
+      transactions.forEach((tx) => deleteDocument(COLLECTIONS.TRANSACTIONS, tx.id));
       setTransactions([]);
       setMenuItems((prev) =>
-        prev.map((item) => ({
-          ...item,
-          soldQty: 0,
-        }))
+        prev.map((item) => {
+          const updated = { ...item, soldQty: 0 };
+          saveDocument(COLLECTIONS.MENU_ITEMS, updated);
+          return updated;
+        })
       );
       localStorage.setItem('kukuslokal_transactions', JSON.stringify([]));
     }
@@ -227,19 +285,23 @@ export default function App() {
   // HANDLERS FOR MENU ITEMS & PRICES
   const handleUpdateMenuItem = (updated: MenuItem) => {
     setMenuItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+    saveDocument(COLLECTIONS.MENU_ITEMS, updated);
   };
 
   const handleAddMenuItem = (newItem: MenuItem) => {
     setMenuItems((prev) => [...prev, newItem]);
+    saveDocument(COLLECTIONS.MENU_ITEMS, newItem);
   };
 
   // HANDLERS FOR INVENTORY
   const handleAddStockItem = (item: StockItem) => {
     setStockItems((prev) => [item, ...prev]);
+    saveDocument(COLLECTIONS.STOCK_ITEMS, item);
   };
 
   const handleUpdateStockItem = (updated: StockItem) => {
     setStockItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+    saveDocument(COLLECTIONS.STOCK_ITEMS, updated);
   };
 
   const handleDeleteStockItem = (id: string) => {
@@ -247,6 +309,7 @@ export default function App() {
       const nextStock = stockItems.filter((item) => item.id !== id);
       const remainingStockIds = new Set(nextStock.map((s) => s.id));
       setStockItems(nextStock);
+      deleteDocument(COLLECTIONS.STOCK_ITEMS, id);
 
       setMenuItems((prevMenu) =>
         prevMenu.filter((m) => {
@@ -274,11 +337,13 @@ export default function App() {
     setStockItems((prev) =>
       prev.map((item) => {
         if (item.id === stockItemId) {
-          return {
+          const updated = {
             ...item,
             currentStock: Number((item.currentStock + addedQty).toFixed(2)),
             lastUpdated: isoDate,
           };
+          saveDocument(COLLECTIONS.STOCK_ITEMS, updated);
+          return updated;
         }
         return item;
       })
@@ -297,17 +362,20 @@ export default function App() {
         notes: `Restock otomatis dari modul stok ${purchaseDate ? 'tanggal ' + purchaseDate : ''}`,
       };
       setExpenses((prev) => [newExpense, ...prev]);
+      saveDocument(COLLECTIONS.EXPENSES, newExpense);
     }
   };
 
   const handleUpdateMenuRecipe = (updatedMenu: MenuItem) => {
     setMenuItems((prev) => prev.map((m) => (m.id === updatedMenu.id ? updatedMenu : m)));
+    saveDocument(COLLECTIONS.MENU_ITEMS, updatedMenu);
   };
 
   // HANDLERS FOR POS SALES & AUTO STOCK DEDUCTION
   const handleProcessSale = (transaction: Transaction) => {
     // 1. Save Transaction
     setTransactions((prev) => [transaction, ...prev]);
+    saveDocument(COLLECTIONS.TRANSACTIONS, transaction);
 
     // 2. Automatically deduct corresponding stock items based on ingredients
     setStockItems((prevStock) => {
@@ -339,11 +407,13 @@ export default function App() {
         const deductAmt = stockMap.get(stockItem.id);
         if (deductAmt && deductAmt > 0) {
           const newQty = Math.max(0, Number((stockItem.currentStock - deductAmt).toFixed(2)));
-          return {
+          const updated = {
             ...stockItem,
             currentStock: newQty,
             lastUpdated: new Date().toISOString(),
           };
+          saveDocument(COLLECTIONS.STOCK_ITEMS, updated);
+          return updated;
         }
         return stockItem;
       });
@@ -353,11 +423,13 @@ export default function App() {
   // HANDLERS FOR EXPENSES
   const handleAddExpense = (expense: Expense) => {
     setExpenses((prev) => [expense, ...prev]);
+    saveDocument(COLLECTIONS.EXPENSES, expense);
   };
 
   const handleDeleteExpense = (id: string) => {
     if (confirm('Hapus log pengeluaran ini?')) {
       setExpenses((prev) => prev.filter((e) => e.id !== id));
+      deleteDocument(COLLECTIONS.EXPENSES, id);
     }
   };
 

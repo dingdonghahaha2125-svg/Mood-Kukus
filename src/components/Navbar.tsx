@@ -24,6 +24,7 @@ interface NavbarProps {
   onOpenMenuEditor?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
+  isCloudConnected?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -35,6 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenMenuEditor,
   onExportExcel,
   onExportPdf,
+  isCloudConnected = true,
 }) => {
   const navItems = [
     { id: 'dashboard', label: '🏠 Ringkasan Usaha', icon: LayoutDashboard },
@@ -74,6 +76,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="flex items-center gap-1.5">
               <span className="text-stone-400">Margin:</span>
               <span className="font-semibold text-amber-400">{financialSummary.profitMargin}%</span>
+            </div>
+            <div className="w-px h-4 bg-stone-700" />
+            <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-700/60 px-2 py-0.5 rounded-md" title="Database Firestore Terhubung Real-Time">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Firebase Cloud</span>
             </div>
           </div>
 

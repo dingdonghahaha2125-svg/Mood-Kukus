@@ -1,0 +1,127 @@
+{
+  "entities": {
+    "StockItem": {
+      "title": "Stock Item",
+      "description": "Raw material stock inventory item",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "enum": ["bahan_utama", "bahan_saus", "kemasan", "operasional"] },
+        "currentStock": { "type": "number" },
+        "minStock": { "type": "number" },
+        "unit": { "type": "string", "enum": ["kg", "pcs", "liter", "pack", "ikat", "roll", "gram"] },
+        "unitCostPrice": { "type": "number" },
+        "lastUpdated": { "type": "string" },
+        "supplier": { "type": "string", "maxLength": 100 },
+        "notes": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["id", "name", "category", "currentStock", "minStock", "unit", "unitCostPrice", "lastUpdated"]
+    },
+    "SauceItem": {
+      "title": "Sauce Item",
+      "description": "Sauce variant and recipe definition",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 300 },
+        "extraPrice": { "type": "number" }
+      },
+      "required": ["id", "name", "description", "extraPrice"]
+    },
+    "MenuItem": {
+      "title": "Menu Item",
+      "description": "Food and beverage menu item for sale",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "category": { "type": "string", "enum": ["paket", "satuan", "minuman", "kemasan"] },
+        "price": { "type": "number" },
+        "description": { "type": "string", "maxLength": 300 },
+        "isAvailable": { "type": "boolean" },
+        "unitName": { "type": "string", "maxLength": 20 },
+        "preparedQty": { "type": "number" },
+        "soldQty": { "type": "number" }
+      },
+      "required": ["id", "name", "category", "price", "description", "isAvailable"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "POS sales transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "totalHpp": { "type": "number" },
+        "netProfit": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["qris", "cash", "transfer"] },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "notes": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["id", "date", "totalAmount", "totalHpp", "netProfit", "paymentMethod"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Operational expense or capital investment entry",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "title": { "type": "string", "maxLength": 200 },
+        "category": { "type": "string", "enum": ["modal_awal", "belanja_bahan", "pembelian_kemasan", "peralatan", "sewa_operasional", "pemasaran"] },
+        "amount": { "type": "number" },
+        "isCapital": { "type": "boolean" },
+        "paymentMethod": { "type": "string", "enum": ["qris", "cash", "transfer"] },
+        "notes": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["id", "date", "title", "category", "amount", "isCapital", "paymentMethod"]
+    },
+    "DailyReport": {
+      "title": "Daily Report",
+      "description": "Finalized daily sales and financial report summary",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "dateLabel": { "type": "string", "maxLength": 100 },
+        "totalRevenue": { "type": "number" },
+        "totalHpp": { "type": "number" },
+        "totalProfit": { "type": "number" },
+        "totalItemsSold": { "type": "number" },
+        "notes": { "type": "string", "maxLength": 500 },
+        "finalizedAt": { "type": "string" },
+        "isStockDeducted": { "type": "boolean" }
+      },
+      "required": ["id", "date", "dateLabel", "totalRevenue", "totalHpp", "totalProfit", "totalItemsSold", "finalizedAt"]
+    }
+  },
+  "firestore": {
+    "/stockItems/{stockItemId}": {
+      "schema": { "$ref": "#/entities/StockItem" },
+      "description": "Collection of raw material stock inventory items"
+    },
+    "/sauceItems/{sauceItemId}": {
+      "schema": { "$ref": "#/entities/SauceItem" },
+      "description": "Collection of sauce items and recipes"
+    },
+    "/menuItems/{menuItemId}": {
+      "schema": { "$ref": "#/entities/MenuItem" },
+      "description": "Collection of food and beverage menu items"
+    },
+    "/transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/Transaction" },
+      "description": "Collection of sale transactions"
+    },
+    "/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Collection of business expenses"
+    },
+    "/dailyReports/{dailyReportId}": {
+      "schema": { "$ref": "#/entities/DailyReport" },
+      "description": "Collection of daily finalized sales reports"
+    }
+  }
+}
