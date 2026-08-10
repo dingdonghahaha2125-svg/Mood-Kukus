@@ -433,6 +433,24 @@ export default function App() {
   const handleAddExpense = (expense: Expense) => {
     setExpenses((prev) => [expense, ...prev]);
     saveDocument(COLLECTIONS.EXPENSES, expense);
+
+    // Otomatis update stok jika expense terhubung dengan stock item
+    if (expense.stockItemId && expense.addedStockQty && expense.addedStockQty > 0) {
+      setStockItems((prevStock) =>
+        prevStock.map((s) => {
+          if (s.id === expense.stockItemId) {
+            const updated = {
+              ...s,
+              currentStock: Number((s.currentStock + expense.addedStockQty!).toFixed(2)),
+              lastUpdated: expense.date || new Date().toISOString(),
+            };
+            saveDocument(COLLECTIONS.STOCK_ITEMS, updated);
+            return updated;
+          }
+          return s;
+        })
+      );
+    }
   };
 
   const handleDeleteExpense = (id: string) => {
@@ -554,6 +572,7 @@ export default function App() {
         {activeTab === 'expenses' && (
           <ExpenseTracker
             expenses={expenses}
+            stockItems={stockItems}
             onAddExpense={handleAddExpense}
             onDeleteExpense={handleDeleteExpense}
             onOpenInitialCapitalModal={() => setIsInitialCapitalModalOpen(true)}

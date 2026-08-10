@@ -12,11 +12,12 @@ import {
   Tag,
   Wallet,
 } from 'lucide-react';
-import { Expense, ExpenseCategory } from '../types';
+import { Expense, ExpenseCategory, StockItem } from '../types';
 import { formatRp, formatDateOnly } from '../utils/calculations';
 
 interface ExpenseTrackerProps {
   expenses: Expense[];
+  stockItems?: StockItem[];
   onAddExpense: (expense: Expense) => void;
   onDeleteExpense: (id: string) => void;
   onOpenInitialCapitalModal?: () => void;
@@ -24,6 +25,7 @@ interface ExpenseTrackerProps {
 
 export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
   expenses,
+  stockItems = [],
   onAddExpense,
   onDeleteExpense,
   onOpenInitialCapitalModal,
@@ -40,6 +42,9 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
     paymentMethod: 'qris' | 'cash' | 'transfer';
     notes: string;
     date: string;
+    linkToStock: boolean;
+    stockItemId: string;
+    addedStockQty: number;
   }>({
     title: '',
     category: 'belanja_bahan',
@@ -48,6 +53,9 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
     paymentMethod: 'qris',
     notes: '',
     date: new Date().toISOString().split('T')[0],
+    linkToStock: false,
+    stockItemId: '',
+    addedStockQty: 5,
   });
 
   const handleSaveExpense = (e: React.FormEvent) => {
@@ -63,6 +71,8 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
       paymentMethod: formData.paymentMethod,
       notes: formData.notes,
       date: new Date(formData.date).toISOString(),
+      stockItemId: formData.linkToStock && formData.stockItemId ? formData.stockItemId : undefined,
+      addedStockQty: formData.linkToStock && formData.addedStockQty > 0 ? Number(formData.addedStockQty) : undefined,
     });
 
     setIsAddModalOpen(false);
@@ -74,6 +84,9 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
       paymentMethod: 'qris',
       notes: '',
       date: new Date().toISOString().split('T')[0],
+      linkToStock: false,
+      stockItemId: '',
+      addedStockQty: 5,
     });
   };
 
@@ -350,6 +363,72 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
                 <label htmlFor="isCapitalCheck" className="text-xs text-stone-200 cursor-pointer">
                   Tandai sebagai <span className="font-bold text-indigo-400">Modal Awal / Aset</span> (Bukan pengeluaran operasional harian rutin)
                 </label>
+              </div>
+
+              {/* STOCK AUTO-RESTOCK LINKING OPTION */}
+              <div className="bg-emerald-950/40 border border-emerald-800/60 rounded-xl p-3.5 space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="linkToStockCheck"
+                    checked={formData.linkToStock}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        linkToStock: e.target.checked,
+                        stockItemId: e.target.checked && stockItems.length > 0 ? stockItems[0].id : '',
+                      })
+                    }
+                    className="w-4 h-4 accent-emerald-500"
+                  />
+                  <label htmlFor="linkToStockCheck" className="text-xs font-bold text-emerald-300 cursor-pointer">
+                    🛒 Hubungkan dengan Stok Bahan Baku & Kemasan (Tambah Stok Otomatis)
+                  </label>
+                </div>
+
+                {formData.linkToStock && (
+                  <div className="space-y-3 pt-1 text-xs">
+                    <p className="text-[11px] text-emerald-200/80">
+                      Pengeluaran ini akan langsung menambah sisa stok bahan jualan Anda di modul Manajemen Stok.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-stone-300 mb-1 font-medium">Pilih Item Bahan Baku:</label>
+                        <select
+                          value={formData.stockItemId}
+                          onChange={(e) => setFormData({ ...formData, stockItemId: e.target.value })}
+                          className="w-full bg-stone-900 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-semibold focus:outline-none focus:border-emerald-500"
+                        >
+                          {stockItems.map((stk) => (
+                            <option key={stk.id} value={stk.id}>
+                              {stk.name} (Stok: {stk.currentStock} {stk.unit})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-stone-300 mb-1 font-medium">Jumlah Ditambahkan:</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            step="any"
+                            min="0.1"
+                            value={formData.addedStockQty}
+                            onChange={(e) =>
+                              setFormData({ ...formData, addedStockQty: parseFloat(e.target.value) || 0 })
+                            }
+                            className="w-full bg-stone-900 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500"
+                          />
+                          <span className="font-bold text-emerald-400 shrink-0">
+                            {stockItems.find((s) => s.id === formData.stockItemId)?.unit || 'unit'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
