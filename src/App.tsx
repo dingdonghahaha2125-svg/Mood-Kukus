@@ -18,6 +18,7 @@ import { AiBusinessAdvisor } from './components/AiBusinessAdvisor';
 import { DigitalReceiptModal } from './components/DigitalReceiptModal';
 import { MenuPriceEditorModal } from './components/MenuPriceEditorModal';
 import { FinalizeDayModal } from './components/FinalizeDayModal';
+import { ManualPastReportModal } from './components/ManualPastReportModal';
 import { exportToExcel, exportToPdf } from './utils/exportUtils';
 import { testConnection } from './lib/firebase';
 import {
@@ -74,12 +75,18 @@ export default function App() {
   const [isAiAdvisorOpen, setIsAiAdvisorOpen] = useState<boolean>(false);
   const [isMenuEditorOpen, setIsMenuEditorOpen] = useState<boolean>(false);
   const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState<boolean>(false);
+  const [isManualPastReportOpen, setIsManualPastReportOpen] = useState<boolean>(false);
   const [finalizeModalDate, setFinalizeModalDate] = useState<string>('');
   const [activeReceiptTransaction, setActiveReceiptTransaction] = useState<Transaction | null>(null);
 
   const handleOpenFinalizeModal = (date?: string) => {
     setFinalizeModalDate(date || new Date().toISOString().split('T')[0]);
     setIsFinalizeModalOpen(true);
+  };
+
+  const handleSaveManualPastReport = (report: DailyReport) => {
+    setDailyReports((prev) => [report, ...prev]);
+    saveDocument(COLLECTIONS.DAILY_REPORTS, report);
   };
 
   // Firebase Firestore Connection & Realtime Sync
@@ -510,6 +517,7 @@ export default function App() {
             onResetSalesToday={handleResetSalesToday}
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
+            onOpenManualPastReport={() => setIsManualPastReportOpen(true)}
           />
         )}
 
@@ -520,6 +528,7 @@ export default function App() {
             onDeleteDailyReport={handleDeleteDailyReport}
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
+            onOpenManualPastReport={() => setIsManualPastReportOpen(true)}
           />
         )}
 
@@ -578,6 +587,12 @@ export default function App() {
         stockItems={stockItems}
         onFinalizeDay={handleFinalizeDailyReport}
         initialDate={finalizeModalDate}
+      />
+
+      <ManualPastReportModal
+        isOpen={isManualPastReportOpen}
+        onClose={() => setIsManualPastReportOpen(false)}
+        onSaveManualReport={handleSaveManualPastReport}
       />
 
       {/* Footer */}

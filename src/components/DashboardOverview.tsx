@@ -22,6 +22,7 @@ import {
   Trash2,
   Eye,
   Plus,
+  History,
 } from 'lucide-react';
 import {
   BarChart,
@@ -59,6 +60,7 @@ interface DashboardOverviewProps {
   onResetSalesToday?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
+  onOpenManualPastReport?: () => void;
 }
 
 const COLORS = ['#10b981', '#14b8a6', '#06b6d4', '#f59e0b', '#ec4899', '#8b5cf6'];
@@ -82,6 +84,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onResetSalesToday,
   onExportExcel,
   onExportPdf,
+  onOpenManualPastReport,
 }) => {
   // State to filter per-item sales view (default: only show sold items today)
   const [itemFilter, setItemFilter] = React.useState<'sold_only' | 'all'>('sold_only');
@@ -171,22 +174,96 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Compact Header */}
-      <div className="bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 flex items-center justify-between gap-3 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-emerald-950/80 border border-emerald-500/30 rounded-xl text-emerald-400 shrink-0">
-            <Flame className="w-5 h-5" />
+      {/* Mood Kukus Mamuju Header & Total Kumulatif Financial Metrics */}
+      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-xl space-y-4">
+        {/* Brand Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800/80 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-950/80 border border-emerald-500/30 rounded-2xl text-emerald-400 shrink-0 shadow-inner">
+              <Flame className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-xl font-black text-stone-100 flex items-center gap-2 leading-tight">
+                <span>Mood Kukus Mamuju</span>
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  Kuliner Sehat & Alami 🍃
+                </span>
+              </h1>
+              <p className="text-xs text-stone-400 mt-0.5">
+                Pencatatan Penjualan & Kelola Stok Kukusan Harian
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2 leading-tight">
-              <span>Mood Kukus Mamuju</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                Kuliner Sehat & Alami 🍃
+
+          {onOpenManualPastReport && (
+            <button
+              onClick={onOpenManualPastReport}
+              className="self-start sm:self-auto px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded-xl font-bold text-xs transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+              title="Input manual omset hari lalu saat catatan per item bahan hilang"
+            >
+              <History className="w-4 h-4 text-amber-400" />
+              <span>+ Input Pemasukan Lalu (Catatan Hilang)</span>
+            </button>
+          )}
+        </div>
+
+        {/* CUMULATIVE TOTAL FINANCIAL METRICS (Pemasukan Total, Laba Bersih Total, Margin Total) */}
+        <div className="bg-stone-950/90 border border-emerald-800/60 rounded-xl p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-stone-800/80 pb-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+              <h3 className="text-xs font-black text-emerald-400 uppercase tracking-wider">
+                Total Akumulasi Keseluruhan Usaha
+              </h3>
+            </div>
+            <span className="text-[11px] font-semibold text-amber-400/90 italic">
+              *(Total Kumulatif Seluruh Usaha — Berbeda dengan Laporan Harian di bawah)*
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            {/* Total Pemasukan */}
+            <div className="bg-stone-900 border border-stone-800 p-3.5 rounded-xl space-y-1">
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                🟢 Pemasukan Total (Kumulatif)
               </span>
-            </h1>
-            <p className="text-xs text-stone-400">
-              Pencatatan Penjualan & Kelola Stok Kukusan Harian
-            </p>
+              <div className="text-lg sm:text-xl font-black text-emerald-400">
+                {formatRp(financialSummary.totalRevenue)}
+              </div>
+              <p className="text-[10px] text-stone-500">
+                Total uang masuk akumulasi seluruh hari
+              </p>
+            </div>
+
+            {/* Total Laba Bersih */}
+            <div className="bg-stone-900 border border-stone-800 p-3.5 rounded-xl space-y-1">
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                💰 Laba Bersih Total (Kumulatif)
+              </span>
+              <div
+                className={`text-lg sm:text-xl font-black ${
+                  financialSummary.netProfit >= 0 ? 'text-teal-300' : 'text-rose-400'
+                }`}
+              >
+                {formatRp(financialSummary.netProfit)}
+              </div>
+              <p className="text-[10px] text-stone-500">
+                Keuntungan bersih setelah dikurangi modal
+              </p>
+            </div>
+
+            {/* Total Margin */}
+            <div className="bg-stone-900 border border-stone-800 p-3.5 rounded-xl space-y-1">
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+                📊 Margin Total (Kumulatif)
+              </span>
+              <div className="text-lg sm:text-xl font-black text-amber-400">
+                {financialSummary.profitMargin}%
+              </div>
+              <p className="text-[10px] text-stone-500">
+                Persentase kebersihan profit dibanding omset
+              </p>
+            </div>
           </div>
         </div>
       </div>

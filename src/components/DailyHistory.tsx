@@ -13,6 +13,7 @@ import {
   Package,
   CheckCircle2,
   AlertCircle,
+  History,
 } from 'lucide-react';
 import { DailyReport } from '../types';
 import { formatRp } from '../utils/calculations';
@@ -24,12 +25,14 @@ interface DailyHistoryProps {
   onDeleteDailyReport: (id: string) => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
+  onOpenManualPastReport?: () => void;
 }
 
 export const DailyHistory: React.FC<DailyHistoryProps> = ({
   dailyReports,
   onOpenFinalizeModal,
   onDeleteDailyReport,
+  onOpenManualPastReport,
 }) => {
   const [expandedReportId, setExpandedReportId] = useState<string | null>(
     dailyReports[0]?.id || null
@@ -77,13 +80,26 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onOpenFinalizeModal}
-          className="px-5 py-3 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-stone-950 font-black text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 shrink-0 active:scale-95"
-        >
-          <CheckCircle2 className="w-4 h-4" />
-          <span>Finalisasi Penjualan Hari Ini</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            onClick={onOpenFinalizeModal}
+            className="px-4 py-3 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-stone-950 font-black text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Finalisasi Penjualan Hari Ini</span>
+          </button>
+
+          {onOpenManualPastReport && (
+            <button
+              onClick={onOpenManualPastReport}
+              className="px-4 py-3 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-amber-300 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-2"
+              title="Input manual omset hari lalu saat catatan per item bahan hilang"
+            >
+              <History className="w-4 h-4 text-amber-400" />
+              <span>+ Input Pemasukan Lalu</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Cumulative Metrics Bar */}

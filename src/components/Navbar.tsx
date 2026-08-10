@@ -8,7 +8,6 @@ import {
   Bot,
   FileSpreadsheet,
   FileText,
-  DollarSign,
 } from 'lucide-react';
 import { FinancialSummary, StockItem } from '../types';
 import { formatRp } from '../utils/calculations';
@@ -59,45 +58,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             <BrandLogo size="md" />
           </div>
 
-          {/* Quick Metrics Bar (Desktop) */}
-          <div className="hidden lg:flex items-center gap-4 bg-stone-800/60 border border-stone-700/60 rounded-xl px-3 py-1.5 text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="text-stone-400">Pemasukan:</span>
-              <span className="font-semibold text-emerald-400">{formatRp(financialSummary.totalRevenue)}</span>
-            </div>
-            <div className="w-px h-4 bg-stone-700" />
-            <div className="flex items-center gap-1.5">
-              <span className="text-stone-400">Laba Bersih:</span>
-              <span className={`font-semibold ${financialSummary.netProfit >= 0 ? 'text-teal-300' : 'text-rose-400'}`}>
-                {formatRp(financialSummary.netProfit)}
-              </span>
-            </div>
-            <div className="w-px h-4 bg-stone-700" />
-            <div className="flex items-center gap-1.5">
-              <span className="text-stone-400">Margin:</span>
-              <span className="font-semibold text-amber-400">{financialSummary.profitMargin}%</span>
-            </div>
-            <div className="w-px h-4 bg-stone-700" />
-            <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-700/60 px-2 py-0.5 rounded-md" title="Database Firestore Terhubung Real-Time">
+          {/* Cloud Badge (Desktop) */}
+          <div className="hidden lg:flex items-center gap-2 bg-stone-800/60 border border-stone-700/60 rounded-xl px-3 py-1.5 text-xs">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400" title="Database Firestore Terhubung Real-Time">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Firebase Cloud</span>
+              <span>Firebase Cloud Active</span>
             </div>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Edit Menu Price Quick Button */}
-            {onOpenMenuEditor && (
-              <button
-                onClick={onOpenMenuEditor}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded-xl font-bold text-xs transition-all shadow-sm"
-                title="Edit Harga Jual Menu & Ketahui Keuntungan Per Unit"
-              >
-                <DollarSign className="w-4 h-4 text-amber-400" />
-                <span>Atur Harga Jual</span>
-              </button>
-            )}
-
             {/* Export Buttons */}
             {onExportExcel && (
               <button
