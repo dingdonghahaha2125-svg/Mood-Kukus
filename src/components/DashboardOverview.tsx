@@ -177,6 +177,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       {/* Mood Kukus Mamuju Header & Total Kumulatif Financial Metrics */}
       <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-xl space-y-4">
         {/* Brand Header */}
+        {/* Brand Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800/80 pb-3">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-emerald-950/80 border border-emerald-500/30 rounded-2xl text-emerald-400 shrink-0 shadow-inner">
@@ -194,31 +195,47 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               </p>
             </div>
           </div>
-
-          {onOpenManualPastReport && (
-            <button
-              onClick={onOpenManualPastReport}
-              className="self-start sm:self-auto px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded-xl font-bold text-xs transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
-              title="Input manual omset hari lalu saat catatan per item bahan hilang"
-            >
-              <History className="w-4 h-4 text-amber-400" />
-              <span>+ Input Pemasukan Lalu (Catatan Hilang)</span>
-            </button>
-          )}
         </div>
 
-        {/* CUMULATIVE TOTAL FINANCIAL METRICS (Pemasukan Total, Laba Bersih Total, Margin Total) */}
+        {/* CUMULATIVE TOTAL FINANCIAL METRICS (Pemasukan Total, Laba Bersih Total, Margin Total + Export Kumulatif) */}
         <div className="bg-stone-950/90 border border-emerald-800/60 rounded-xl p-4 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-stone-800/80 pb-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <h3 className="text-xs font-black text-emerald-400 uppercase tracking-wider">
-                Total Akumulasi Keseluruhan Usaha
-              </h3>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-stone-800/80 pb-2.5">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <h3 className="text-xs font-black text-emerald-400 uppercase tracking-wider">
+                  Grup Total Akumulasi Kegiatan Keseluruhan Usaha
+                </h3>
+              </div>
+              <p className="text-[11px] font-medium text-amber-400/90 italic mt-0.5">
+                *(File yang diexport pada grup ini merupakan laporan kumulatif total penghasilan usaha harian)*
+              </p>
             </div>
-            <span className="text-[11px] font-semibold text-amber-400/90 italic">
-              *(Total Kumulatif Seluruh Usaha — Berbeda dengan Laporan Harian di bawah)*
-            </span>
+
+            {/* Export Buttons for Cumulative Total Business Data */}
+            <div className="flex items-center gap-2 shrink-0 pt-1 md:pt-0">
+              {onExportExcel && (
+                <button
+                  onClick={onExportExcel}
+                  className="px-3 py-1.5 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                  title="Export Kumulatif Total Penghasilan Usaha ke Excel (.xlsx)"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                  <span>Export Total (Excel)</span>
+                </button>
+              )}
+
+              {onExportPdf && (
+                <button
+                  onClick={onExportPdf}
+                  className="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-700/80 text-rose-300 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                  title="Export Kumulatif Total Penghasilan Usaha ke PDF (.pdf)"
+                >
+                  <FileText className="w-4 h-4 text-rose-400" />
+                  <span>Export Total (PDF)</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
@@ -329,6 +346,17 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-stone-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95"
               >
                 <span>🏁 Finalisasi Laporan Tanggal {selectedDateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+              </button>
+            )}
+
+            {onOpenManualPastReport && (
+              <button
+                onClick={onOpenManualPastReport}
+                className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+                title="Input manual omset nominal uang hasil penjualan hari sebelumnya (saat rincian per item hilang)"
+              >
+                <History className="w-4 h-4 text-amber-400" />
+                <span>+ Input Penjualan Lalu (Nominal Uang)</span>
               </button>
             )}
 

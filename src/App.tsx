@@ -586,6 +586,7 @@ export default function App() {
         sauces={sauces}
         stockItems={stockItems}
         onFinalizeDay={handleFinalizeDailyReport}
+        onOpenManualPastReport={() => setIsManualPastReportOpen(true)}
         initialDate={finalizeModalDate}
       />
 

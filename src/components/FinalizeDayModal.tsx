@@ -10,6 +10,7 @@ interface FinalizeDayModalProps {
   sauces: SauceItem[];
   stockItems: StockItem[];
   onFinalizeDay: (report: DailyReport, resetTodaySales: boolean) => void;
+  onOpenManualPastReport?: () => void;
   initialDate?: string;
 }
 
@@ -20,6 +21,7 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
   sauces,
   stockItems,
   onFinalizeDay,
+  onOpenManualPastReport,
   initialDate,
 }) => {
   const [notes, setNotes] = useState<string>('');
@@ -134,12 +136,26 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
 
         {/* Content */}
         {soldItemsToday.length === 0 ? (
-          <div className="bg-stone-950 p-6 rounded-xl border border-dashed border-stone-800 text-center space-y-2">
+          <div className="bg-stone-950 p-6 rounded-xl border border-dashed border-stone-800 text-center space-y-3">
             <AlertCircle className="w-8 h-8 text-amber-400 mx-auto" />
-            <h4 className="font-bold text-sm text-stone-200">Belum Ada Item Terjual Diinput</h4>
+            <h4 className="font-bold text-sm text-stone-200">Belum Ada Item Terjual Diinput Per-Item</h4>
             <p className="text-xs text-stone-400 max-w-md mx-auto">
-              Silakan masukkan dulu jumlah item laku terjual hari ini pada tabel di Ringkasan Usaha sebelum melakukan finalisasi.
+              Silakan masukkan dulu jumlah item laku terjual hari ini pada tabel di Ringkasan Usaha.
             </p>
+            {onOpenManualPastReport && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenManualPastReport();
+                  }}
+                  className="px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-xl transition-all shadow-sm inline-flex items-center gap-2"
+                >
+                  <span>+ Input Nominal Uang Hasil Penjualan Hari Lalu (Catatan Rincian Hilang)</span>
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

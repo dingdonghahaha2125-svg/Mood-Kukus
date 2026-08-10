@@ -68,29 +68,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Export Buttons */}
-            {onExportExcel && (
-              <button
-                onClick={onExportExcel}
-                className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-emerald-400 rounded-xl font-semibold text-xs transition-all"
-                title="Export Laporan ke Excel (.xlsx)"
-              >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
-                <span>Excel</span>
-              </button>
-            )}
-
-            {onExportPdf && (
-              <button
-                onClick={onExportPdf}
-                className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-rose-400 rounded-xl font-semibold text-xs transition-all"
-                title="Export Laporan ke PDF (.pdf)"
-              >
-                <FileText className="w-4 h-4 text-rose-400" />
-                <span>PDF</span>
-              </button>
-            )}
-
             {/* AI Advisor Button */}
             <button
               onClick={onOpenAiAdvisor}

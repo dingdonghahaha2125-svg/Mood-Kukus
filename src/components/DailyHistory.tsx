@@ -17,7 +17,12 @@ import {
 } from 'lucide-react';
 import { DailyReport } from '../types';
 import { formatRp } from '../utils/calculations';
-import { exportToExcel, exportToPdf } from '../utils/exportUtils';
+import {
+  exportToExcel,
+  exportToPdf,
+  exportSingleDailyReportToExcel,
+  exportSingleDailyReportToPdf,
+} from '../utils/exportUtils';
 
 interface DailyHistoryProps {
   dailyReports: DailyReport[];
@@ -231,7 +236,32 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      {/* Single Daily Report Export Buttons */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          exportSingleDailyReportToExcel(report);
+                        }}
+                        className="px-2.5 py-1 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-800 text-emerald-400 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
+                        title={`Export Laporan Harian (${report.dateLabel}) ke Excel`}
+                      >
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="hidden sm:inline">Excel</span>
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          exportSingleDailyReportToPdf(report);
+                        }}
+                        className="px-2.5 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-300 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
+                        title={`Export Laporan Harian (${report.dateLabel}) ke PDF`}
+                      >
+                        <FileText className="w-3.5 h-3.5 text-rose-400" />
+                        <span className="hidden sm:inline">PDF</span>
+                      </button>
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -239,7 +269,7 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({
                             onDeleteDailyReport(report.id);
                           }
                         }}
-                        className="p-1.5 text-stone-500 hover:text-rose-400 hover:bg-stone-800 rounded-lg transition-colors"
+                        className="p-1.5 text-stone-500 hover:text-rose-400 hover:bg-stone-800 rounded-lg transition-colors ml-1"
                         title="Hapus Laporan Harian Ini"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -255,14 +285,31 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({
                 {/* Expanded Itemized Detail View */}
                 {isExpanded && (
                   <div className="border-t border-stone-800 bg-stone-950/70 p-4 sm:p-5 space-y-4">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-800 pb-2">
                       <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                         <Package className="w-4 h-4 text-amber-400" />
                         <span>Rincian Item Terjual Tanggal {report.dateLabel}</span>
                       </h4>
-                      <span className="text-[11px] text-stone-400">
-                        Waktu Finalisasi: {new Date(report.finalizedAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA
-                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => exportSingleDailyReportToExcel(report)}
+                          className="px-3 py-1.5 bg-emerald-950 border border-emerald-700/80 text-emerald-300 hover:bg-emerald-900 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5"
+                          title="Export Laporan Penjualan Hari Ini ke Excel"
+                        >
+                          <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Export Excel Harian</span>
+                        </button>
+
+                        <button
+                          onClick={() => exportSingleDailyReportToPdf(report)}
+                          className="px-3 py-1.5 bg-rose-950 border border-rose-700/80 text-rose-300 hover:bg-rose-900 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5"
+                          title="Export Laporan Penjualan Hari Ini ke PDF"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-rose-400" />
+                          <span>Export PDF Harian</span>
+                        </button>
+                      </div>
                     </div>
 
                     {/* Table */}
