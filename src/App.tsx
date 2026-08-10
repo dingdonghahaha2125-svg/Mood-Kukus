@@ -14,13 +14,11 @@ import { DashboardOverview } from './components/DashboardOverview';
 import { StockManagement } from './components/StockManagement';
 import { DailyHistory } from './components/DailyHistory';
 import { ExpenseTracker } from './components/ExpenseTracker';
-import { HppCalculator } from './components/HppCalculator';
 import { FlyerGenerator } from './components/FlyerGenerator';
 import { AiBusinessAdvisor } from './components/AiBusinessAdvisor';
 import { DigitalReceiptModal } from './components/DigitalReceiptModal';
 import { MenuPriceEditorModal } from './components/MenuPriceEditorModal';
 import { FinalizeDayModal } from './components/FinalizeDayModal';
-import { DeviceSyncModal } from './components/DeviceSyncModal';
 import { exportToExcel, exportToPdf } from './utils/exportUtils';
 
 export default function App() {
@@ -32,7 +30,7 @@ export default function App() {
     const saved = localStorage.getItem('kukuslokal_stock_items');
     const items: StockItem[] = saved ? JSON.parse(saved) : INITIAL_STOCK_ITEMS;
     return items
-      .filter((s) => s.id !== 'stk-3' && !s.name.toLowerCase().includes('jagung'))
+      .filter((s) => !s.name.toLowerCase().includes('jagung'))
       .map((s) => ({ ...s, name: fixSingkos(s.name) }));
   });
 
@@ -69,31 +67,7 @@ export default function App() {
   const [isAiAdvisorOpen, setIsAiAdvisorOpen] = useState<boolean>(false);
   const [isMenuEditorOpen, setIsMenuEditorOpen] = useState<boolean>(false);
   const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState<boolean>(false);
-  const [isDeviceSyncOpen, setIsDeviceSyncOpen] = useState<boolean>(false);
   const [activeReceiptTransaction, setActiveReceiptTransaction] = useState<Transaction | null>(null);
-
-  // Auto-sync via URL parameter (e.g. from QR scan)
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const syncData = urlParams.get('syncData');
-    if (syncData) {
-      try {
-        const decoded = JSON.parse(decodeURIComponent(atob(syncData)));
-        if (decoded && typeof decoded === 'object') {
-          if (decoded.stockItems) setStockItems(decoded.stockItems);
-          if (decoded.menuItems) setMenuItems(decoded.menuItems);
-          if (decoded.sauces) setSauces(decoded.sauces);
-          if (decoded.expenses) setExpenses(decoded.expenses);
-          if (decoded.transactions) setTransactions(decoded.transactions);
-          if (decoded.dailyReports) setDailyReports(decoded.dailyReports);
-          alert('📱 Data berhasil disinkronkan dari Laptop/HP!');
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      } catch (err) {
-        console.error('Failed auto sync from URL', err);
-      }
-    }
-  }, []);
 
   // Multi-tab / Broadcast sync
   useEffect(() => {
@@ -189,7 +163,7 @@ export default function App() {
   }, [dailyReports, menuItems]);
 
   // Derived financial calculation
-  const financialSummary = calculateFinancialSummary(transactions, expenses, menuItems, sauces, stockItems);
+  const financialSummary = calculateFinancialSummary(transactions, expenses, menuItems, sauces, stockItems, dailyReports);
   const lowStockItems = stockItems.filter((i) => i.currentStock <= i.minStock);
 
   // HANDLERS FOR DAILY REPORT FINALIZATION
@@ -285,15 +259,20 @@ export default function App() {
     stockItemId: string,
     addedQty: number,
     purchaseCost: number,
-    recordAsExpense: boolean
+    recordAsExpense: boolean,
+    purchaseDate?: string
   ) => {
+    const isoDate = purchaseDate
+      ? new Date(purchaseDate + 'T12:00:00').toISOString()
+      : new Date().toISOString();
+
     setStockItems((prev) =>
       prev.map((item) => {
         if (item.id === stockItemId) {
           return {
             ...item,
             currentStock: Number((item.currentStock + addedQty).toFixed(2)),
-            lastUpdated: new Date().toISOString(),
+            lastUpdated: isoDate,
           };
         }
         return item;
@@ -309,8 +288,8 @@ export default function App() {
         amount: purchaseCost,
         isCapital: false,
         paymentMethod: 'qris',
-        date: new Date().toISOString(),
-        notes: `Restock otomatis dari modul stok`,
+        date: isoDate,
+        notes: `Restock otomatis dari modul stok ${purchaseDate ? 'tanggal ' + purchaseDate : ''}`,
       };
       setExpenses((prev) => [newExpense, ...prev]);
     }
@@ -417,22 +396,6 @@ export default function App() {
     }
   };
 
-  const handleImportData = (imported: {
-    stockItems?: StockItem[];
-    menuItems?: MenuItem[];
-    sauces?: SauceItem[];
-    expenses?: Expense[];
-    transactions?: Transaction[];
-    dailyReports?: DailyReport[];
-  }) => {
-    if (imported.stockItems) setStockItems(imported.stockItems);
-    if (imported.menuItems) setMenuItems(imported.menuItems);
-    if (imported.sauces) setSauces(imported.sauces);
-    if (imported.expenses) setExpenses(imported.expenses);
-    if (imported.transactions) setTransactions(imported.transactions);
-    if (imported.dailyReports) setDailyReports(imported.dailyReports);
-  };
-
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 font-sans selection:bg-emerald-500 selection:text-stone-950 flex flex-col">
       {/* Top Navigation */}
@@ -444,7 +407,6 @@ export default function App() {
         onOpenAiAdvisor={() => setIsAiAdvisorOpen(true)}
         onResetDemoData={handleResetDemoData}
         onOpenMenuEditor={() => setIsMenuEditorOpen(true)}
-        onOpenDeviceSync={() => setIsDeviceSyncOpen(true)}
         onExportExcel={handleExportExcel}
         onExportPdf={handleExportPdf}
       />
@@ -545,18 +507,6 @@ export default function App() {
         sauces={sauces}
         stockItems={stockItems}
         onFinalizeDay={handleFinalizeDailyReport}
-      />
-
-      <DeviceSyncModal
-        isOpen={isDeviceSyncOpen}
-        onClose={() => setIsDeviceSyncOpen(false)}
-        stockItems={stockItems}
-        menuItems={menuItems}
-        sauces={sauces}
-        expenses={expenses}
-        transactions={transactions}
-        dailyReports={dailyReports}
-        onImportData={handleImportData}
       />
 
       {/* Footer */}

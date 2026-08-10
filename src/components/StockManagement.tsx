@@ -26,7 +26,13 @@ interface StockManagementProps {
   onAddStockItem: (item: StockItem) => void;
   onUpdateStockItem: (item: StockItem) => void;
   onDeleteStockItem: (id: string) => void;
-  onRestock: (stockItemId: string, addedQty: number, purchaseCost: number, recordAsExpense: boolean) => void;
+  onRestock: (
+    stockItemId: string,
+    addedQty: number,
+    purchaseCost: number,
+    recordAsExpense: boolean,
+    purchaseDate?: string
+  ) => void;
   onUpdateMenuRecipe: (updatedMenu: MenuItem) => void;
   onAddMenuItem?: (newItem: MenuItem) => void;
 }
@@ -78,6 +84,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const [restockQty, setRestockQty] = useState<number>(5);
   const [restockCost, setRestockCost] = useState<number>(0);
   const [recordExpense, setRecordExpense] = useState<boolean>(true);
+  const [restockDate, setRestockDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
 
   // Filter logic
   const filteredItems = stockItems.filter((item) => {
@@ -201,12 +208,13 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     setRestockQty(5);
     setRestockCost(5 * item.unitCostPrice);
     setRecordExpense(true);
+    setRestockDate(new Date().toISOString().split('T')[0]);
   };
 
   const handleConfirmRestock = () => {
     if (!restockTargetItem || restockQty <= 0) return;
 
-    onRestock(restockTargetItem.id, Number(restockQty), Number(restockCost), recordExpense);
+    onRestock(restockTargetItem.id, Number(restockQty), Number(restockCost), recordExpense, restockDate);
     setRestockTargetItem(null);
   };
 
@@ -719,6 +727,42 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500"
                   />
                   <span className="font-bold text-stone-300 shrink-0">{restockTargetItem.unit}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-stone-400 mb-1 font-medium flex items-center justify-between">
+                  <span>Tanggal Pembelian / Restock Bahan:</span>
+                  <span className="text-emerald-400 text-xs font-bold">
+                    {formatDateOnly(restockDate + 'T12:00:00')}
+                  </span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    required
+                    value={restockDate}
+                    onChange={(e) => setRestockDate(e.target.value)}
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500 text-xs sm:text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setRestockDate(new Date().toISOString().split('T')[0])}
+                    className="px-2.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl border border-stone-700 text-xs shrink-0 font-medium"
+                  >
+                    Hari Ini
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date();
+                      d.setDate(d.getDate() - 1);
+                      setRestockDate(d.toISOString().split('T')[0]);
+                    }}
+                    className="px-2.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl border border-stone-700 text-xs shrink-0 font-medium"
+                  >
+                    Kemarin
+                  </button>
                 </div>
               </div>
 

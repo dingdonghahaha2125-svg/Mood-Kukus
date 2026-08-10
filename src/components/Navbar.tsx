@@ -12,7 +12,6 @@ import {
   FileSpreadsheet,
   FileText,
   DollarSign,
-  Smartphone,
   RefreshCw,
 } from 'lucide-react';
 import { FinancialSummary, StockItem } from '../types';
@@ -27,7 +26,6 @@ interface NavbarProps {
   onOpenAiAdvisor: () => void;
   onResetDemoData: () => void;
   onOpenMenuEditor?: () => void;
-  onOpenDeviceSync?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
 }
@@ -40,7 +38,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAiAdvisor,
   onResetDemoData,
   onOpenMenuEditor,
-  onOpenDeviceSync,
   onExportExcel,
   onExportPdf,
 }) => {
@@ -88,18 +85,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Device Sync Button */}
-            {onOpenDeviceSync && (
-              <button
-                onClick={onOpenDeviceSync}
-                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 rounded-xl font-bold text-xs transition-all shadow-sm"
-                title="Sinkronisasikan Data Antara Laptop & Handphone"
-              >
-                <Smartphone className="w-4 h-4 text-emerald-400" />
-                <span className="hidden sm:inline">Sync HP</span>
-              </button>
-            )}
-
             {/* Edit Menu Price Quick Button */}
             {onOpenMenuEditor && (
               <button

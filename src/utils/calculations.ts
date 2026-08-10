@@ -1,4 +1,4 @@
-import { MenuItem, SauceItem, StockItem, Transaction, Expense, FinancialSummary } from '../types';
+import { MenuItem, SauceItem, StockItem, Transaction, Expense, FinancialSummary, DailyReport } from '../types';
 
 /**
  * Calculates the exact HPP (Harga Pokok Penjualan) for a menu item
@@ -49,25 +49,30 @@ export function calculateFinancialSummary(
   expenses: Expense[],
   menuItems: MenuItem[] = [],
   sauces: SauceItem[] = [],
-  stockItems: StockItem[] = []
+  stockItems: StockItem[] = [],
+  dailyReports: DailyReport[] = []
 ): FinancialSummary {
-  let totalRevenue = transactions.reduce((sum, tr) => sum + tr.totalAmount, 0);
-  let totalHpp = transactions.reduce((sum, tr) => sum + tr.totalHpp, 0);
+  // 1. Calculate cumulative revenue and HPP from all finalized daily reports
+  const reportsRevenue = dailyReports.reduce((sum, r) => sum + (r.totalRevenue || 0), 0);
+  const reportsHpp = dailyReports.reduce((sum, r) => sum + (r.totalHpp || 0), 0);
 
-  // If there are no transactions OR if menu items have direct soldQty logged,
-  // ensure revenue & HPP reflect the sold items
+  // 2. Calculate active unfinalized sales (transactions or current active menuItems.soldQty)
+  let activeRevenue = transactions.reduce((sum, tr) => sum + tr.totalAmount, 0);
+  let activeHpp = transactions.reduce((sum, tr) => sum + tr.totalHpp, 0);
+
   const menuItemsRevenue = menuItems.reduce((sum, item) => sum + (item.soldQty || 0) * item.price, 0);
-  
   if (transactions.length === 0 && menuItemsRevenue > 0) {
-    totalRevenue = menuItemsRevenue;
-    totalHpp = menuItems.reduce((sum, item) => {
+    activeRevenue = menuItemsRevenue;
+    activeHpp = menuItems.reduce((sum, item) => {
       const hpp = calculateMenuItemHpp(item, item.defaultSauceId, sauces, stockItems);
       return sum + (item.soldQty || 0) * hpp;
     }, 0);
-  } else if (transactions.length > 0 && menuItemsRevenue > totalRevenue) {
-    // Combine if user directly modified soldQty beyond recorded transactions
-    totalRevenue = Math.max(totalRevenue, menuItemsRevenue);
+  } else if (transactions.length > 0 && menuItemsRevenue > activeRevenue) {
+    activeRevenue = Math.max(activeRevenue, menuItemsRevenue);
   }
+
+  const totalRevenue = reportsRevenue + activeRevenue;
+  const totalHpp = reportsHpp + activeHpp;
 
   const operationalExpenses = expenses
     .filter((e) => !e.isCapital)
