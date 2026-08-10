@@ -4,15 +4,11 @@ import {
   Boxes,
   Calendar,
   Receipt,
-  Calculator,
-  Bot,
   AlertTriangle,
-  RotateCcw,
-  Sparkles,
+  Bot,
   FileSpreadsheet,
   FileText,
   DollarSign,
-  RefreshCw,
 } from 'lucide-react';
 import { FinancialSummary, StockItem } from '../types';
 import { formatRp } from '../utils/calculations';
@@ -24,7 +20,7 @@ interface NavbarProps {
   financialSummary: FinancialSummary;
   lowStockItems: StockItem[];
   onOpenAiAdvisor: () => void;
-  onResetDemoData: () => void;
+  onResetDemoData?: () => void;
   onOpenMenuEditor?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
@@ -36,7 +32,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   financialSummary,
   lowStockItems,
   onOpenAiAdvisor,
-  onResetDemoData,
   onOpenMenuEditor,
   onExportExcel,
   onExportPdf,
@@ -51,7 +46,6 @@ export const Navbar: React.FC<NavbarProps> = ({
       badge: lowStockItems.length > 0 ? lowStockItems.length : undefined,
     },
     { id: 'expenses', label: '💸 Catat Belanja & Pengeluaran', icon: Receipt },
-    { id: 'flyer', label: '🎨 Buat Flyer Promosi', icon: Sparkles },
   ];
 
   return (
@@ -129,15 +123,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Bot className="w-4 h-4 text-emerald-200 animate-pulse" />
               <span className="hidden sm:inline">Tanya KukusBot AI</span>
               <span className="sm:hidden">AI Advisor</span>
-            </button>
-
-            {/* Reset Demo Button */}
-            <button
-              onClick={onResetDemoData}
-              className="p-2 text-stone-400 hover:text-stone-200 hover:bg-stone-800 rounded-xl transition-colors"
-              title="Reset ke Data Sample Awal"
-            >
-              <RotateCcw className="w-4 h-4" />
             </button>
           </div>
         </div>

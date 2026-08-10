@@ -14,7 +14,6 @@ import { DashboardOverview } from './components/DashboardOverview';
 import { StockManagement } from './components/StockManagement';
 import { DailyHistory } from './components/DailyHistory';
 import { ExpenseTracker } from './components/ExpenseTracker';
-import { FlyerGenerator } from './components/FlyerGenerator';
 import { AiBusinessAdvisor } from './components/AiBusinessAdvisor';
 import { DigitalReceiptModal } from './components/DigitalReceiptModal';
 import { MenuPriceEditorModal } from './components/MenuPriceEditorModal';
@@ -471,13 +470,6 @@ export default function App() {
             expenses={expenses}
             onAddExpense={handleAddExpense}
             onDeleteExpense={handleDeleteExpense}
-          />
-        )}
-
-        {activeTab === 'flyer' && (
-          <FlyerGenerator
-            menuItems={menuItems}
-            sauces={sauces}
           />
         )}
       </main>
