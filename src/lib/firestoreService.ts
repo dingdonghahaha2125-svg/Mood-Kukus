@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   setDoc,
+  addDoc,
   deleteDoc,
   onSnapshot,
   getDocs,
@@ -36,7 +37,10 @@ export function subscribeToCollection<T>(
     return onSnapshot(
       colRef,
       (snapshot) => {
-        const items: T[] = snapshot.docs.map((d) => d.data() as T);
+        const items: T[] = snapshot.docs.map((d) => ({
+          ...d.data(),
+          id: d.id,
+        } as T));
         onData(items);
       },
       (error) => {
@@ -49,7 +53,7 @@ export function subscribeToCollection<T>(
   }
 }
 
-// Save or Update a Document in Firestore
+// Save or Update a Document in Firestore using setDoc
 export async function saveDocument<T extends { id: string }>(
   collectionName: string,
   data: T
@@ -58,7 +62,23 @@ export async function saveDocument<T extends { id: string }>(
   try {
     const docRef = doc(db, collectionName, data.id);
     await setDoc(docRef, data, { merge: true });
+    console.log(`[Firestore Success] Saved document to ${path}:`, data);
   } catch (error) {
+    console.error(`[Firestore Error] Failed saving to ${path}:`, error);
+    handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+// Directly add an Expense document to Firestore using addDoc / setDoc
+export async function addExpenseToFirestore(expense: Expense): Promise<string> {
+  const path = `${COLLECTIONS.EXPENSES}/${expense.id}`;
+  try {
+    const docRef = doc(db, COLLECTIONS.EXPENSES, expense.id);
+    await setDoc(docRef, expense, { merge: true });
+    console.log(`[Firestore Success] Expense added to collection '${COLLECTIONS.EXPENSES}' with ID ${expense.id}:`, expense);
+    return expense.id;
+  } catch (error) {
+    console.error(`[Firestore Error] Failed adding expense to Firestore:`, error);
     handleFirestoreError(error, OperationType.WRITE, path);
   }
 }
@@ -72,6 +92,7 @@ export async function deleteDocument(
   try {
     const docRef = doc(db, collectionName, id);
     await deleteDoc(docRef);
+    console.log(`[Firestore Success] Deleted document from ${path}`);
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -86,10 +107,11 @@ export async function seedCollectionIfEmpty<T extends { id: string }>(
     const colRef = collection(db, collectionName);
     const snapshot = await getDocs(colRef);
     if (snapshot.empty && initialData.length > 0) {
-      console.log(`Seeding initial data for ${collectionName}...`);
+      console.log(`Seeding initial data into Firestore collection '${collectionName}'...`);
       for (const item of initialData) {
         await setDoc(doc(db, collectionName, item.id), item);
       }
+      console.log(`[Firestore Success] Seeded ${initialData.length} items to '${collectionName}'.`);
     }
   } catch (error) {
     console.warn(`Could not seed ${collectionName} into Firestore:`, error);
@@ -97,3 +119,4 @@ export async function seedCollectionIfEmpty<T extends { id: string }>(
 }
 
 export { COLLECTIONS };
+

@@ -25,6 +25,7 @@ import { testConnection } from './lib/firebase';
 import {
   subscribeToCollection,
   saveDocument,
+  addExpenseToFirestore,
   deleteDocument,
   seedCollectionIfEmpty,
   COLLECTIONS,
@@ -106,22 +107,22 @@ export default function App() {
 
     // 3. Subscribe to Firestore real-time updates
     const unsubStock = subscribeToCollection<StockItem>(COLLECTIONS.STOCK_ITEMS, (items) => {
-      if (items.length > 0) setStockItems(items);
+      setStockItems(items);
     });
     const unsubSauce = subscribeToCollection<SauceItem>(COLLECTIONS.SAUCE_ITEMS, (items) => {
-      if (items.length > 0) setSauces(items);
+      setSauces(items);
     });
     const unsubMenu = subscribeToCollection<MenuItem>(COLLECTIONS.MENU_ITEMS, (items) => {
-      if (items.length > 0) setMenuItems(items);
+      setMenuItems(items);
     });
     const unsubExpense = subscribeToCollection<Expense>(COLLECTIONS.EXPENSES, (items) => {
-      if (items.length > 0) setExpenses(items);
+      setExpenses(items);
     });
     const unsubTx = subscribeToCollection<Transaction>(COLLECTIONS.TRANSACTIONS, (items) => {
-      if (items.length > 0) setTransactions(items);
+      setTransactions(items);
     });
     const unsubReport = subscribeToCollection<DailyReport>(COLLECTIONS.DAILY_REPORTS, (items) => {
-      if (items.length > 0) setDailyReports(items);
+      setDailyReports(items);
     });
 
     return () => {
@@ -430,9 +431,9 @@ export default function App() {
   };
 
   // HANDLERS FOR EXPENSES
-  const handleAddExpense = (expense: Expense) => {
+  const handleAddExpense = async (expense: Expense) => {
     setExpenses((prev) => [expense, ...prev]);
-    saveDocument(COLLECTIONS.EXPENSES, expense);
+    await addExpenseToFirestore(expense);
 
     // Otomatis update stok jika expense terhubung dengan stock item
     if (expense.stockItemId && expense.addedStockQty && expense.addedStockQty > 0) {
