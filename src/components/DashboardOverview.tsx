@@ -299,11 +299,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             const excessProfit = Math.max(0, netProfit - totalCapital);
 
             return (
-              <div className="mt-3 pt-3 border-t border-stone-800/80 bg-stone-950/90 border border-stone-800 rounded-xl p-3.5 space-y-3">
+              <div className="mt-3 pt-3 border-t border-sky-900/40 bg-slate-950/90 border border-sky-800/40 rounded-xl p-3.5 space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-amber-400" />
-                    <h4 className="text-xs font-black text-stone-200 uppercase tracking-wider">
+                    <Wallet className="w-4 h-4 text-cyan-300" />
+                    <h4 className="text-xs font-black text-slate-100 uppercase tracking-wider">
                       Analisis Balik Modal (BEP Usaha dari Nol) 🍃
                     </h4>
                     {totalCapital > 0 && (
@@ -313,7 +313,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                             ? 'bg-emerald-950 text-emerald-400 border-emerald-500/60'
                             : netProfit < 0
                             ? 'bg-rose-950 text-rose-300 border-rose-700/60'
-                            : 'bg-amber-950 text-amber-300 border-amber-600/60'
+                            : 'bg-sky-950 text-cyan-300 border-sky-600/60'
                         }`}
                       >
                         {isBepAchieved
@@ -328,26 +328,26 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   {onOpenInitialCapitalModal && (
                     <button
                       onClick={onOpenInitialCapitalModal}
-                      className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 rounded-xl font-bold text-xs transition-all shadow-sm flex items-center gap-1.5 active:scale-95 self-start sm:self-auto"
+                      className="px-3 py-1 bg-sky-950 hover:bg-sky-900 border border-sky-700/60 text-cyan-300 rounded-xl font-bold text-xs transition-all shadow-sm flex items-center gap-1.5 active:scale-95 self-start sm:self-auto"
                       title="Atur atau Tambah Modal Awal Disetor"
                     >
-                      <Plus className="w-3.5 h-3.5 text-amber-400" />
+                      <Plus className="w-3.5 h-3.5 text-cyan-300" />
                       <span>+ Kelola Modal Awal</span>
                     </button>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-0.5">
-                  <div className="bg-stone-900 p-2.5 rounded-lg border border-stone-800">
-                    <span className="text-[10px] text-stone-400 font-bold uppercase block">
+                  <div className="bg-slate-900 p-2.5 rounded-lg border border-sky-800/40">
+                    <span className="text-[10px] text-sky-200/70 font-bold uppercase block">
                       Modal Awal Disetor
                     </span>
-                    <span className="text-sm font-black text-amber-400">{formatRp(totalCapital)}</span>
-                    <p className="text-[9px] text-stone-500">Investasi awal rintis usaha</p>
+                    <span className="text-sm font-black text-cyan-300">{formatRp(totalCapital)}</span>
+                    <p className="text-[9px] text-sky-300/60">Investasi awal rintis usaha</p>
                   </div>
 
-                  <div className="bg-stone-900 p-2.5 rounded-lg border border-stone-800">
-                    <span className="text-[10px] text-stone-400 font-bold uppercase block">
+                  <div className="bg-slate-900 p-2.5 rounded-lg border border-sky-800/40">
+                    <span className="text-[10px] text-sky-200/70 font-bold uppercase block">
                       Total Laba Bersih
                     </span>
                     <span
@@ -357,11 +357,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     >
                       {formatRp(netProfit)}
                     </span>
-                    <p className="text-[9px] text-stone-500">Hasil bersih kumulatif</p>
+                    <p className="text-[9px] text-sky-300/60">Hasil bersih kumulatif</p>
                   </div>
 
-                  <div className="bg-stone-900 p-2.5 rounded-lg border border-stone-800">
-                    <span className="text-[10px] text-stone-400 font-bold uppercase block">
+                  <div className="bg-slate-900 p-2.5 rounded-lg border border-sky-800/40">
+                    <span className="text-[10px] text-sky-200/70 font-bold uppercase block">
                       {isBepAchieved ? 'Keuntungan Murni' : 'Sisa Modal Belum Kembali'}
                     </span>
                     <span
@@ -371,7 +371,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     >
                       {isBepAchieved ? formatRp(excessProfit) : formatRp(remainingCapital)}
                     </span>
-                    <p className="text-[9px] text-stone-500">
+                    <p className="text-[9px] text-sky-300/60">
                       {isBepAchieved ? 'Laba di atas modal awal' : 'Kekurangan omset bersih'}
                     </p>
                   </div>

@@ -503,7 +503,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans selection:bg-emerald-500 selection:text-stone-950 flex flex-col">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950 flex flex-col">
       {/* Top Navigation */}
       <Navbar
         activeTab={activeTab}
@@ -631,8 +631,8 @@ export default function App() {
       />
 
       {/* Footer */}
-      <footer className="bg-stone-900 border-t border-stone-800 text-stone-500 text-xs py-4 text-center mt-8">
-        <p>KukusLokal &copy; {new Date().getFullYear()} - Sistem Manajemen Stok & Keuangan Kuliner Alami Eco-Friendly</p>
+      <footer className="bg-slate-900/90 border-t border-sky-900/40 text-sky-200/60 text-xs py-4 text-center mt-8 backdrop-blur-sm">
+        <p>Mood Kukus Mamuju &copy; {new Date().getFullYear()} - Sistem Manajemen Stok & Keuangan Kuliner Kukusan Sehat</p>
       </footer>
     </div>
   );
