@@ -171,21 +171,23 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-stone-900 via-stone-800 to-emerald-950 border border-stone-700/70 rounded-2xl p-5 sm:p-6 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
-              Monitoring Stok Per Item & Keuangan Real-time
-            </span>
+      {/* Compact Header */}
+      <div className="bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 flex items-center justify-between gap-3 shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-emerald-950/80 border border-emerald-500/30 rounded-xl text-emerald-400 shrink-0">
+            <Flame className="w-5 h-5" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-stone-100">
-            Selamat Datang di <span className="text-emerald-400">Mood Kukus Mamuju</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-stone-300 max-w-2xl">
-            Sistem pencatatan khusus per-item bahan jualan kukusan (Pisang Kukus Kepok, Ubi Cilembu, Telur Rebus, Jagung Manis), batch olahan harian, dan analisis Laku Terjual.
-          </p>
+          <div>
+            <h1 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2 leading-tight">
+              <span>Mood Kukus Mamuju</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                Kuliner Sehat & Alami 🍃
+              </span>
+            </h1>
+            <p className="text-xs text-stone-400">
+              Pencatatan Penjualan & Kelola Stok Kukusan Harian
+            </p>
+          </div>
         </div>
       </div>
 
