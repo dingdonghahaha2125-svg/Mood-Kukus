@@ -15,6 +15,7 @@ import {
   Calendar,
   Utensils,
   CheckCircle,
+  CheckCircle2,
   Flame,
   FileSpreadsheet,
   FileText,
@@ -23,6 +24,7 @@ import {
   Eye,
   Plus,
   History,
+  Wallet,
 } from 'lucide-react';
 import {
   BarChart,
@@ -61,6 +63,7 @@ interface DashboardOverviewProps {
   onExportExcel?: () => void;
   onExportPdf?: () => void;
   onOpenManualPastReport?: () => void;
+  onOpenInitialCapitalModal?: () => void;
 }
 
 const COLORS = ['#10b981', '#14b8a6', '#06b6d4', '#f59e0b', '#ec4899', '#8b5cf6'];
@@ -85,6 +88,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onExportExcel,
   onExportPdf,
   onOpenManualPastReport,
+  onOpenInitialCapitalModal,
 }) => {
   // State to filter per-item sales view (default: only show sold items today)
   const [itemFilter, setItemFilter] = React.useState<'sold_only' | 'all'>('sold_only');
@@ -282,6 +286,135 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               </p>
             </div>
           </div>
+
+          {/* ANALISIS BALIK MODAL (BEP & ROI USAHA DARI NOL) */}
+          {(() => {
+            const totalCapital = financialSummary.totalCapital;
+            const netProfit = financialSummary.netProfit;
+            const isBepAchieved = netProfit >= totalCapital && totalCapital > 0;
+            const bepProgress =
+              totalCapital > 0
+                ? Math.min(100, Math.max(0, Math.round((netProfit / totalCapital) * 100)))
+                : 0;
+            const remainingCapital = Math.max(0, totalCapital - netProfit);
+            const excessProfit = Math.max(0, netProfit - totalCapital);
+
+            return (
+              <div className="mt-3 pt-3 border-t border-stone-800/80 bg-stone-900/90 border border-stone-800 rounded-xl p-3.5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="w-4 h-4 text-amber-400" />
+                    <h4 className="text-xs font-black text-amber-300 uppercase tracking-wider">
+                      Analisis Balik Modal (BEP Usaha dari Nol)
+                    </h4>
+                    {totalCapital > 0 && (
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                          isBepAchieved
+                            ? 'bg-emerald-950 text-emerald-300 border-emerald-600/60'
+                            : netProfit < 0
+                            ? 'bg-rose-950 text-rose-300 border-rose-700/60'
+                            : 'bg-amber-950 text-amber-300 border-amber-600/60'
+                        }`}
+                      >
+                        {isBepAchieved
+                          ? '🎉 IMPAS & PROFIT MURNI'
+                          : netProfit < 0
+                          ? '⚠️ MERUGI OPERASIONAL'
+                          : `⏳ BALIK MODAL ${bepProgress}%`}
+                      </span>
+                    )}
+                  </div>
+
+                  {onOpenInitialCapitalModal && (
+                    <button
+                      onClick={onOpenInitialCapitalModal}
+                      className="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded-xl font-bold text-xs transition-all shadow-sm flex items-center gap-1.5 active:scale-95 self-start sm:self-auto"
+                      title="Atur atau Tambah Modal Awal Disetor"
+                    >
+                      <Plus className="w-3.5 h-3.5 text-amber-400" />
+                      <span>+ Kelola Modal Awal</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-0.5">
+                  <div className="bg-stone-950 p-2.5 rounded-lg border border-stone-800/80">
+                    <span className="text-[10px] text-stone-400 font-bold uppercase block">
+                      Modal Awal Disetor
+                    </span>
+                    <span className="text-sm font-black text-amber-400">{formatRp(totalCapital)}</span>
+                    <p className="text-[9px] text-stone-500">Investasi awal rintis usaha</p>
+                  </div>
+
+                  <div className="bg-stone-950 p-2.5 rounded-lg border border-stone-800/80">
+                    <span className="text-[10px] text-stone-400 font-bold uppercase block">
+                      Total Laba Bersih
+                    </span>
+                    <span
+                      className={`text-sm font-black ${
+                        netProfit >= 0 ? 'text-teal-300' : 'text-rose-400'
+                      }`}
+                    >
+                      {formatRp(netProfit)}
+                    </span>
+                    <p className="text-[9px] text-stone-500">Hasil bersih kumulatif</p>
+                  </div>
+
+                  <div className="bg-stone-950 p-2.5 rounded-lg border border-stone-800/80">
+                    <span className="text-[10px] text-stone-400 font-bold uppercase block">
+                      {isBepAchieved ? 'Keuntungan Murni' : 'Sisa Modal Belum Kembali'}
+                    </span>
+                    <span
+                      className={`text-sm font-black ${
+                        isBepAchieved ? 'text-emerald-400' : 'text-rose-300'
+                      }`}
+                    >
+                      {isBepAchieved ? formatRp(excessProfit) : formatRp(remainingCapital)}
+                    </span>
+                    <p className="text-[9px] text-stone-500">
+                      {isBepAchieved ? 'Laba di atas modal awal' : 'Kekurangan omset bersih'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                {totalCapital > 0 ? (
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-[10px] font-bold">
+                      <span className="text-stone-400">Progres Pengembalian Modal Awal:</span>
+                      <span className={isBepAchieved ? 'text-emerald-400' : 'text-amber-300'}>
+                        {bepProgress}% {isBepAchieved ? '(Sudah Lunas BEP 🎉)' : 'Menuju Balik Modal'}
+                      </span>
+                    </div>
+                    <div className="w-full bg-stone-950 rounded-full h-2 overflow-hidden border border-stone-800">
+                      <div
+                        className={`h-full transition-all duration-500 rounded-full ${
+                          isBepAchieved
+                            ? 'bg-gradient-to-r from-teal-500 to-emerald-400'
+                            : 'bg-gradient-to-r from-amber-500 to-emerald-500'
+                        }`}
+                        style={{ width: `${Math.max(3, bepProgress)}%` }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-2 bg-stone-950/80 border border-dashed border-stone-800 rounded-lg text-center">
+                    <p className="text-[11px] text-stone-400 font-medium">
+                      Belum ada modal awal diinput. Klik{' '}
+                      <button
+                        onClick={onOpenInitialCapitalModal}
+                        className="text-amber-400 underline font-bold"
+                      >
+                        + Kelola Modal Awal
+                      </button>{' '}
+                      untuk melihat kalkulasi Balik Modal (BEP).
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
 

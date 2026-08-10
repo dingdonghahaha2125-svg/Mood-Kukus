@@ -23,17 +23,25 @@ export function exportToExcel({
   const dateStr = new Date().toISOString().split('T')[0];
 
   // 1. RINGKASAN KEUANGAN TOTAL SHEET
+  const isBep = financialSummary.netProfit >= financialSummary.totalCapital && financialSummary.totalCapital > 0;
+  const bepStatusStr = financialSummary.totalCapital === 0
+    ? 'Belum ada modal awal diinput'
+    : isBep
+    ? `SUDAH BALIK MODAL & PROFIT (+ ${formatRp(financialSummary.netProfit - financialSummary.totalCapital)})`
+    : `BELUM BALIK MODAL (Sisa ${formatRp(financialSummary.totalCapital - financialSummary.netProfit)} lagi untuk BEP)`;
+
   const summaryData = [
     ['MOOD KUKUS MAMUJU - LAPORAN REKAPITULASI KEUANGAN TOTAL USAHA'],
     [`Tanggal Export: ${new Date().toLocaleDateString('id-ID')}`],
     [''],
     ['Metrik Keuangan Utama', 'Nilai (Rp) / Persentase'],
+    ['Total Modal Awal Disetor', financialSummary.totalCapital],
     ['Total Pemasukan (Omset)', financialSummary.totalRevenue],
     ['Laba Kotor Usaha', financialSummary.grossProfit],
     ['Total Pengeluaran Operasional', financialSummary.totalExpenses],
-    ['Total Pengeluaran Modal / Investasi', financialSummary.totalCapital],
     ['Total Laba Bersih Usaha', financialSummary.netProfit],
     ['Margin Keuntungan Usaha', `${financialSummary.profitMargin}%`],
+    ['Status Balik Modal (BEP)', bepStatusStr],
   ];
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
   XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan Utama');
@@ -110,28 +118,38 @@ export function exportToPdf({
 
   let currentY = 36;
 
-  // METRICS SUMMARY BOX
+  // METRICS SUMMARY BOX WITH BEP ANALYSIS
+  const isBep = financialSummary.netProfit >= financialSummary.totalCapital && financialSummary.totalCapital > 0;
+  const bepStatusStr = financialSummary.totalCapital === 0
+    ? 'BEP: Modal Awal Belum Diinput'
+    : isBep
+    ? `BEP: SUDAH BALIK MODAL 🎉 (+${formatRp(financialSummary.netProfit - financialSummary.totalCapital)})`
+    : `BEP: BELUM BALIK MODAL ⏳ (Sisa ${formatRp(financialSummary.totalCapital - financialSummary.netProfit)})`;
+
   doc.setDrawColor(220, 220, 220);
   doc.setFillColor(248, 250, 252);
-  doc.roundedRect(14, currentY, 182, 34, 3, 3, 'FD');
+  doc.roundedRect(14, currentY, 182, 40, 3, 3, 'FD');
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(30, 41, 59);
-  doc.text('REKAPITULASI KEUANGAN TOTAL USAHA', 18, currentY + 7);
+  doc.text('REKAPITULASI KEUANGAN & BEP TOTAL USAHA', 18, currentY + 7);
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
-  doc.text(`• Total Pemasukan (Omset)  : ${formatRp(financialSummary.totalRevenue)}`, 18, currentY + 16);
-  doc.text(`• Total Pengeluaran (Modal/Ops): ${formatRp(financialSummary.totalExpenses + financialSummary.totalCapital)}`, 18, currentY + 24);
+  doc.text(`• Modal Awal Disetor : ${formatRp(financialSummary.totalCapital)}`, 18, currentY + 16);
+  doc.text(`• Total Pemasukan    : ${formatRp(financialSummary.totalRevenue)}`, 18, currentY + 24);
+  doc.text(`• Total Pengeluaran  : ${formatRp(financialSummary.totalExpenses)}`, 18, currentY + 32);
 
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(16, 185, 129);
-  doc.text(`• TOTAL LABA BERSIH       : ${formatRp(financialSummary.netProfit)}`, 110, currentY + 16);
+  doc.text(`• TOTAL LABA BERSIH  : ${formatRp(financialSummary.netProfit)}`, 110, currentY + 16);
   doc.setTextColor(245, 158, 11);
-  doc.text(`• MARGIN KEUNTUNGAN      : ${financialSummary.profitMargin}%`, 110, currentY + 24);
+  doc.text(`• MARGIN PROFIT      : ${financialSummary.profitMargin}%`, 110, currentY + 24);
+  doc.setTextColor(isBep ? 16 : 225, isBep ? 185 : 29, isBep ? 129 : 72);
+  doc.text(`• ${bepStatusStr}`, 110, currentY + 32);
 
-  currentY += 42;
+  currentY += 48;
 
   // TABLE 1: REKAPAN PENJUALAN HARIAN
   if (dailyReports && dailyReports.length > 0) {

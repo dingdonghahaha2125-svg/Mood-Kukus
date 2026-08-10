@@ -10,6 +10,7 @@ import {
   Filter,
   CreditCard,
   Tag,
+  Wallet,
 } from 'lucide-react';
 import { Expense, ExpenseCategory } from '../types';
 import { formatRp, formatDateOnly } from '../utils/calculations';
@@ -18,12 +19,14 @@ interface ExpenseTrackerProps {
   expenses: Expense[];
   onAddExpense: (expense: Expense) => void;
   onDeleteExpense: (id: string) => void;
+  onOpenInitialCapitalModal?: () => void;
 }
 
 export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
   expenses,
   onAddExpense,
   onDeleteExpense,
+  onOpenInitialCapitalModal,
 }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -120,13 +123,26 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5"
-        >
-          <Plus className="w-4 h-4" />
-          Catat Pengeluaran Baru
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {onOpenInitialCapitalModal && (
+            <button
+              onClick={onOpenInitialCapitalModal}
+              className="px-3.5 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-sm"
+              title="Atur modal awal rintis usaha dari nol"
+            >
+              <Wallet className="w-4 h-4 text-amber-400" />
+              <span>+ Kelola Modal Awal (BEP)</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            Catat Pengeluaran Baru
+          </button>
+        </div>
       </div>
 
       {/* Summary KPI Cards */}

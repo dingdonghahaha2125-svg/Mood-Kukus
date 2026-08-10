@@ -19,6 +19,7 @@ import { DigitalReceiptModal } from './components/DigitalReceiptModal';
 import { MenuPriceEditorModal } from './components/MenuPriceEditorModal';
 import { FinalizeDayModal } from './components/FinalizeDayModal';
 import { ManualPastReportModal } from './components/ManualPastReportModal';
+import { InitialCapitalModal } from './components/InitialCapitalModal';
 import { exportToExcel, exportToPdf } from './utils/exportUtils';
 import { testConnection } from './lib/firebase';
 import {
@@ -76,6 +77,7 @@ export default function App() {
   const [isMenuEditorOpen, setIsMenuEditorOpen] = useState<boolean>(false);
   const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState<boolean>(false);
   const [isManualPastReportOpen, setIsManualPastReportOpen] = useState<boolean>(false);
+  const [isInitialCapitalModalOpen, setIsInitialCapitalModalOpen] = useState<boolean>(false);
   const [finalizeModalDate, setFinalizeModalDate] = useState<string>('');
   const [activeReceiptTransaction, setActiveReceiptTransaction] = useState<Transaction | null>(null);
 
@@ -520,6 +522,7 @@ export default function App() {
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
             onOpenManualPastReport={() => setIsManualPastReportOpen(true)}
+            onOpenInitialCapitalModal={() => setIsInitialCapitalModalOpen(true)}
           />
         )}
 
@@ -553,6 +556,7 @@ export default function App() {
             expenses={expenses}
             onAddExpense={handleAddExpense}
             onDeleteExpense={handleDeleteExpense}
+            onOpenInitialCapitalModal={() => setIsInitialCapitalModalOpen(true)}
           />
         )}
       </main>
@@ -596,6 +600,15 @@ export default function App() {
         isOpen={isManualPastReportOpen}
         onClose={() => setIsManualPastReportOpen(false)}
         onSaveManualReport={handleSaveManualPastReport}
+      />
+
+      <InitialCapitalModal
+        isOpen={isInitialCapitalModalOpen}
+        onClose={() => setIsInitialCapitalModalOpen(false)}
+        expenses={expenses}
+        financialSummary={financialSummary}
+        onAddExpense={handleAddExpense}
+        onDeleteExpense={handleDeleteExpense}
       />
 
       {/* Footer */}
