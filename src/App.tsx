@@ -67,7 +67,13 @@ export default function App() {
   const [isAiAdvisorOpen, setIsAiAdvisorOpen] = useState<boolean>(false);
   const [isMenuEditorOpen, setIsMenuEditorOpen] = useState<boolean>(false);
   const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState<boolean>(false);
+  const [finalizeModalDate, setFinalizeModalDate] = useState<string>('');
   const [activeReceiptTransaction, setActiveReceiptTransaction] = useState<Transaction | null>(null);
+
+  const handleOpenFinalizeModal = (date?: string) => {
+    setFinalizeModalDate(date || new Date().toISOString().split('T')[0]);
+    setIsFinalizeModalOpen(true);
+  };
 
   // Multi-tab / Broadcast sync
   useEffect(() => {
@@ -427,7 +433,7 @@ export default function App() {
             onOpenReceipt={(tr) => setActiveReceiptTransaction(tr)}
             onOpenAiAdvisor={() => setIsAiAdvisorOpen(true)}
             onOpenMenuEditor={() => setIsMenuEditorOpen(true)}
-            onOpenFinalizeModal={() => setIsFinalizeModalOpen(true)}
+            onOpenFinalizeModal={handleOpenFinalizeModal}
             onUpdateMenuItem={handleUpdateMenuItem}
             onAddMenuItem={handleAddMenuItem}
             onResetSalesToday={handleResetSalesToday}
@@ -439,7 +445,7 @@ export default function App() {
         {activeTab === 'daily_history' && (
           <DailyHistory
             dailyReports={dailyReports}
-            onOpenFinalizeModal={() => setIsFinalizeModalOpen(true)}
+            onOpenFinalizeModal={handleOpenFinalizeModal}
             onDeleteDailyReport={handleDeleteDailyReport}
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
@@ -507,6 +513,7 @@ export default function App() {
         sauces={sauces}
         stockItems={stockItems}
         onFinalizeDay={handleFinalizeDailyReport}
+        initialDate={finalizeModalDate}
       />
 
       {/* Footer */}

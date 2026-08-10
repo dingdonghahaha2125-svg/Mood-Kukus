@@ -10,6 +10,7 @@ interface FinalizeDayModalProps {
   sauces: SauceItem[];
   stockItems: StockItem[];
   onFinalizeDay: (report: DailyReport, resetTodaySales: boolean) => void;
+  initialDate?: string;
 }
 
 export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
@@ -19,10 +20,19 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
   sauces,
   stockItems,
   onFinalizeDay,
+  initialDate,
 }) => {
   const [notes, setNotes] = useState<string>('');
   const [resetTodaySales, setResetTodaySales] = useState<boolean>(true);
-  const [reportDate, setReportDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [reportDate, setReportDate] = useState<string>(
+    () => initialDate || new Date().toISOString().split('T')[0]
+  );
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setReportDate(initialDate || new Date().toISOString().split('T')[0]);
+    }
+  }, [isOpen, initialDate]);
 
   if (!isOpen) return null;
 

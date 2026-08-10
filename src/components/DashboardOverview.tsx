@@ -53,7 +53,7 @@ interface DashboardOverviewProps {
   onOpenReceipt: (transaction: Transaction) => void;
   onOpenAiAdvisor: () => void;
   onOpenMenuEditor?: () => void;
-  onOpenFinalizeModal?: () => void;
+  onOpenFinalizeModal?: (date?: string) => void;
   onUpdateMenuItem?: (item: MenuItem) => void;
   onAddMenuItem?: (newItem: MenuItem) => void;
   onResetSalesToday?: () => void;
@@ -87,6 +87,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const [itemFilter, setItemFilter] = React.useState<'sold_only' | 'all'>('sold_only');
   const [addSoldItemId, setAddSoldItemId] = React.useState<string>('');
   const [addSoldQty, setAddSoldQty] = React.useState<number>(1);
+  const [selectedReportDate, setSelectedReportDate] = React.useState<string>(
+    () => new Date().toISOString().split('T')[0]
+  );
+
+  // Selected Date Full Label
+  const selectedDateObj = new Date(selectedReportDate + 'T12:00:00');
+  const selectedDateFull = new Intl.DateTimeFormat('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(selectedDateObj);
 
   // Calculate per-item sales metrics with unit profits
   const perItemSales = calculatePerItemSales(menuItems, transactions, sauces, stockItems);
@@ -224,25 +236,60 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-800 pb-4">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center gap-1.5">
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Laporan Penjualan Harian</span>
               </span>
-              <span className="text-xs font-bold text-amber-300 bg-amber-950/80 border border-amber-800/80 px-2.5 py-0.5 rounded-full">
-                📅 Tanggal: {todayDateFull}
-              </span>
+
+              {/* Interactive Date Selector Badge */}
+              <div className="flex flex-wrap items-center gap-1.5 bg-amber-950/90 border border-amber-500/50 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold shadow-sm">
+                <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="text-amber-200">Pilih Tanggal:</span>
+                <input
+                  type="date"
+                  value={selectedReportDate}
+                  onChange={(e) => setSelectedReportDate(e.target.value)}
+                  className="bg-stone-900 text-amber-200 border border-amber-700/80 rounded px-2 py-0.5 text-xs font-bold focus:outline-none focus:border-amber-400 cursor-pointer"
+                />
+                <span className="text-amber-200 font-medium text-[11px] hidden lg:inline">
+                  ({selectedDateFull})
+                </span>
+                <div className="flex items-center gap-1 pl-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const d = new Date();
+                      d.setDate(d.getDate() - 1);
+                      setSelectedReportDate(d.toISOString().split('T')[0]);
+                    }}
+                    className="px-2 py-0.5 bg-amber-900/90 hover:bg-amber-800 text-amber-200 rounded text-[11px] font-bold border border-amber-700/60 transition-colors"
+                    title="Atur ke Tanggal Kemarin (9 Ags)"
+                  >
+                    Kemarin (9 Ags)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedReportDate(new Date().toISOString().split('T')[0])}
+                    className="px-2 py-0.5 bg-amber-900/90 hover:bg-amber-800 text-amber-200 rounded text-[11px] font-bold border border-amber-700/60 transition-colors"
+                    title="Atur ke Tanggal Hari Ini"
+                  >
+                    Hari Ini
+                  </button>
+                </div>
+              </div>
             </div>
+
             <h2 className="text-lg sm:text-xl font-bold text-stone-100 flex items-center gap-2 pt-1">
-              <span>Ringkasan Real-Time Laporan Hari Ini</span>
+              <span>Ringkasan Laporan — {selectedDateFull}</span>
             </h2>
             <p className="text-xs text-stone-300">
               {totalUnitsSold === 0 ? (
                 <span className="text-amber-400 font-medium">
-                  ⚠️ Status: Hari ini belum ada yang terjual (0 unit). Silakan masukkan data stok & jumlah laku terjual di bawah.
+                  ⚠️ Status: Belum ada item terjual diinput untuk laporan tanggal ini. Silakan masukkan data laku terjual di bawah.
                 </span>
               ) : (
                 <span className="text-emerald-400 font-semibold">
-                  ✅ Status: Terjual {totalUnitsSold} unit barang hari ini | Total Uang Masuk: {formatRp(financialSummary.totalRevenue)} | Untung Bersih: {formatRp(financialSummary.netProfit)}
+                  ✅ Status: Terjual {totalUnitsSold} unit barang | Total Uang Masuk: {formatRp(financialSummary.totalRevenue)} | Untung Bersih: {formatRp(financialSummary.netProfit)}
                 </span>
               )}
             </p>
@@ -251,10 +298,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             {onOpenFinalizeModal && (
               <button
-                onClick={onOpenFinalizeModal}
+                onClick={() => onOpenFinalizeModal(selectedReportDate)}
                 className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-stone-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95"
               >
-                <span>🏁 Finalisasi Penjualan Hari Ini</span>
+                <span>🏁 Finalisasi Laporan Tanggal {selectedDateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
               </button>
             )}
 
