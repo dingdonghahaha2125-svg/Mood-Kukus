@@ -261,28 +261,28 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       {/* Top Header & Metrics */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-stone-100 flex items-center gap-2">
-            <Boxes className="w-6 h-6 text-emerald-400" />
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2">
+            <Boxes className="w-6 h-6 text-cyan-300" />
             Manajemen Stok Bahan Baku & Kemasan
           </h2>
-          <p className="text-xs sm:text-sm text-stone-400">
-            Kelola persediaan pisang, ubi, jagung, telur, bahan saus, dan kemasan ramah lingkungan (Besek/Paper box).
+          <p className="text-xs sm:text-sm text-sky-200/80">
+            Kelola persediaan pisang, ubi, singkong, telur, bahan saus, dan kemasan ramah lingkungan (Besek/Paper box).
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => setRecipeMenuTarget(menuItems[0] || null)}
-            className="px-3.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 font-medium text-xs sm:text-sm rounded-xl transition-all flex items-center gap-1.5"
+            className="px-3.5 py-2 bg-slate-900 hover:bg-sky-950 text-cyan-200 border border-sky-800/60 font-medium text-xs sm:text-sm rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
           >
-            <ChefHat className="w-4 h-4 text-emerald-400" />
+            <ChefHat className="w-4 h-4 text-cyan-300" />
             Kelola Resep (BOM)
           </button>
           <button
             onClick={handleOpenAddModal}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center gap-1.5"
+            className="px-4 py-2 bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 hover:from-sky-300 hover:to-cyan-300 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow-md shadow-sky-400/20 transition-all flex items-center gap-1.5 active:scale-95"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 text-slate-950" />
             Tambah Bahan
           </button>
         </div>
@@ -290,34 +290,34 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
       {/* Stock Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 flex items-center justify-between">
+        <div className="bg-slate-900/90 border border-sky-800/40 hover:border-sky-400/60 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/10 rounded-2xl p-4 flex items-center justify-between transition-all duration-300 backdrop-blur-sm">
           <div>
-            <span className="text-xs text-stone-400 font-medium">Total Jenis Bahan & Kemasan</span>
-            <div className="text-xl font-bold text-stone-100 mt-1">{stockItems.length} Item</div>
+            <span className="text-xs text-sky-200/80 font-medium">Total Jenis Bahan & Kemasan</span>
+            <div className="text-xl font-black text-slate-100 mt-1">{stockItems.length} Item</div>
           </div>
-          <div className="p-3 bg-stone-800 rounded-xl text-emerald-400">
+          <div className="p-3 bg-sky-950/80 border border-sky-700/60 rounded-xl text-cyan-300">
             <Layers className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 flex items-center justify-between">
+        <div className="bg-slate-900/90 border border-sky-800/40 hover:border-sky-400/60 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/10 rounded-2xl p-4 flex items-center justify-between transition-all duration-300 backdrop-blur-sm">
           <div>
-            <span className="text-xs text-stone-400 font-medium">Total Nilai Asset Persediaan</span>
-            <div className="text-xl font-bold text-teal-400 mt-1">{formatRp(totalStockValue)}</div>
+            <span className="text-xs text-sky-200/80 font-medium">Total Nilai Asset Persediaan</span>
+            <div className="text-xl font-black text-cyan-300 mt-1">{formatRp(totalStockValue)}</div>
           </div>
-          <div className="p-3 bg-stone-800 rounded-xl text-teal-400">
+          <div className="p-3 bg-sky-950/80 border border-sky-700/60 rounded-xl text-cyan-300">
             <DollarSign className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 flex items-center justify-between">
+        <div className="bg-slate-900/90 border border-sky-800/40 hover:border-sky-400/60 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/10 rounded-2xl p-4 flex items-center justify-between transition-all duration-300 backdrop-blur-sm">
           <div>
-            <span className="text-xs text-stone-400 font-medium">Alert Perlu Restock</span>
-            <div className="text-xl font-bold text-amber-400 mt-1">
+            <span className="text-xs text-sky-200/80 font-medium">Alert Perlu Restock</span>
+            <div className="text-xl font-black text-amber-300 mt-1">
               {lowStockCount} Menipis {emptyStockCount > 0 ? `(${emptyStockCount} Habis)` : ''}
             </div>
           </div>
-          <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400">
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300">
             <AlertTriangle className="w-5 h-5" />
           </div>
         </div>

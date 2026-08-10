@@ -50,7 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-30 bg-stone-900/95 backdrop-blur border-b border-stone-800 text-stone-100 shadow-md">
+    <header className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-sky-800/40 text-slate-100 shadow-lg shadow-sky-950/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
@@ -59,9 +59,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Cloud Badge (Desktop) */}
-          <div className="hidden lg:flex items-center gap-2 bg-stone-800/60 border border-stone-700/60 rounded-xl px-3 py-1.5 text-xs">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400" title="Database Firestore Terhubung Real-Time">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="hidden lg:flex items-center gap-2 bg-sky-950/80 border border-sky-700/60 rounded-xl px-3 py-1.5 text-xs">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold text-cyan-300" title="Database Firestore Terhubung Real-Time">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
               <span>Firebase Cloud Active</span>
             </div>
           </div>
@@ -71,10 +71,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* AI Advisor Button */}
             <button
               onClick={onOpenAiAdvisor}
-              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-medium text-xs sm:text-sm shadow-md transition-all active:scale-95"
+              className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 hover:from-sky-300 hover:to-cyan-300 text-slate-950 rounded-xl font-black text-xs sm:text-sm shadow-md shadow-sky-400/20 transition-all active:scale-95"
               title="Konsultasikan Keuangan & Stok dengan AI"
             >
-              <Bot className="w-4 h-4 text-emerald-200 animate-pulse" />
+              <Bot className="w-4 h-4 text-slate-950 animate-bounce" />
               <span className="hidden sm:inline">Tanya KukusBot AI</span>
               <span className="sm:hidden">AI Advisor</span>
             </button>
@@ -82,7 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="flex space-x-1 overflow-x-auto pb-2 scrollbar-none border-t border-stone-800/80 pt-2">
+        <nav className="flex space-x-1.5 overflow-x-auto pb-2 scrollbar-none border-t border-sky-900/40 pt-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -90,13 +90,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                   isActive
-                    ? 'bg-emerald-600 text-white shadow-sm font-semibold'
-                    : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/70'
+                    ? 'bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-600 text-slate-950 font-black shadow-md shadow-sky-500/20 scale-[1.02]'
+                    : 'text-sky-200/80 hover:text-cyan-200 hover:bg-sky-950/70 hover:scale-[1.01]'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-stone-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-cyan-300'}`} />
                 <span>{item.label}</span>
                 {item.badge !== undefined && (
                   <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-stone-950 rounded-full flex items-center gap-0.5">

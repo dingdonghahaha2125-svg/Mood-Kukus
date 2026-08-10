@@ -1,1 +1,39 @@
 @import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #080f1e;
+    color: #f1f5f9;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+
+  /* Custom Scrollbar in Sky Blue */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #080f1e;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #0284c7;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #38bdf8;
+  }
+
+  /* Date input calendar picker indicator */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8) sepia(1) saturate(5) hue-rotate(170deg);
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    transform: scale(1.15);
+  }
+}
+
+
