@@ -597,7 +597,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     type="number"
                     min="1"
                     value={addSoldQty || 1}
-                    onChange={(e) => setAddSoldQty(Math.max(1, parseInt(e.target.value) || 1))}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setAddSoldQty(e.target.value === '' ? 1 : Math.max(1, parseInt(e.target.value)))}
                     className="w-14 bg-stone-900 text-center text-xs font-black text-amber-300 py-1 rounded focus:outline-none"
                   />
                 </div>
@@ -824,8 +825,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                             type="number"
                             min="0"
                             value={item.soldQty || 0}
+                            onFocus={(e) => e.target.select()}
                             onChange={(e) => {
-                              const val = Math.max(0, parseInt(e.target.value) || 0);
+                              const val = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value));
                               if (onUpdateMenuItem) {
                                 onUpdateMenuItem({ ...item, soldQty: val });
                               }

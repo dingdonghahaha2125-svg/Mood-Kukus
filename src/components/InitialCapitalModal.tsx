@@ -230,6 +230,7 @@ export const InitialCapitalModal: React.FC<InitialCapitalModalProps> = ({
                   type="number"
                   placeholder="5000000"
                   value={amount}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setAmount(e.target.value ? Number(e.target.value) : '')}
                   required
                   min="1000"
@@ -244,7 +245,13 @@ export const InitialCapitalModal: React.FC<InitialCapitalModalProps> = ({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-stone-900 border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-100 focus:outline-none focus:border-amber-500"
+                onClick={(e) => {
+                  try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                }}
+                onFocus={(e) => {
+                  try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                }}
+                className="w-full bg-stone-900 border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-100 focus:outline-none focus:border-amber-500 cursor-pointer"
               />
             </div>
 

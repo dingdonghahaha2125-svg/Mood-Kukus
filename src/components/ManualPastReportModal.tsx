@@ -129,6 +129,9 @@ export const ManualPastReportModal: React.FC<ManualPastReportModalProps> = ({
               onClick={(e) => {
                 try { (e.target as HTMLInputElement).showPicker(); } catch {}
               }}
+              onFocus={(e) => {
+                try { (e.target as HTMLInputElement).showPicker(); } catch {}
+              }}
               className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2.5 text-xs font-bold text-stone-100 focus:outline-none focus:border-amber-500 cursor-pointer"
             />
           </div>
@@ -148,6 +151,7 @@ export const ManualPastReportModal: React.FC<ManualPastReportModalProps> = ({
                 required
                 placeholder="misal: 500000"
                 value={revenue}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => {
                   const val = e.target.value === '' ? '' : Number(e.target.value);
                   setRevenue(val);
@@ -173,6 +177,7 @@ export const ManualPastReportModal: React.FC<ManualPastReportModalProps> = ({
                 step="1000"
                 placeholder="misal: 200000"
                 value={estimatedHpp}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => setEstimatedHpp(e.target.value === '' ? '' : Number(e.target.value))}
                 className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs font-bold text-stone-200 focus:outline-none focus:border-amber-500"
               />
@@ -187,6 +192,7 @@ export const ManualPastReportModal: React.FC<ManualPastReportModalProps> = ({
                 min="1"
                 placeholder="misal: 50"
                 value={estimatedItemsSold}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) => setEstimatedItemsSold(e.target.value === '' ? '' : Number(e.target.value))}
                 className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs font-bold text-amber-300 focus:outline-none focus:border-amber-500"
               />

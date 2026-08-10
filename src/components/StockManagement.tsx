@@ -63,10 +63,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const [formData, setFormData] = useState<{
     name: string;
     category: StockCategory;
-    currentStock: number;
-    minStock: number;
+    currentStock: number | '';
+    minStock: number | '';
     unit: StockUnit;
-    unitCostPrice: number;
+    unitCostPrice: number | '';
     supplier: string;
     notes: string;
   }>({
@@ -81,8 +81,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   });
 
   // Restock modal state
-  const [restockQty, setRestockQty] = useState<number>(5);
-  const [restockCost, setRestockCost] = useState<number>(0);
+  const [restockQty, setRestockQty] = useState<number | ''>(5);
+  const [restockCost, setRestockCost] = useState<number | ''>(0);
   const [recordExpense, setRecordExpense] = useState<boolean>(true);
   const [restockDate, setRestockDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
 
@@ -606,7 +606,13 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     step="any"
                     required
                     value={formData.currentStock}
-                    onChange={(e) => setFormData({ ...formData, currentStock: parseFloat(e.target.value) || 0 })}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        currentStock: e.target.value === '' ? '' : parseFloat(e.target.value),
+                      })
+                    }
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500 font-bold"
                   />
                 </div>
@@ -618,7 +624,13 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     step="any"
                     required
                     value={formData.minStock}
-                    onChange={(e) => setFormData({ ...formData, minStock: parseFloat(e.target.value) || 0 })}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        minStock: e.target.value === '' ? '' : parseFloat(e.target.value),
+                      })
+                    }
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -629,7 +641,13 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     type="number"
                     required
                     value={formData.unitCostPrice}
-                    onChange={(e) => setFormData({ ...formData, unitCostPrice: parseFloat(e.target.value) || 0 })}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        unitCostPrice: e.target.value === '' ? '' : parseFloat(e.target.value),
+                      })
+                    }
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -719,10 +737,12 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     type="number"
                     step="any"
                     value={restockQty}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => {
-                      const qty = parseFloat(e.target.value) || 0;
-                      setRestockQty(qty);
-                      setRestockCost(qty * restockTargetItem.unitCostPrice);
+                      const val = e.target.value === '' ? '' : parseFloat(e.target.value);
+                      setRestockQty(val);
+                      const numQty = typeof val === 'number' ? val : 0;
+                      setRestockCost(numQty * restockTargetItem.unitCostPrice);
                     }}
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500"
                   />
@@ -744,6 +764,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     value={restockDate}
                     onChange={(e) => setRestockDate(e.target.value)}
                     onClick={(e) => {
+                      try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                    }}
+                    onFocus={(e) => {
                       try { (e.target as HTMLInputElement).showPicker(); } catch {}
                     }}
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500 text-xs sm:text-sm cursor-pointer"
@@ -774,7 +797,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 <input
                   type="number"
                   value={restockCost}
-                  onChange={(e) => setRestockCost(parseFloat(e.target.value) || 0)}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setRestockCost(e.target.value === '' ? '' : parseFloat(e.target.value))}
                   className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                 />
               </div>
@@ -877,8 +901,9 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                           type="number"
                           step="any"
                           value={ing.amount}
+                          onFocus={(e) => e.target.select()}
                           onChange={(e) => {
-                            const val = parseFloat(e.target.value) || 0;
+                            const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
                             const newIngredients = [...recipeMenuTarget.ingredients];
                             newIngredients[idx] = { ...ing, amount: val };
                             const updated = { ...recipeMenuTarget, ingredients: newIngredients };

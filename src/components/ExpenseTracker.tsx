@@ -37,14 +37,14 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
   const [formData, setFormData] = useState<{
     title: string;
     category: ExpenseCategory;
-    amount: number;
+    amount: number | '';
     isCapital: boolean;
     paymentMethod: 'qris' | 'cash' | 'transfer';
     notes: string;
     date: string;
     linkToStock: boolean;
     stockItemId: string;
-    addedStockQty: number;
+    addedStockQty: number | '';
   }>({
     title: '',
     category: 'belanja_bahan',
@@ -60,7 +60,7 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
 
   const handleSaveExpense = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title || formData.amount <= 0) return;
+    if (!formData.title || !formData.amount || Number(formData.amount) <= 0) return;
 
     onAddExpense({
       id: `exp-${Date.now()}`,
@@ -320,7 +320,13 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
                     type="number"
                     required
                     value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        amount: e.target.value === '' ? '' : parseFloat(e.target.value),
+                      })
+                    }
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-rose-500 font-bold"
                   />
                 </div>
@@ -347,7 +353,13 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-rose-500"
+                    onClick={(e) => {
+                      try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                    }}
+                    onFocus={(e) => {
+                      try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                    }}
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-rose-500 cursor-pointer"
                   />
                 </div>
               </div>
@@ -416,8 +428,12 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
                             step="any"
                             min="0.1"
                             value={formData.addedStockQty}
+                            onFocus={(e) => e.target.select()}
                             onChange={(e) =>
-                              setFormData({ ...formData, addedStockQty: parseFloat(e.target.value) || 0 })
+                              setFormData({
+                                ...formData,
+                                addedStockQty: e.target.value === '' ? '' : parseFloat(e.target.value),
+                              })
                             }
                             className="w-full bg-stone-900 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500"
                           />
