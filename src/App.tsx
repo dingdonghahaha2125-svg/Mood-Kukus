@@ -21,10 +21,13 @@ import { FinalizeDayModal } from './components/FinalizeDayModal';
 import { ManualPastReportModal } from './components/ManualPastReportModal';
 import { InitialCapitalModal } from './components/InitialCapitalModal';
 import { exportToExcel, exportToPdf } from './utils/exportUtils';
+import { testConnection } from './lib/firebase';
 import {
+  subscribeToCollection,
   saveDocument,
   addExpenseToFirestore,
   deleteDocument,
+  seedCollectionIfEmpty,
   COLLECTIONS,
 } from './lib/firestoreService';
 
@@ -89,7 +92,48 @@ export default function App() {
     saveDocument(COLLECTIONS.DAILY_REPORTS, report);
   };
 
-  // Firebase Cloud sync is disabled - App runs strictly offline with LocalStorage
+  // Firebase Firestore Connection & Realtime Sync
+  useEffect(() => {
+    // 1. Verify Firestore Connection
+    testConnection();
+
+    // 2. Seed initial collections if empty
+    seedCollectionIfEmpty(COLLECTIONS.STOCK_ITEMS, INITIAL_STOCK_ITEMS);
+    seedCollectionIfEmpty(COLLECTIONS.SAUCE_ITEMS, INITIAL_SAUCES);
+    seedCollectionIfEmpty(COLLECTIONS.MENU_ITEMS, INITIAL_MENU_ITEMS);
+    seedCollectionIfEmpty(COLLECTIONS.EXPENSES, INITIAL_EXPENSES);
+    seedCollectionIfEmpty(COLLECTIONS.TRANSACTIONS, INITIAL_TRANSACTIONS);
+    seedCollectionIfEmpty(COLLECTIONS.DAILY_REPORTS, INITIAL_DAILY_REPORTS);
+
+    // 3. Subscribe to Firestore real-time updates
+    const unsubStock = subscribeToCollection<StockItem>(COLLECTIONS.STOCK_ITEMS, (items) => {
+      setStockItems(items);
+    });
+    const unsubSauce = subscribeToCollection<SauceItem>(COLLECTIONS.SAUCE_ITEMS, (items) => {
+      setSauces(items);
+    });
+    const unsubMenu = subscribeToCollection<MenuItem>(COLLECTIONS.MENU_ITEMS, (items) => {
+      setMenuItems(items);
+    });
+    const unsubExpense = subscribeToCollection<Expense>(COLLECTIONS.EXPENSES, (items) => {
+      setExpenses(items);
+    });
+    const unsubTx = subscribeToCollection<Transaction>(COLLECTIONS.TRANSACTIONS, (items) => {
+      setTransactions(items);
+    });
+    const unsubReport = subscribeToCollection<DailyReport>(COLLECTIONS.DAILY_REPORTS, (items) => {
+      setDailyReports(items);
+    });
+
+    return () => {
+      unsubStock();
+      unsubSauce();
+      unsubMenu();
+      unsubExpense();
+      unsubTx();
+      unsubReport();
+    };
+  }, []);
 
   // Multi-tab / Broadcast sync
   useEffect(() => {
