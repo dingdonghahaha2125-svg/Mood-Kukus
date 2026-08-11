@@ -84,8 +84,6 @@ export interface Expense {
   isCapital: boolean; // Is it initial investment capital or operational expense
   paymentMethod: 'qris' | 'cash' | 'transfer';
   notes?: string;
-  stockItemId?: string; // Optional linked stock item ID for auto-restock
-  addedStockQty?: number; // Optional added stock quantity
 }
 
 export interface FinancialSummary {

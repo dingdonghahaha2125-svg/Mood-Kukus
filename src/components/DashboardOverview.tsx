@@ -15,7 +15,6 @@ import {
   Calendar,
   Utensils,
   CheckCircle,
-  CheckCircle2,
   Flame,
   FileSpreadsheet,
   FileText,
@@ -23,8 +22,6 @@ import {
   Trash2,
   Eye,
   Plus,
-  History,
-  Wallet,
 } from 'lucide-react';
 import {
   BarChart,
@@ -62,11 +59,9 @@ interface DashboardOverviewProps {
   onResetSalesToday?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
-  onOpenManualPastReport?: () => void;
-  onOpenInitialCapitalModal?: () => void;
 }
 
-const COLORS = ['#38bdf8', '#0284c7', '#06b6d4', '#60a5fa', '#3b82f6', '#2563eb'];
+const COLORS = ['#10b981', '#14b8a6', '#06b6d4', '#f59e0b', '#ec4899', '#8b5cf6'];
 
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   financialSummary,
@@ -87,8 +82,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onResetSalesToday,
   onExportExcel,
   onExportPdf,
-  onOpenManualPastReport,
-  onOpenInitialCapitalModal,
 }) => {
   // State to filter per-item sales view (default: only show sold items today)
   const [itemFilter, setItemFilter] = React.useState<'sold_only' | 'all'>('sold_only');
@@ -178,255 +171,36 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Mood Kukus Mamuju Header & Total Kumulatif Financial Metrics */}
-      <div className="bg-slate-900/90 border border-sky-800/40 rounded-2xl p-5 shadow-xl shadow-sky-950/30 space-y-4 backdrop-blur-sm">
-        {/* Brand Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sky-900/40 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-sky-950 border border-sky-500/40 rounded-2xl text-cyan-300 shrink-0 shadow-inner">
-              <Flame className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-black text-slate-100 flex items-center gap-2 leading-tight">
-                <span>Mood Kukus Mamuju</span>
-                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-sky-500/20 text-cyan-300 border border-sky-400/40">
-                  Kuliner Sehat & Alami 🍃
-                </span>
-              </h1>
-              <p className="text-xs text-sky-200/80 mt-0.5">
-                Pencatatan Penjualan & Kelola Stok Kukusan Harian
-              </p>
-            </div>
+      {/* Compact Header */}
+      <div className="bg-stone-900 border border-stone-800 rounded-xl px-4 py-3 flex items-center justify-between gap-3 shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-emerald-950/80 border border-emerald-500/30 rounded-xl text-emerald-400 shrink-0">
+            <Flame className="w-5 h-5" />
           </div>
-        </div>
-
-        {/* CUMULATIVE TOTAL FINANCIAL METRICS (Pemasukan Total, Laba Bersih Total, Margin Total + Export Kumulatif) */}
-        <div className="bg-slate-950/90 border border-sky-700/50 rounded-xl p-4 space-y-3">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-sky-900/40 pb-2.5">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
-                <h3 className="text-xs font-black text-cyan-300 uppercase tracking-wider">
-                  Grup Total Akumulasi Kegiatan Keseluruhan Usaha
-                </h3>
-              </div>
-              <p className="text-[11px] font-medium text-sky-300/80 italic mt-0.5">
-                *(File yang diexport pada grup ini merupakan laporan kumulatif total penghasilan usaha harian)*
-              </p>
-            </div>
-
-            {/* Export Buttons for Cumulative Total Business Data */}
-            <div className="flex items-center gap-2 shrink-0 pt-1 md:pt-0">
-              {onExportExcel && (
-                <button
-                  onClick={onExportExcel}
-                  className="px-3 py-1.5 bg-sky-950/80 hover:bg-sky-900 border border-sky-600/80 text-cyan-200 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
-                  title="Export Kumulatif Total Penghasilan Usaha ke Excel (.xlsx)"
-                >
-                  <FileSpreadsheet className="w-4 h-4 text-cyan-300" />
-                  <span>Export Total (Excel)</span>
-                </button>
-              )}
-
-              {onExportPdf && (
-                <button
-                  onClick={onExportPdf}
-                  className="px-3 py-1.5 bg-blue-950/80 hover:bg-blue-900 border border-blue-600/80 text-blue-200 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
-                  title="Export Kumulatif Total Penghasilan Usaha ke PDF (.pdf)"
-                >
-                  <FileText className="w-4 h-4 text-blue-300" />
-                  <span>Export Total (PDF)</span>
-                </button>
-              )}
-            </div>
+          <div>
+            <h1 className="text-base sm:text-lg font-bold text-stone-100 flex items-center gap-2 leading-tight">
+              <span>Mood Kukus Mamuju</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                Kuliner Sehat & Alami 🍃
+              </span>
+            </h1>
+            <p className="text-xs text-stone-400">
+              Pencatatan Penjualan & Kelola Stok Kukusan Harian
+            </p>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-            {/* Total Pemasukan */}
-            <div className="bg-slate-900 border border-sky-800/40 p-3.5 rounded-xl space-y-1">
-              <span className="text-[10px] font-bold text-sky-300/80 uppercase tracking-wider block">
-                🟢 Pemasukan Total (Kumulatif)
-              </span>
-              <div className="text-lg sm:text-xl font-black text-cyan-300">
-                {formatRp(financialSummary.totalRevenue)}
-              </div>
-              <p className="text-[10px] text-sky-200/60">
-                Total uang masuk akumulasi seluruh hari
-              </p>
-            </div>
-
-            {/* Total Laba Bersih */}
-            <div className="bg-slate-900 border border-sky-800/40 p-3.5 rounded-xl space-y-1">
-              <span className="text-[10px] font-bold text-sky-300/80 uppercase tracking-wider block">
-                💰 Laba Bersih Total (Kumulatif)
-              </span>
-              <div
-                className={`text-lg sm:text-xl font-black ${
-                  financialSummary.netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                }`}
-              >
-                {formatRp(financialSummary.netProfit)}
-              </div>
-              <p className="text-[10px] text-sky-200/60">
-                Keuntungan bersih setelah dikurangi modal
-              </p>
-            </div>
-
-            {/* Total Margin */}
-            <div className="bg-slate-900 border border-sky-800/40 p-3.5 rounded-xl space-y-1">
-              <span className="text-[10px] font-bold text-sky-300/80 uppercase tracking-wider block">
-                📊 Margin Total (Kumulatif)
-              </span>
-              <div className="text-lg sm:text-xl font-black text-amber-300">
-                {financialSummary.profitMargin}%
-              </div>
-              <p className="text-[10px] text-sky-200/60">
-                Persentase kebersihan profit dibanding omset
-              </p>
-            </div>
-          </div>
-
-          {/* ANALISIS BALIK MODAL (BEP & ROI USAHA DARI NOL) */}
-          {(() => {
-            const totalCapital = financialSummary.totalCapital;
-            const netProfit = financialSummary.netProfit;
-            const isBepAchieved = netProfit >= totalCapital && totalCapital > 0;
-            const bepProgress =
-              totalCapital > 0
-                ? Math.min(100, Math.max(0, Math.round((netProfit / totalCapital) * 100)))
-                : 0;
-            const remainingCapital = Math.max(0, totalCapital - netProfit);
-            const excessProfit = Math.max(0, netProfit - totalCapital);
-
-            return (
-              <div className="mt-3 pt-3 border-t border-sky-900/40 bg-slate-950/90 border border-sky-800/40 rounded-xl p-3.5 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Wallet className="w-4 h-4 text-cyan-300" />
-                    <h4 className="text-xs font-black text-slate-100 uppercase tracking-wider">
-                      Analisis Balik Modal (BEP Usaha dari Nol) 🍃
-                    </h4>
-                    {totalCapital > 0 && (
-                      <span
-                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
-                          isBepAchieved
-                            ? 'bg-emerald-950 text-emerald-400 border-emerald-500/60'
-                            : netProfit < 0
-                            ? 'bg-rose-950 text-rose-300 border-rose-700/60'
-                            : 'bg-sky-950 text-cyan-300 border-sky-600/60'
-                        }`}
-                      >
-                        {isBepAchieved
-                          ? '🎉 IMPAS & PROFIT MURNI'
-                          : netProfit < 0
-                          ? '⚠️ MERUGI OPERASIONAL'
-                          : `⏳ BALIK MODAL ${bepProgress}%`}
-                      </span>
-                    )}
-                  </div>
-
-                  {onOpenInitialCapitalModal && (
-                    <button
-                      onClick={onOpenInitialCapitalModal}
-                      className="px-3 py-1 bg-sky-950 hover:bg-sky-900 border border-sky-700/60 text-cyan-300 rounded-xl font-bold text-xs transition-all shadow-sm flex items-center gap-1.5 active:scale-95 self-start sm:self-auto"
-                      title="Atur atau Tambah Modal Awal Disetor"
-                    >
-                      <Plus className="w-3.5 h-3.5 text-cyan-300" />
-                      <span>+ Kelola Modal Awal</span>
-                    </button>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-0.5">
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-sky-800/40">
-                    <span className="text-[10px] text-sky-200/70 font-bold uppercase block">
-                      Modal Awal Disetor
-                    </span>
-                    <span className="text-sm font-black text-cyan-300">{formatRp(totalCapital)}</span>
-                    <p className="text-[9px] text-sky-300/60">Investasi awal rintis usaha</p>
-                  </div>
-
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-sky-800/40">
-                    <span className="text-[10px] text-sky-200/70 font-bold uppercase block">
-                      Total Laba Bersih
-                    </span>
-                    <span
-                      className={`text-sm font-black ${
-                        netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'
-                      }`}
-                    >
-                      {formatRp(netProfit)}
-                    </span>
-                    <p className="text-[9px] text-sky-300/60">Hasil bersih kumulatif</p>
-                  </div>
-
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-sky-800/40">
-                    <span className="text-[10px] text-sky-200/70 font-bold uppercase block">
-                      {isBepAchieved ? 'Keuntungan Murni' : 'Sisa Modal Belum Kembali'}
-                    </span>
-                    <span
-                      className={`text-sm font-black ${
-                        isBepAchieved ? 'text-teal-300' : 'text-rose-300'
-                      }`}
-                    >
-                      {isBepAchieved ? formatRp(excessProfit) : formatRp(remainingCapital)}
-                    </span>
-                    <p className="text-[9px] text-sky-300/60">
-                      {isBepAchieved ? 'Laba di atas modal awal' : 'Kekurangan omset bersih'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                {totalCapital > 0 ? (
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center text-[10px] font-bold">
-                      <span className="text-stone-400">Progres Pengembalian Modal Awal:</span>
-                      <span className={isBepAchieved ? 'text-emerald-400' : 'text-amber-400'}>
-                        {bepProgress}% {isBepAchieved ? '(Sudah Lunas BEP 🎉)' : 'Menuju Balik Modal'}
-                      </span>
-                    </div>
-                    <div className="w-full bg-stone-900 rounded-full h-2 overflow-hidden border border-stone-800">
-                      <div
-                        className={`h-full transition-all duration-500 rounded-full ${
-                          isBepAchieved
-                            ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
-                            : 'bg-gradient-to-r from-amber-500 to-emerald-400'
-                        }`}
-                        style={{ width: `${Math.max(3, bepProgress)}%` }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-2 bg-stone-900 border border-dashed border-stone-800 rounded-lg text-center">
-                    <p className="text-[11px] text-stone-400 font-medium">
-                      Belum ada modal awal diinput. Klik{' '}
-                      <button
-                        onClick={onOpenInitialCapitalModal}
-                        className="text-amber-400 underline font-bold"
-                      >
-                        + Kelola Modal Awal
-                      </button>{' '}
-                      untuk melihat kalkulasi Balik Modal (BEP).
-                    </p>
-                  </div>
-                )}
-              </div>
-            );
-          })()}
         </div>
       </div>
 
       {/* DEDICATED DAILY REPORT CARD WITH CLEAN DATE SELECTOR */}
-      <div className="bg-slate-900/90 border border-sky-800/40 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl relative overflow-hidden backdrop-blur-sm">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-stone-900 border border-emerald-800/60 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-sky-900/40 pb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-800 pb-4">
           <div className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-sky-950 text-cyan-300 border border-sky-700/60 flex items-center gap-1.5 shadow-sm">
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5" />
-                <span>Laporan Penjualan Harian 🍃</span>
+                <span>Laporan Penjualan Harian</span>
               </span>
 
               {/* Clean Date Selector with direct calendar popup on click */}
@@ -437,10 +211,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     try { input.showPicker(); } catch {}
                   }
                 }}
-                className="flex items-center gap-2 bg-slate-950 hover:bg-sky-950/80 border border-sky-500/50 text-cyan-200 px-3 py-1 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
+                className="flex items-center gap-2 bg-amber-950/80 hover:bg-amber-900 border border-amber-500/40 text-amber-300 px-3 py-1 rounded-xl text-xs font-bold shadow-sm cursor-pointer transition-colors"
                 title="Klik untuk membuka kalender pilih tanggal"
               >
-                <Calendar className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+                <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 <span>Tanggal Laporan:</span>
                 <input
                   type="date"
@@ -450,21 +224,21 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     e.stopPropagation();
                     try { (e.target as HTMLInputElement).showPicker(); } catch {}
                   }}
-                  className="bg-slate-950 text-cyan-200 border border-sky-700/80 rounded px-2.5 py-1 text-xs font-bold focus:outline-none focus:border-cyan-400 cursor-pointer"
+                  className="bg-stone-900 text-amber-200 border border-amber-700/80 rounded px-2.5 py-1 text-xs font-bold focus:outline-none focus:border-amber-400 cursor-pointer"
                 />
               </div>
             </div>
 
-            <h2 className="text-lg sm:text-xl font-bold text-slate-100 flex items-center gap-2 pt-1">
+            <h2 className="text-lg sm:text-xl font-bold text-stone-100 flex items-center gap-2 pt-1">
               <span>Ringkasan Laporan — {selectedDateFull}</span>
             </h2>
-            <p className="text-xs text-sky-200/80">
+            <p className="text-xs text-stone-300">
               {totalUnitsSold === 0 ? (
-                <span className="text-amber-300 font-medium">
+                <span className="text-amber-400 font-medium">
                   ⚠️ Status: Belum ada item terjual diinput untuk laporan tanggal ini. Silakan masukkan data laku terjual di bawah.
                 </span>
               ) : (
-                <span className="text-cyan-300 font-semibold">
+                <span className="text-emerald-400 font-semibold">
                   ✅ Status: Terjual {totalUnitsSold} unit barang | Total Uang Masuk: {formatRp(financialSummary.totalRevenue)} | Untung Bersih: {formatRp(financialSummary.netProfit)}
                 </span>
               )}
@@ -475,28 +249,17 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             {onOpenFinalizeModal && (
               <button
                 onClick={() => onOpenFinalizeModal(selectedReportDate)}
-                className="px-3.5 py-2 bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 hover:from-sky-300 hover:to-cyan-300 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-sky-500/20 transition-all flex items-center gap-1.5 active:scale-95"
+                className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-stone-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95"
               >
                 <span>🏁 Finalisasi Laporan Tanggal {selectedDateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
               </button>
             )}
 
-            {onOpenManualPastReport && (
-              <button
-                onClick={onOpenManualPastReport}
-                className="px-3 py-2 bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-cyan-200 font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
-                title="Input manual omset nominal uang hasil penjualan hari sebelumnya (saat rincian per item hilang)"
-              >
-                <History className="w-4 h-4 text-cyan-300" />
-                <span>+ Input Penjualan Lalu (Nominal Uang)</span>
-              </button>
-            )}
-
             <button
               onClick={() => onNavigateToTab('daily_history')}
-              className="px-3 py-2 bg-slate-950 hover:bg-sky-950 border border-sky-800/60 text-sky-200 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5"
+              className="px-3 py-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5"
             >
-              <Calendar className="w-3.5 h-3.5 text-cyan-300" />
+              <Calendar className="w-3.5 h-3.5 text-amber-400" />
               <span>📅 Histori Laporan Per Hari</span>
             </button>
 
@@ -596,8 +359,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     type="number"
                     min="1"
                     value={addSoldQty || 1}
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) => setAddSoldQty(e.target.value === '' ? 1 : Math.max(1, parseInt(e.target.value)))}
+                    onChange={(e) => setAddSoldQty(Math.max(1, parseInt(e.target.value) || 1))}
                     className="w-14 bg-stone-900 text-center text-xs font-black text-amber-300 py-1 rounded focus:outline-none"
                   />
                 </div>
@@ -670,7 +432,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     setAddSoldQty(1);
                   }}
                   disabled={!addSoldItemId}
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-stone-950 font-black text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 active:scale-95 cursor-pointer"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-stone-950 font-black text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Catat Laku</span>
@@ -824,9 +586,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                             type="number"
                             min="0"
                             value={item.soldQty || 0}
-                            onFocus={(e) => e.target.select()}
                             onChange={(e) => {
-                              const val = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value));
+                              const val = Math.max(0, parseInt(e.target.value) || 0);
                               if (onUpdateMenuItem) {
                                 onUpdateMenuItem({ ...item, soldQty: val });
                               }
@@ -911,88 +672,102 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       )}
 
       {/* KPI Cards Grid - Everyday Language */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Uang Masuk */}
-        <div className="bg-slate-900/90 border border-sky-800/40 hover:border-sky-500/50 rounded-2xl p-5 shadow-lg shadow-sky-950/30 space-y-3 transition-all backdrop-blur-sm">
+        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider">🟢 Total Uang Masuk</span>
-            <div className="p-2.5 bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-xl">
+            <span className="text-xs font-bold text-stone-300 uppercase tracking-wider">🟢 Total Uang Masuk</span>
+            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl">
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-100">{formatRp(financialSummary.totalRevenue)}</div>
-            <p className="text-xs text-cyan-300 flex items-center gap-1 mt-1 font-medium">
-              <ArrowUpRight className="w-3.5 h-3.5 text-cyan-400" />
+            <div className="text-2xl font-bold text-stone-100">{formatRp(financialSummary.totalRevenue)}</div>
+            <p className="text-xs text-emerald-400 flex items-center gap-1 mt-1 font-medium">
+              <ArrowUpRight className="w-3.5 h-3.5" />
               Dari {transactions.length} kali transaksi jualan
             </p>
           </div>
         </div>
 
         {/* Untung Bersih */}
-        <div className="bg-slate-900/90 border border-sky-800/40 hover:border-sky-500/50 rounded-2xl p-5 shadow-lg shadow-sky-950/30 space-y-3 transition-all backdrop-blur-sm">
+        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-sky-200 uppercase tracking-wider">💰 Untung Bersih (Sisa Uang)</span>
-            <div className="p-2.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-xl">
+            <span className="text-xs font-bold text-stone-300 uppercase tracking-wider">💰 Untung Bersih (Sisa Uang)</span>
+            <div className="p-2 bg-teal-500/10 text-teal-400 rounded-xl">
               <DollarSign className="w-5 h-5" />
             </div>
           </div>
           <div>
             <div
-              className={`text-2xl font-black ${financialSummary.netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}
+              className={`text-2xl font-bold ${financialSummary.netProfit >= 0 ? 'text-teal-400' : 'text-rose-400'}`}
             >
               {formatRp(financialSummary.netProfit)}
             </div>
-            <p className="text-xs text-sky-200/70 mt-1">
-              Sudah dipotong belanja bahan, operasional, & peralatan
+            <p className="text-xs text-stone-400 mt-1">
+              Sudah dipotong belanja bahan & operasional
             </p>
           </div>
         </div>
 
-        {/* Total Uang Keluar (Semua Pengeluaran, Belanja, & Peralatan) */}
-        <div className="bg-slate-900/90 border border-sky-800/40 hover:border-sky-500/50 rounded-2xl p-5 shadow-lg shadow-sky-950/30 space-y-3 transition-all backdrop-blur-sm">
+        {/* Total Belanja */}
+        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-rose-300 uppercase tracking-wider">🔴 Total Uang Keluar</span>
-            <div className="p-2.5 bg-rose-500/10 text-rose-400 border border-rose-500/30 rounded-xl">
+            <span className="text-xs font-bold text-stone-300 uppercase tracking-wider">🔴 Total Uang Keluar</span>
+            <div className="p-2 bg-rose-500/10 text-rose-400 rounded-xl">
               <TrendingDown className="w-5 h-5" />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-black text-slate-100">{formatRp(financialSummary.totalExpenses)}</div>
-            <p className="text-xs text-sky-200/70 mt-1">Uang belanja pisang, ubi, gas, kemasan, & peralatan</p>
+            <div className="text-2xl font-bold text-stone-100">{formatRp(financialSummary.totalExpenses)}</div>
+            <p className="text-xs text-stone-400 mt-1">Uang belanja pisang, ubi, gas, & kemasan</p>
+          </div>
+        </div>
+
+        {/* Modal Peralatan */}
+        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-stone-300 uppercase tracking-wider">🛠️ Modal Peralatan & Booth</span>
+            <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl">
+              <Boxes className="w-5 h-5" />
+            </div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-stone-100">{formatRp(financialSummary.totalCapital)}</div>
+            <p className="text-xs text-stone-400 mt-1">Panci kukusan, spanduk, & perlengkapan</p>
           </div>
         </div>
       </div>
 
       {/* DEDICATED SECTION: Per-Item Sales & Daily Prepared Stock Monitoring */}
-      <div className="bg-slate-900/90 border border-sky-800/40 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl backdrop-blur-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sky-900/40 pb-3">
+      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800 pb-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Flame className="w-5 h-5 text-cyan-300 animate-pulse" />
-              <h3 className="font-bold text-slate-100 text-base sm:text-lg">
+              <Flame className="w-5 h-5 text-amber-400 animate-pulse" />
+              <h3 className="font-bold text-stone-100 text-base sm:text-lg">
                 Keuntungan & Penjualan Laku Terjual (Per Item Unit)
               </h3>
             </div>
-            <p className="text-xs text-sky-200/70">
+            <p className="text-xs text-stone-400">
               Lihat langsung keuntungan bersih per unit + jumlah laku terjual
             </p>
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
             {/* Filter Mode Toggle */}
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-sky-900/60">
+            <div className="flex items-center gap-1 bg-stone-950 p-1 rounded-xl border border-stone-800">
               <button
                 type="button"
                 onClick={() => setItemFilter('sold_only')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                   itemFilter === 'sold_only'
-                    ? 'bg-sky-500/20 text-cyan-300 border border-sky-400/40 shadow-sm'
-                    : 'text-sky-200/70 hover:text-cyan-200'
+                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                    : 'text-stone-400 hover:text-stone-200'
                 }`}
                 title="Tampilkan hanya item yang sudah laku terjual hari ini"
               >
-                <Flame className="w-3.5 h-3.5 text-cyan-300" />
+                <Flame className="w-3.5 h-3.5 text-amber-400" />
                 <span>Terjual ({perItemSales.filter((i) => i.soldQty > 0).length})</span>
               </button>
               <button
@@ -1000,12 +775,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 onClick={() => setItemFilter('all')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                   itemFilter === 'all'
-                    ? 'bg-sky-950 text-cyan-300 border border-sky-700/80 shadow-sm'
-                    : 'text-sky-200/70 hover:text-cyan-200'
+                    ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/80 shadow-sm'
+                    : 'text-stone-400 hover:text-stone-200'
                 }`}
                 title="Tampilkan seluruh katalog menu produk"
               >
-                <Eye className="w-3.5 h-3.5 text-cyan-300" />
+                <Eye className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Semua ({perItemSales.length})</span>
               </button>
             </div>
@@ -1024,7 +799,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             {onOpenMenuEditor && (
               <button
                 onClick={onOpenMenuEditor}
-                className="text-xs bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-cyan-200 font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5"
+                className="text-xs bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5"
               >
                 <span>✏️ Edit Harga</span>
               </button>
@@ -1035,22 +810,22 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         {/* Per Item Table / Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {displayedPerItemSales.length === 0 ? (
-            <div className="col-span-full bg-slate-950/80 border border-dashed border-sky-800/40 rounded-2xl p-8 text-center space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-cyan-300 mx-auto">
+            <div className="col-span-full bg-stone-950/80 border border-dashed border-stone-800 rounded-2xl p-8 text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mx-auto">
                 <Flame className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h4 className="font-bold text-slate-200 text-sm">Belum Ada Item Terjual Hari Ini</h4>
-                <p className="text-xs text-sky-200/70 max-w-md mx-auto leading-relaxed">
+                <h4 className="font-bold text-stone-200 text-sm">Belum Ada Item Terjual Hari Ini</h4>
+                <p className="text-xs text-stone-400 max-w-md mx-auto leading-relaxed">
                   Tampilan awal laporan per item ini masih kosong. Ketika Anda menginput item yang terjual hari ini pada form di atas atau transaksi kasir, laporannya akan muncul otomatis di sini tanpa mengubah format.
                 </p>
               </div>
               <div className="pt-2">
                 <button
                   onClick={() => setItemFilter('all')}
-                  className="text-xs bg-sky-950 hover:bg-sky-900 text-cyan-200 font-semibold px-3.5 py-2 rounded-xl border border-sky-700/60 transition-colors inline-flex items-center gap-1.5"
+                  className="text-xs bg-stone-800 hover:bg-stone-700 text-stone-300 font-semibold px-3.5 py-2 rounded-xl border border-stone-700 transition-colors inline-flex items-center gap-1.5"
                 >
-                  <Eye className="w-3.5 h-3.5 text-cyan-300" />
+                  <Eye className="w-3.5 h-3.5 text-amber-400" />
                   <span>Tampilkan Semua Katalog Menu ({perItemSales.length} Menu)</span>
                 </button>
               </div>
@@ -1064,22 +839,22 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 if (item.category === 'satuan') return '🍌 Satuan';
                 if (item.category === 'paket') return '📦 Paket';
                 if (item.category === 'minuman') return '🥤 Air Mineral';
-                return '弁当 Packing';
+                return '🍱 Packing';
               };
 
               return (
                 <div
                   key={item.menuItemId}
-                  className="bg-slate-900/90 border border-sky-800/40 rounded-xl p-4 space-y-3 flex flex-col justify-between hover:border-sky-400/60 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/10 transition-all duration-300 relative group"
+                  className="bg-stone-800/60 border border-stone-700/70 rounded-xl p-4 space-y-3 flex flex-col justify-between hover:border-emerald-500/50 transition-all shadow-sm relative group"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-sky-950 text-cyan-300 border border-sky-800/60">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-stone-700 text-stone-300">
                         {getCategoryLabel()}
                       </span>
                       
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-bold text-cyan-300">{formatRp(item.pricePerUnit)}/{item.unitName}</span>
+                        <span className="text-xs font-bold text-emerald-400">{formatRp(item.pricePerUnit)}/{item.unitName}</span>
                         
                         {/* Hapus / Remove button on card */}
                         <button
@@ -1093,7 +868,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                               }
                             }
                           }}
-                          className="p-1 text-sky-200/60 hover:text-rose-400 hover:bg-rose-950/80 border border-transparent hover:border-rose-800/80 rounded-lg transition-colors"
+                          className="p-1 text-stone-400 hover:text-rose-400 hover:bg-rose-950/80 border border-transparent hover:border-rose-800/80 rounded-lg transition-colors"
                           title="Hapus item ini dari laporan terjual (Set 0)"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1101,11 +876,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                       </div>
                     </div>
 
-                    <h4 className="font-bold text-sm text-slate-100 leading-snug line-clamp-1">{item.itemName}</h4>
+                    <h4 className="font-bold text-sm text-stone-100 leading-snug line-clamp-1">{item.itemName}</h4>
 
                     {/* Per Unit Profit Badge */}
-                    <div className="bg-slate-950/80 border border-sky-800/40 rounded-lg p-2 flex items-center justify-between text-xs">
-                      <span className="text-[10px] text-sky-200/60">Untung / {item.unitName}:</span>
+                    <div className="bg-stone-900/90 border border-stone-700/80 rounded-lg p-2 flex items-center justify-between text-xs">
+                      <span className="text-[10px] text-stone-400">Untung / {item.unitName}:</span>
                       <span className="font-black text-emerald-400 text-xs">
                         +{formatRp(item.unitProfit)} ({item.profitMarginPct}%)
                       </span>
@@ -1114,9 +889,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     {/* Progress Bar for Sell Rate with +/- and Reset controls */}
                     <div className="space-y-1 pt-0.5">
                       <div className="flex items-center justify-between text-[11px] gap-1">
-                        <span className="text-sky-200/70 font-medium">Laku Terjual:</span>
+                        <span className="text-stone-400 font-medium">Laku Terjual:</span>
                         
-                        <div className="flex items-center gap-1 font-bold text-cyan-300">
+                        <div className="flex items-center gap-1 font-bold text-amber-400">
                           {/* Decrement button */}
                           <button
                             type="button"
@@ -1128,7 +903,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                               }
                             }}
                             disabled={item.soldQty <= 0}
-                            className="w-5 h-5 rounded bg-sky-950 hover:bg-sky-900 border border-sky-800/60 disabled:opacity-20 text-slate-200 font-bold text-xs flex items-center justify-center transition-colors"
+                            className="w-5 h-5 rounded bg-stone-700 hover:bg-stone-600 disabled:opacity-20 text-stone-200 font-bold text-xs flex items-center justify-center transition-colors"
                             title="Kurangi 1 item terjual"
                           >
                             -
@@ -1148,7 +923,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                                 onUpdateMenuItem({ ...target, soldQty: target.soldQty + 1 });
                               }
                             }}
-                            className="w-5 h-5 rounded bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/50 text-cyan-200 font-bold text-xs flex items-center justify-center transition-colors"
+                            className="w-5 h-5 rounded bg-emerald-950 hover:bg-emerald-900 border border-emerald-700/80 text-emerald-300 font-bold text-xs flex items-center justify-center transition-colors"
                             title="Tambah 1 item terjual"
                           >
                             +
@@ -1165,7 +940,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                                   onUpdateMenuItem({ ...target, soldQty: 0 });
                                 }
                               }}
-                              className="ml-1 p-0.5 text-sky-200/60 hover:text-rose-400 transition-colors"
+                              className="ml-1 p-0.5 text-stone-400 hover:text-rose-400 transition-colors"
                               title="Hapus / Reset jumlah terjual item ini menjadi 0"
                             >
                               <RotateCcw className="w-3.5 h-3.5" />
@@ -1174,7 +949,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                         </div>
                       </div>
 
-                      <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-sky-900/40">
+                      <div className="w-full h-2 bg-stone-700 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
                             isSoldOut
@@ -1216,16 +991,16 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Chart: Trend Pemasukan vs Pengeluaran */}
-        <div className="lg:col-span-2 bg-slate-900/90 border border-sky-800/40 rounded-2xl p-5 space-y-4 shadow-xl backdrop-blur-sm">
+        <div className="lg:col-span-2 bg-stone-900 border border-stone-800 rounded-2xl p-5 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-bold text-slate-100 text-base flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-cyan-300" />
+              <h3 className="font-bold text-stone-100 text-base flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-emerald-400" />
                 Tren Keuangan & Laba Bersih
               </h3>
-              <p className="text-xs text-sky-200/70">Perbandingan pemasukan, HPP modal bahan, dan laba bersih</p>
+              <p className="text-xs text-stone-400">Perbandingan pemasukan, HPP modal bahan, dan laba bersih</p>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 bg-sky-950 text-cyan-200 rounded-lg border border-sky-700/60">
+            <span className="text-xs font-semibold px-2.5 py-1 bg-stone-800 text-stone-300 rounded-lg border border-stone-700">
               Harian / Transaksi
             </span>
           </div>
@@ -1235,27 +1010,27 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               <AreaChart data={trendData}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#38bdf8" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#22d3ee" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="formattedDate" stroke="#38bdf8" fontSize={11} tickLine={false} />
+                <XAxis dataKey="formattedDate" stroke="#78716c" fontSize={11} tickLine={false} />
                 <YAxis
-                  stroke="#38bdf8"
+                  stroke="#78716c"
                   fontSize={11}
                   tickLine={false}
                   tickFormatter={(v) => `Rp${v / 1000}k`}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0b1329',
-                    borderColor: '#1e3a8a',
+                    backgroundColor: '#1c1917',
+                    borderColor: '#44403c',
                     borderRadius: '12px',
-                    color: '#f1f5f9',
+                    color: '#f5f5f4',
                     fontSize: '12px',
                   }}
                   formatter={(value: any) => [formatRp(Number(value)), '']}
@@ -1264,7 +1039,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   type="monotone"
                   dataKey="revenue"
                   name="Pemasukan (Revenue)"
-                  stroke="#38bdf8"
+                  stroke="#10b981"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorRev)"
@@ -1273,7 +1048,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   type="monotone"
                   dataKey="netProfitReal"
                   name="Laba Bersih"
-                  stroke="#22d3ee"
+                  stroke="#14b8a6"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorProfit)"
@@ -1284,13 +1059,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
 
         {/* Side Chart: Popular Dipping Sauces */}
-        <div className="bg-slate-900/90 border border-sky-800/40 rounded-2xl p-5 space-y-4 shadow-xl backdrop-blur-sm">
+        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 space-y-4">
           <div>
-            <h3 className="font-bold text-slate-100 text-base flex items-center gap-2">
-              <PieIcon className="w-4 h-4 text-cyan-300" />
+            <h3 className="font-bold text-stone-100 text-base flex items-center gap-2">
+              <PieIcon className="w-4 h-4 text-teal-400" />
               Saus Cocolan Terfavorit
             </h3>
-            <p className="text-xs text-sky-200/70">Porsi saus pilihan pelanggan</p>
+            <p className="text-xs text-stone-400">Porsi saus pilihan pelanggan</p>
           </div>
 
           <div className="h-56 w-full flex items-center justify-center">
@@ -1312,10 +1087,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#0b1329',
-                      borderColor: '#1e3a8a',
+                      backgroundColor: '#1c1917',
+                      borderColor: '#44403c',
                       borderRadius: '12px',
-                      color: '#f1f5f9',
+                      color: '#f5f5f4',
                       fontSize: '12px',
                     }}
                   />
@@ -1323,12 +1098,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     layout="horizontal"
                     verticalAlign="bottom"
                     align="center"
-                    wrapperStyle={{ fontSize: '11px', color: '#7dd3fc' }}
+                    wrapperStyle={{ fontSize: '11px', color: '#a8a29e' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-xs text-sky-200/60">Belum ada data saus terisolasi.</p>
+              <p className="text-xs text-stone-500">Belum ada data saus terisolasi.</p>
             )}
           </div>
         </div>

@@ -10,7 +10,6 @@ interface FinalizeDayModalProps {
   sauces: SauceItem[];
   stockItems: StockItem[];
   onFinalizeDay: (report: DailyReport, resetTodaySales: boolean) => void;
-  onOpenManualPastReport?: () => void;
   initialDate?: string;
 }
 
@@ -21,7 +20,6 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
   sauces,
   stockItems,
   onFinalizeDay,
-  onOpenManualPastReport,
   initialDate,
 }) => {
   const [notes, setNotes] = useState<string>('');
@@ -136,26 +134,12 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
 
         {/* Content */}
         {soldItemsToday.length === 0 ? (
-          <div className="bg-stone-950 p-6 rounded-xl border border-dashed border-stone-800 text-center space-y-3">
+          <div className="bg-stone-950 p-6 rounded-xl border border-dashed border-stone-800 text-center space-y-2">
             <AlertCircle className="w-8 h-8 text-amber-400 mx-auto" />
-            <h4 className="font-bold text-sm text-stone-200">Belum Ada Item Terjual Diinput Per-Item</h4>
+            <h4 className="font-bold text-sm text-stone-200">Belum Ada Item Terjual Diinput</h4>
             <p className="text-xs text-stone-400 max-w-md mx-auto">
-              Silakan masukkan dulu jumlah item laku terjual hari ini pada tabel di Ringkasan Usaha.
+              Silakan masukkan dulu jumlah item laku terjual hari ini pada tabel di Ringkasan Usaha sebelum melakukan finalisasi.
             </p>
-            {onOpenManualPastReport && (
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onOpenManualPastReport();
-                  }}
-                  className="px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-xl transition-all shadow-sm inline-flex items-center gap-2"
-                >
-                  <span>+ Input Nominal Uang Hasil Penjualan Hari Lalu (Catatan Rincian Hilang)</span>
-                </button>
-              </div>
-            )}
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -177,9 +161,6 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
                   value={reportDate}
                   onChange={(e) => setReportDate(e.target.value)}
                   onClick={(e) => {
-                    try { (e.target as HTMLInputElement).showPicker(); } catch {}
-                  }}
-                  onFocus={(e) => {
                     try { (e.target as HTMLInputElement).showPicker(); } catch {}
                   }}
                   className="flex-1 bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-xs font-bold text-stone-100 focus:outline-none focus:border-amber-500 cursor-pointer"

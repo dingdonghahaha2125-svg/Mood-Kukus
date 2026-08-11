@@ -63,10 +63,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   const [formData, setFormData] = useState<{
     name: string;
     category: StockCategory;
-    currentStock: number | '';
-    minStock: number | '';
+    currentStock: number;
+    minStock: number;
     unit: StockUnit;
-    unitCostPrice: number | '';
+    unitCostPrice: number;
     supplier: string;
     notes: string;
   }>({
@@ -81,8 +81,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   });
 
   // Restock modal state
-  const [restockQty, setRestockQty] = useState<number | ''>(5);
-  const [restockCost, setRestockCost] = useState<number | ''>(0);
+  const [restockQty, setRestockQty] = useState<number>(5);
+  const [restockCost, setRestockCost] = useState<number>(0);
   const [recordExpense, setRecordExpense] = useState<boolean>(true);
   const [restockDate, setRestockDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
 
@@ -261,28 +261,28 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       {/* Top Header & Metrics */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-100 flex items-center gap-2">
-            <Boxes className="w-6 h-6 text-cyan-300" />
+          <h2 className="text-xl sm:text-2xl font-bold text-stone-100 flex items-center gap-2">
+            <Boxes className="w-6 h-6 text-emerald-400" />
             Manajemen Stok Bahan Baku & Kemasan
           </h2>
-          <p className="text-xs sm:text-sm text-sky-200/80">
-            Kelola persediaan pisang, ubi, singkong, telur, bahan saus, dan kemasan ramah lingkungan (Besek/Paper box).
+          <p className="text-xs sm:text-sm text-stone-400">
+            Kelola persediaan pisang, ubi, jagung, telur, bahan saus, dan kemasan ramah lingkungan (Besek/Paper box).
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => setRecipeMenuTarget(menuItems[0] || null)}
-            className="px-3.5 py-2 bg-slate-900 hover:bg-sky-950 text-cyan-200 border border-sky-800/60 font-medium text-xs sm:text-sm rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+            className="px-3.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 font-medium text-xs sm:text-sm rounded-xl transition-all flex items-center gap-1.5"
           >
-            <ChefHat className="w-4 h-4 text-cyan-300" />
+            <ChefHat className="w-4 h-4 text-emerald-400" />
             Kelola Resep (BOM)
           </button>
           <button
             onClick={handleOpenAddModal}
-            className="px-4 py-2 bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 hover:from-sky-300 hover:to-cyan-300 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow-md shadow-sky-400/20 transition-all flex items-center gap-1.5 active:scale-95"
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs sm:text-sm rounded-xl shadow-md transition-all flex items-center gap-1.5"
           >
-            <Plus className="w-4 h-4 text-slate-950" />
+            <Plus className="w-4 h-4" />
             Tambah Bahan
           </button>
         </div>
@@ -290,51 +290,51 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
       {/* Stock Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-slate-900/90 border border-sky-800/40 hover:border-sky-400/60 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/10 rounded-2xl p-4 flex items-center justify-between transition-all duration-300 backdrop-blur-sm">
+        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-sky-200/80 font-medium">Total Jenis Bahan & Kemasan</span>
-            <div className="text-xl font-black text-slate-100 mt-1">{stockItems.length} Item</div>
+            <span className="text-xs text-stone-400 font-medium">Total Jenis Bahan & Kemasan</span>
+            <div className="text-xl font-bold text-stone-100 mt-1">{stockItems.length} Item</div>
           </div>
-          <div className="p-3 bg-sky-950/80 border border-sky-700/60 rounded-xl text-cyan-300">
+          <div className="p-3 bg-stone-800 rounded-xl text-emerald-400">
             <Layers className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-slate-900/90 border border-sky-800/40 hover:border-sky-400/60 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/10 rounded-2xl p-4 flex items-center justify-between transition-all duration-300 backdrop-blur-sm">
+        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-sky-200/80 font-medium">Total Nilai Asset Persediaan</span>
-            <div className="text-xl font-black text-cyan-300 mt-1">{formatRp(totalStockValue)}</div>
+            <span className="text-xs text-stone-400 font-medium">Total Nilai Asset Persediaan</span>
+            <div className="text-xl font-bold text-teal-400 mt-1">{formatRp(totalStockValue)}</div>
           </div>
-          <div className="p-3 bg-sky-950/80 border border-sky-700/60 rounded-xl text-cyan-300">
+          <div className="p-3 bg-stone-800 rounded-xl text-teal-400">
             <DollarSign className="w-5 h-5" />
           </div>
         </div>
 
-        <div className="bg-slate-900/90 border border-sky-800/40 hover:border-sky-400/60 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/10 rounded-2xl p-4 flex items-center justify-between transition-all duration-300 backdrop-blur-sm">
+        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 flex items-center justify-between">
           <div>
-            <span className="text-xs text-sky-200/80 font-medium">Alert Perlu Restock</span>
-            <div className="text-xl font-black text-amber-300 mt-1">
+            <span className="text-xs text-stone-400 font-medium">Alert Perlu Restock</span>
+            <div className="text-xl font-bold text-amber-400 mt-1">
               {lowStockCount} Menipis {emptyStockCount > 0 ? `(${emptyStockCount} Habis)` : ''}
             </div>
           </div>
-          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300">
+          <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400">
             <AlertTriangle className="w-5 h-5" />
           </div>
         </div>
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-slate-900/90 border border-sky-800/40 rounded-2xl p-4 space-y-3 backdrop-blur-sm">
+      <div className="bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-3">
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3.5 top-3 text-sky-200/60" />
+            <Search className="w-4 h-4 absolute left-3.5 top-3 text-stone-400" />
             <input
               type="text"
               placeholder="Cari bahan (pisang, ubi, besek, supplier)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-950 border border-sky-800/60 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-slate-100 placeholder-sky-300/40 focus:outline-none focus:border-cyan-400"
+              className="w-full bg-stone-800/80 border border-stone-700/80 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm text-stone-100 placeholder-stone-500 focus:outline-none focus:border-emerald-500"
             />
           </div>
 
@@ -343,7 +343,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full bg-slate-950 border border-sky-800/60 rounded-xl px-3 py-2 text-xs sm:text-sm text-cyan-200 focus:outline-none focus:border-cyan-400"
+              className="w-full bg-stone-800/80 border border-stone-700/80 rounded-xl px-3 py-2 text-xs sm:text-sm text-stone-200 focus:outline-none focus:border-emerald-500"
             >
               <option value="all">Semua Status</option>
               <option value="safe">Stok Aman</option>
@@ -365,10 +365,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                 selectedCategory === cat.id
-                  ? 'bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 text-slate-950 font-black shadow-md shadow-sky-400/20'
-                  : 'bg-slate-950 text-sky-200/80 hover:text-cyan-200 border border-sky-800/40'
+                  ? 'bg-emerald-600 text-white font-semibold'
+                  : 'bg-stone-800 text-stone-400 hover:text-stone-200'
               }`}
             >
               {cat.label}
@@ -403,10 +403,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
           return (
             <div
               key={item.id}
-              className={`bg-slate-900/90 border rounded-2xl p-4 space-y-3 transition-all backdrop-blur-sm ${
+              className={`bg-stone-900 border rounded-2xl p-4 space-y-3 transition-all ${
                 effectiveStock <= item.minStock
-                  ? 'border-amber-500/80 bg-amber-950/20 shadow-lg shadow-amber-950/30'
-                  : 'border-sky-800/40 hover:border-sky-400/60 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/10'
+                  ? 'border-amber-600/60 bg-amber-950/10 shadow-lg shadow-amber-950/20'
+                  : 'border-stone-800 hover:border-stone-700'
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -415,37 +415,37 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     {getCategoryBadge(item.category)}
                     {getStockStatusBadge(item, effectiveStock)}
                   </div>
-                  <h3 className="font-bold text-slate-100 text-sm sm:text-base">{item.name}</h3>
-                  {item.supplier && <p className="text-[11px] text-sky-200/70">Supplier: {item.supplier}</p>}
+                  <h3 className="font-bold text-stone-100 text-sm sm:text-base">{item.name}</h3>
+                  {item.supplier && <p className="text-[11px] text-stone-400">Supplier: {item.supplier}</p>}
                 </div>
               </div>
 
               {/* Stock Quantity Gauge */}
-              <div className="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-sky-800/60">
+              <div className="space-y-1.5 bg-stone-800/60 p-3 rounded-xl border border-stone-700/50">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-sky-200/80">Sisa Stok Real-Time:</span>
-                  <span className="font-bold text-cyan-300 text-sm">
+                  <span className="text-stone-400">Sisa Stok Real-Time:</span>
+                  <span className="font-bold text-emerald-400 text-sm">
                     {effectiveStock} {item.unit}
                   </span>
                 </div>
 
-                <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-sky-900/40">
+                <div className="w-full bg-stone-700 rounded-full h-2 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
                       effectiveStock <= 0
                         ? 'bg-rose-500'
                         : effectiveStock <= item.minStock
-                        ? 'bg-amber-400'
-                        : 'bg-emerald-400'
+                        ? 'bg-amber-500'
+                        : 'bg-emerald-500'
                     }`}
                     style={{ width: `${stockRatio}%` }}
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] text-sky-200/70 pt-0.5">
+                <div className="flex items-center justify-between text-[10px] text-stone-400 pt-0.5">
                   <span>Stok Gudang: {item.currentStock} {item.unit}</span>
                   {soldDeductionToday > 0 ? (
-                    <span className="text-amber-300 font-bold bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-800/80">
+                    <span className="text-amber-400 font-bold bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-800/60">
                       Terjual: -{soldDeductionToday} {item.unit}
                     </span>
                   ) : (
@@ -455,30 +455,30 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               </div>
 
               {/* Details & Actions */}
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-sky-900/40">
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-stone-800">
                 <div>
-                  <span className="text-[10px] text-sky-200/60">Nilai Aset Stok:</span>
-                  <div className="font-semibold text-emerald-400">{formatRp(totalValue)}</div>
+                  <span className="text-[10px] text-stone-500">Nilai Aset Stok:</span>
+                  <div className="font-semibold text-teal-400">{formatRp(totalValue)}</div>
                 </div>
 
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => handleOpenRestockModal(item)}
-                    className="px-2.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-lg text-xs transition-colors flex items-center gap-1 shadow-sm"
+                    className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg text-xs transition-colors flex items-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     Restock
                   </button>
                   <button
                     onClick={() => handleOpenEditModal(item)}
-                    className="p-1.5 bg-slate-950 hover:bg-sky-950 text-cyan-300 rounded-lg border border-sky-800/60 transition-colors"
+                    className="p-1.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-lg transition-colors"
                     title="Edit Item"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => onDeleteStockItem(item.id)}
-                    className="p-1.5 bg-slate-950 hover:bg-rose-950 text-sky-200/60 hover:text-rose-300 rounded-lg border border-sky-800/60 hover:border-rose-800 transition-colors"
+                    className="p-1.5 bg-stone-800 hover:bg-rose-900/50 text-stone-400 hover:text-rose-300 rounded-lg transition-colors"
                     title="Hapus Item"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -492,15 +492,15 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
       {/* MODAL 1: Add/Edit Stock Item */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-sky-800/60 rounded-2xl w-full max-w-lg p-6 space-y-4 text-slate-100 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-sky-900/40 pb-3">
-              <h3 className="font-bold text-lg text-slate-100">
+        <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-stone-900 border border-stone-800 rounded-2xl w-full max-w-lg p-6 space-y-4 text-stone-100 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <h3 className="font-bold text-lg text-stone-100">
                 {editingItem ? 'Edit Bahan / Kemasan' : 'Tambah Bahan Baku / Kemasan Baru'}
               </h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-sky-200/60 hover:text-slate-100"
+                className="text-stone-400 hover:text-stone-200"
               >
                 ✕
               </button>
@@ -509,8 +509,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             <form onSubmit={handleSaveStockItem} className="space-y-4 text-xs sm:text-sm">
               {/* Quick Preset Choice Chips */}
               {!editingItem && (
-                <div className="space-y-1.5 bg-slate-950 p-3 rounded-xl border border-sky-800/60">
-                  <label className="block text-[11px] font-bold text-amber-300">
+                <div className="space-y-1.5 bg-stone-950 p-3 rounded-xl border border-stone-800">
+                  <label className="block text-[11px] font-bold text-amber-400">
                     ⚡ Pilih Cepat Bahan Utama / Produk (Atau isi manual):
                   </label>
                   <div className="flex flex-wrap gap-1.5 pt-1">
@@ -538,7 +538,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                             unitCostPrice: preset.price,
                           });
                         }}
-                        className="px-2.5 py-1 bg-slate-900 hover:bg-sky-950 text-sky-200 border border-sky-800/60 rounded-lg text-[11px] font-semibold transition-all hover:border-amber-400"
+                        className="px-2.5 py-1 bg-stone-850 hover:bg-stone-750 text-stone-200 border border-stone-700/80 rounded-lg text-[11px] font-semibold transition-all hover:border-amber-500/60"
                       >
                         + {preset.name}
                       </button>
@@ -548,7 +548,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               )}
 
               <div>
-                <label className="block text-sky-200/80 mb-1 font-medium">Nama Bahan / Stok Utama</label>
+                <label className="block text-stone-400 mb-1 font-medium">Nama Bahan / Stok Utama</label>
                 <input
                   type="text"
                   required
@@ -562,17 +562,17 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     const cleaned = e.target.value.replace(/singkos/gi, 'Singkong');
                     setFormData({ ...formData, name: cleaned });
                   }}
-                  className="w-full bg-slate-950 border border-sky-800/60 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-400 font-bold"
+                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500 font-bold"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sky-200/80 mb-1 font-medium">Kategori Bahan</label>
+                  <label className="block text-stone-400 mb-1 font-medium">Kategori Bahan</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value as StockCategory })}
-                    className="w-full bg-slate-950 border border-sky-800/60 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-400"
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   >
                     <option value="bahan_utama">🍌 Bahan Utama Kukusan</option>
                     <option value="bahan_saus">🍯 Bahan Saus & Topping</option>
@@ -582,11 +582,11 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-sky-200/80 mb-1 font-medium">Satuan (Unit)</label>
+                  <label className="block text-stone-400 mb-1 font-medium">Satuan (Unit)</label>
                   <select
                     value={formData.unit}
                     onChange={(e) => setFormData({ ...formData, unit: e.target.value as StockUnit })}
-                    className="w-full bg-slate-950 border border-sky-800/60 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-400"
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   >
                     <option value="kg">Kilogram (kg)</option>
                     <option value="pcs">Pieces / Biji (pcs)</option>
@@ -600,97 +600,79 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-sky-200/80 mb-1 font-medium">Stok Awal</label>
+                  <label className="block text-stone-400 mb-1 font-medium">Stok Awal</label>
                   <input
                     type="number"
                     step="any"
                     required
                     value={formData.currentStock}
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        currentStock: e.target.value === '' ? '' : parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full bg-slate-950 border border-sky-800/60 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-400 font-bold"
+                    onChange={(e) => setFormData({ ...formData, currentStock: parseFloat(e.target.value) || 0 })}
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500 font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sky-200/80 mb-1 font-medium">Batas Min Alert</label>
+                  <label className="block text-stone-400 mb-1 font-medium">Batas Min Alert</label>
                   <input
                     type="number"
                     step="any"
                     required
                     value={formData.minStock}
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        minStock: e.target.value === '' ? '' : parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full bg-slate-950 border border-sky-800/60 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-400"
+                    onChange={(e) => setFormData({ ...formData, minStock: parseFloat(e.target.value) || 0 })}
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sky-200/80 mb-1 font-medium">Harga Modal / Unit (Rp)</label>
+                  <label className="block text-stone-400 mb-1 font-medium">Harga Modal / Unit (Rp)</label>
                   <input
                     type="number"
                     required
                     value={formData.unitCostPrice}
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        unitCostPrice: e.target.value === '' ? '' : parseFloat(e.target.value),
-                      })
-                    }
-                    className="w-full bg-slate-950 border border-sky-800/60 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-400"
+                    onChange={(e) => setFormData({ ...formData, unitCostPrice: parseFloat(e.target.value) || 0 })}
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
               </div>
 
               {!editingItem && (
-                <div className="bg-sky-950/70 border border-sky-700/60 p-3 rounded-xl flex items-start gap-2.5">
+                <div className="bg-emerald-950/70 border border-emerald-800/80 p-3 rounded-xl flex items-start gap-2.5">
                   <input
                     type="checkbox"
                     id="autoCreateCheck"
                     checked={autoCreateMenuItem}
                     onChange={(e) => setAutoCreateMenuItem(e.target.checked)}
-                    className="w-4 h-4 mt-0.5 accent-cyan-400 shrink-0"
+                    className="w-4 h-4 mt-0.5 accent-emerald-500 shrink-0"
                   />
-                  <label htmlFor="autoCreateCheck" className="text-xs text-sky-200 leading-snug cursor-pointer">
-                    <span className="font-bold text-cyan-300 block">Hubungkan Otomatis ke Katalog Menu Jualan</span>
+                  <label htmlFor="autoCreateCheck" className="text-xs text-emerald-200 leading-snug cursor-pointer">
+                    <span className="font-bold text-emerald-300 block">Hubungkan Otomatis ke Katalog Menu Jualan</span>
                     Bahan ini akan langsung dicantumkan ke daftar menu jualan sehingga bisa diedit laku terjualnya di Laporan Hari Ini & Kasir.
                   </label>
                 </div>
               )}
 
               <div>
-                <label className="block text-sky-200/80 mb-1 font-medium">Supplier / Pemasok (Opsional)</label>
+                <label className="block text-stone-400 mb-1 font-medium">Supplier / Pemasok (Opsional)</label>
                 <input
                   type="text"
                   placeholder="Misal: Pak Tani Pasar Induk / Pengrajin Tasik"
                   value={formData.supplier}
                   onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                  className="w-full bg-slate-950 border border-sky-800/60 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-400"
+                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-sky-900/40">
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-stone-800">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 bg-slate-950 border border-sky-800/60 text-sky-200/80 rounded-xl hover:bg-sky-950"
+                  className="px-4 py-2 bg-stone-800 text-stone-300 rounded-xl hover:bg-stone-700"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 hover:from-sky-300 hover:to-cyan-300 text-slate-950 font-black rounded-xl shadow-md shadow-sky-400/20"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl"
                 >
                   Simpan Bahan
                 </button>
@@ -702,26 +684,26 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
       {/* MODAL 2: Quick Restock Modal */}
       {restockTargetItem && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-sky-800/60 rounded-2xl w-full max-w-md p-6 space-y-4 text-slate-100 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-sky-900/40 pb-3">
-              <h3 className="font-bold text-lg text-cyan-300 flex items-center gap-2">
-                <PackageCheck className="w-5 h-5 text-cyan-300" />
+        <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-stone-900 border border-stone-800 rounded-2xl w-full max-w-md p-6 space-y-4 text-stone-100 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <h3 className="font-bold text-lg text-emerald-400 flex items-center gap-2">
+                <PackageCheck className="w-5 h-5" />
                 Restock Stok: {restockTargetItem.name}
               </h3>
-              <button onClick={() => setRestockTargetItem(null)} className="text-sky-200/60 hover:text-slate-100">
+              <button onClick={() => setRestockTargetItem(null)} className="text-stone-400 hover:text-stone-200">
                 ✕
               </button>
             </div>
 
-            <div className="bg-slate-950 p-3 rounded-xl space-y-1 text-xs border border-sky-800/40">
-              <div className="flex justify-between text-sky-200/80">
+            <div className="bg-stone-800/80 p-3 rounded-xl space-y-1 text-xs">
+              <div className="flex justify-between text-stone-300">
                 <span>Stok Saat Ini:</span>
-                <span className="font-bold text-cyan-300">
+                <span className="font-bold">
                   {restockTargetItem.currentStock} {restockTargetItem.unit}
                 </span>
               </div>
-              <div className="flex justify-between text-sky-200/80">
+              <div className="flex justify-between text-stone-300">
                 <span>Batas Minimal Alert:</span>
                 <span>
                   {restockTargetItem.minStock} {restockTargetItem.unit}
@@ -731,29 +713,27 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
             <div className="space-y-3 text-xs sm:text-sm">
               <div>
-                <label className="block text-sky-200/80 mb-1 font-medium">Jumlah Tambahan Restock</label>
+                <label className="block text-stone-400 mb-1 font-medium">Jumlah Tambahan Restock</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
                     step="any"
                     value={restockQty}
-                    onFocus={(e) => e.target.select()}
                     onChange={(e) => {
-                      const val = e.target.value === '' ? '' : parseFloat(e.target.value);
-                      setRestockQty(val);
-                      const numQty = typeof val === 'number' ? val : 0;
-                      setRestockCost(numQty * restockTargetItem.unitCostPrice);
+                      const qty = parseFloat(e.target.value) || 0;
+                      setRestockQty(qty);
+                      setRestockCost(qty * restockTargetItem.unitCostPrice);
                     }}
-                    className="w-full bg-slate-950 border border-sky-800/60 rounded-xl px-3 py-2 text-slate-100 font-bold focus:outline-none focus:border-cyan-400"
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500"
                   />
-                  <span className="font-bold text-sky-200/80 shrink-0">{restockTargetItem.unit}</span>
+                  <span className="font-bold text-stone-300 shrink-0">{restockTargetItem.unit}</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sky-200/80 mb-1 font-medium flex items-center justify-between">
+                <label className="block text-stone-400 mb-1 font-medium flex items-center justify-between">
                   <span>Tanggal Pembelian / Restock Bahan:</span>
-                  <span className="text-cyan-300 text-xs font-bold">
+                  <span className="text-emerald-400 text-xs font-bold">
                     {formatDateOnly(restockDate + 'T12:00:00')}
                   </span>
                 </label>
@@ -766,15 +746,12 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     onClick={(e) => {
                       try { (e.target as HTMLInputElement).showPicker(); } catch {}
                     }}
-                    onFocus={(e) => {
-                      try { (e.target as HTMLInputElement).showPicker(); } catch {}
-                    }}
-                    className="w-full bg-slate-950 border border-sky-800/60 rounded-xl px-3 py-2 text-slate-100 font-bold focus:outline-none focus:border-cyan-400 text-xs sm:text-sm cursor-pointer"
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500 text-xs sm:text-sm cursor-pointer"
                   />
                   <button
                     type="button"
                     onClick={() => setRestockDate(new Date().toISOString().split('T')[0])}
-                    className="px-2.5 py-2 bg-slate-950 hover:bg-sky-950 text-sky-200 rounded-xl border border-sky-800/60 text-xs shrink-0 font-medium"
+                    className="px-2.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl border border-stone-700 text-xs shrink-0 font-medium"
                   >
                     Hari Ini
                   </button>
@@ -785,7 +762,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                       d.setDate(d.getDate() - 1);
                       setRestockDate(d.toISOString().split('T')[0]);
                     }}
-                    className="px-2.5 py-2 bg-slate-950 hover:bg-sky-950 text-sky-200 rounded-xl border border-sky-800/60 text-xs shrink-0 font-medium"
+                    className="px-2.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl border border-stone-700 text-xs shrink-0 font-medium"
                   >
                     Kemarin
                   </button>
@@ -793,42 +770,41 @@ export const StockManagement: React.FC<StockManagementProps> = ({
               </div>
 
               <div>
-                <label className="block text-sky-200/80 mb-1 font-medium">Total Biaya Pembelian (Rp)</label>
+                <label className="block text-stone-400 mb-1 font-medium">Total Biaya Pembelian (Rp)</label>
                 <input
                   type="number"
                   value={restockCost}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => setRestockCost(e.target.value === '' ? '' : parseFloat(e.target.value))}
-                  className="w-full bg-slate-950 border border-sky-800/60 rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-cyan-400"
+                  onChange={(e) => setRestockCost(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
-              <div className="flex items-center gap-2 bg-slate-950 p-3 rounded-xl border border-sky-800/60">
+              <div className="flex items-center gap-2 bg-stone-800/60 p-3 rounded-xl border border-stone-700/60">
                 <input
                   type="checkbox"
                   id="expenseCheck"
                   checked={recordExpense}
                   onChange={(e) => setRecordExpense(e.target.checked)}
-                  className="w-4 h-4 accent-cyan-400"
+                  className="w-4 h-4 accent-emerald-500"
                 />
-                <label htmlFor="expenseCheck" className="text-xs text-slate-200 cursor-pointer">
+                <label htmlFor="expenseCheck" className="text-xs text-stone-300 cursor-pointer">
                   Catat biaya pembelian ini secara otomatis ke Log Pengeluaran Operasional
                 </label>
               </div>
             </div>
 
-            <div className="pt-3 flex items-center justify-end gap-2 border-t border-sky-900/40">
+            <div className="pt-3 flex items-center justify-end gap-2 border-t border-stone-800">
               <button
                 type="button"
                 onClick={() => setRestockTargetItem(null)}
-                className="px-4 py-2 bg-slate-950 border border-sky-800/60 text-sky-200/80 rounded-xl hover:bg-sky-950 text-xs"
+                className="px-4 py-2 bg-stone-800 text-stone-300 rounded-xl hover:bg-stone-700 text-xs"
               >
                 Batal
               </button>
               <button
                 type="button"
                 onClick={handleConfirmRestock}
-                className="px-5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black rounded-xl text-xs shadow-md"
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs"
               >
                 Konfirmasi Restock
               </button>
@@ -901,9 +877,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                           type="number"
                           step="any"
                           value={ing.amount}
-                          onFocus={(e) => e.target.select()}
                           onChange={(e) => {
-                            const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                            const val = parseFloat(e.target.value) || 0;
                             const newIngredients = [...recipeMenuTarget.ingredients];
                             newIngredients[idx] = { ...ing, amount: val };
                             const updated = { ...recipeMenuTarget, ingredients: newIngredients };

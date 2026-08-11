@@ -8,6 +8,7 @@ import {
   Bot,
   FileSpreadsheet,
   FileText,
+  DollarSign,
 } from 'lucide-react';
 import { FinancialSummary, StockItem } from '../types';
 import { formatRp } from '../utils/calculations';
@@ -23,7 +24,6 @@ interface NavbarProps {
   onOpenMenuEditor?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
-  isCloudConnected?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -35,7 +35,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenMenuEditor,
   onExportExcel,
   onExportPdf,
-  isCloudConnected = true,
 }) => {
   const navItems = [
     { id: 'dashboard', label: '🏠 Ringkasan Usaha', icon: LayoutDashboard },
@@ -50,7 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-30 bg-slate-950/90 backdrop-blur-md border-b border-sky-800/40 text-slate-100 shadow-lg shadow-sky-950/30">
+    <header className="sticky top-0 z-30 bg-stone-900/95 backdrop-blur border-b border-stone-800 text-stone-100 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
@@ -58,23 +57,70 @@ export const Navbar: React.FC<NavbarProps> = ({
             <BrandLogo size="md" />
           </div>
 
-          {/* Cloud Badge (Desktop) */}
-          <div className="hidden lg:flex items-center gap-2 bg-sky-950/80 border border-sky-700/60 rounded-xl px-3 py-1.5 text-xs">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-cyan-300" title="Database Firestore Terhubung Real-Time">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
-              <span>Firebase Cloud Active</span>
+          {/* Quick Metrics Bar (Desktop) */}
+          <div className="hidden lg:flex items-center gap-4 bg-stone-800/60 border border-stone-700/60 rounded-xl px-3 py-1.5 text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="text-stone-400">Pemasukan:</span>
+              <span className="font-semibold text-emerald-400">{formatRp(financialSummary.totalRevenue)}</span>
+            </div>
+            <div className="w-px h-4 bg-stone-700" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-stone-400">Laba Bersih:</span>
+              <span className={`font-semibold ${financialSummary.netProfit >= 0 ? 'text-teal-300' : 'text-rose-400'}`}>
+                {formatRp(financialSummary.netProfit)}
+              </span>
+            </div>
+            <div className="w-px h-4 bg-stone-700" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-stone-400">Margin:</span>
+              <span className="font-semibold text-amber-400">{financialSummary.profitMargin}%</span>
             </div>
           </div>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Edit Menu Price Quick Button */}
+            {onOpenMenuEditor && (
+              <button
+                onClick={onOpenMenuEditor}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 rounded-xl font-bold text-xs transition-all shadow-sm"
+                title="Edit Harga Jual Menu & Ketahui Keuntungan Per Unit"
+              >
+                <DollarSign className="w-4 h-4 text-amber-400" />
+                <span>Atur Harga Jual</span>
+              </button>
+            )}
+
+            {/* Export Buttons */}
+            {onExportExcel && (
+              <button
+                onClick={onExportExcel}
+                className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-emerald-400 rounded-xl font-semibold text-xs transition-all"
+                title="Export Laporan ke Excel (.xlsx)"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                <span>Excel</span>
+              </button>
+            )}
+
+            {onExportPdf && (
+              <button
+                onClick={onExportPdf}
+                className="hidden md:flex items-center gap-1.5 px-3 py-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-rose-400 rounded-xl font-semibold text-xs transition-all"
+                title="Export Laporan ke PDF (.pdf)"
+              >
+                <FileText className="w-4 h-4 text-rose-400" />
+                <span>PDF</span>
+              </button>
+            )}
+
             {/* AI Advisor Button */}
             <button
               onClick={onOpenAiAdvisor}
-              className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 hover:from-sky-300 hover:to-cyan-300 text-slate-950 rounded-xl font-black text-xs sm:text-sm shadow-md shadow-sky-400/20 transition-all active:scale-95"
+              className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-medium text-xs sm:text-sm shadow-md transition-all active:scale-95"
               title="Konsultasikan Keuangan & Stok dengan AI"
             >
-              <Bot className="w-4 h-4 text-slate-950 animate-bounce" />
+              <Bot className="w-4 h-4 text-emerald-200 animate-pulse" />
               <span className="hidden sm:inline">Tanya KukusBot AI</span>
               <span className="sm:hidden">AI Advisor</span>
             </button>
@@ -82,7 +128,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="flex space-x-1.5 overflow-x-auto pb-2 scrollbar-none border-t border-sky-900/40 pt-2">
+        <nav className="flex space-x-1 overflow-x-auto pb-2 scrollbar-none border-t border-stone-800/80 pt-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -90,13 +136,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all ${
                   isActive
-                    ? 'bg-gradient-to-r from-sky-500 via-cyan-500 to-blue-600 text-slate-950 font-black shadow-md shadow-sky-500/20 scale-[1.02]'
-                    : 'text-sky-200/80 hover:text-cyan-200 hover:bg-sky-950/70 hover:scale-[1.01]'
+                    ? 'bg-emerald-600 text-white shadow-sm font-semibold'
+                    : 'text-stone-400 hover:text-stone-200 hover:bg-stone-800/70'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-cyan-300'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-stone-400'}`} />
                 <span>{item.label}</span>
                 {item.badge !== undefined && (
                   <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-stone-950 rounded-full flex items-center gap-0.5">

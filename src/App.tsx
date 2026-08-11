@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
+  collection,
+  doc,
+  setDoc,
+  deleteDoc,
+  onSnapshot,
+} from 'firebase/firestore';
+import { db } from './firebaseConfig';
+import {
   INITIAL_STOCK_ITEMS,
   INITIAL_MENU_ITEMS,
   INITIAL_SAUCES,
@@ -18,18 +26,7 @@ import { AiBusinessAdvisor } from './components/AiBusinessAdvisor';
 import { DigitalReceiptModal } from './components/DigitalReceiptModal';
 import { MenuPriceEditorModal } from './components/MenuPriceEditorModal';
 import { FinalizeDayModal } from './components/FinalizeDayModal';
-import { ManualPastReportModal } from './components/ManualPastReportModal';
-import { InitialCapitalModal } from './components/InitialCapitalModal';
 import { exportToExcel, exportToPdf } from './utils/exportUtils';
-import { testConnection } from './lib/firebase';
-import {
-  subscribeToCollection,
-  saveDocument,
-  addExpenseToFirestore,
-  deleteDocument,
-  seedCollectionIfEmpty,
-  COLLECTIONS,
-} from './lib/firestoreService';
 
 export default function App() {
   // Helper to fix Singkos typo -> Singkong
@@ -77,8 +74,6 @@ export default function App() {
   const [isAiAdvisorOpen, setIsAiAdvisorOpen] = useState<boolean>(false);
   const [isMenuEditorOpen, setIsMenuEditorOpen] = useState<boolean>(false);
   const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState<boolean>(false);
-  const [isManualPastReportOpen, setIsManualPastReportOpen] = useState<boolean>(false);
-  const [isInitialCapitalModalOpen, setIsInitialCapitalModalOpen] = useState<boolean>(false);
   const [finalizeModalDate, setFinalizeModalDate] = useState<string>('');
   const [activeReceiptTransaction, setActiveReceiptTransaction] = useState<Transaction | null>(null);
 
@@ -87,72 +82,93 @@ export default function App() {
     setIsFinalizeModalOpen(true);
   };
 
-  const handleSaveManualPastReport = (report: DailyReport) => {
-    setDailyReports((prev) => [report, ...prev]);
-    saveDocument(COLLECTIONS.DAILY_REPORTS, report);
-  };
-
-  // Firebase Firestore Connection & Realtime Sync
+  // Firestore Real-time Listeners and Auto-Seeding
   useEffect(() => {
-    // 1. Verify Firestore Connection
-    testConnection();
-
-    // 2. Seed initial collections if empty using local storage data if available
-    const localStock = localStorage.getItem('kukuslokal_stock_items');
-    const stockToSeed = localStock ? JSON.parse(localStock) : INITIAL_STOCK_ITEMS;
-    seedCollectionIfEmpty(COLLECTIONS.STOCK_ITEMS, stockToSeed);
-
-    const localSauces = localStorage.getItem('kukuslokal_sauces');
-    const saucesToSeed = localSauces ? JSON.parse(localSauces) : INITIAL_SAUCES;
-    seedCollectionIfEmpty(COLLECTIONS.SAUCE_ITEMS, saucesToSeed);
-
-    const localMenu = localStorage.getItem('kukuslokal_menu_items');
-    const menuToSeed = localMenu ? JSON.parse(localMenu) : INITIAL_MENU_ITEMS;
-    seedCollectionIfEmpty(COLLECTIONS.MENU_ITEMS, menuToSeed);
-
-    const localExp = localStorage.getItem('kukuslokal_expenses');
-    const expToSeed = localExp ? JSON.parse(localExp) : INITIAL_EXPENSES;
-    seedCollectionIfEmpty(COLLECTIONS.EXPENSES, expToSeed);
-
-    const localTx = localStorage.getItem('kukuslokal_transactions');
-    const txToSeed = localTx ? JSON.parse(localTx) : INITIAL_TRANSACTIONS;
-    seedCollectionIfEmpty(COLLECTIONS.TRANSACTIONS, txToSeed);
-
-    const localRep = localStorage.getItem('kukuslokal_daily_reports');
-    const repToSeed = localRep ? JSON.parse(localRep) : INITIAL_DAILY_REPORTS;
-    seedCollectionIfEmpty(COLLECTIONS.DAILY_REPORTS, repToSeed);
-
-    // 3. Subscribe to Firestore real-time updates
-    const unsubStock = subscribeToCollection<StockItem>(COLLECTIONS.STOCK_ITEMS, (items) => {
-      if (items.length > 0) setStockItems(items);
+    const unsubStock = onSnapshot(collection(db, 'stockItems'), (snapshot) => {
+      if (!snapshot.empty) {
+        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as StockItem[];
+        setStockItems(
+          items
+            .filter((s) => !s.name.toLowerCase().includes('jagung'))
+            .map((s) => ({ ...s, name: fixSingkos(s.name) }))
+        );
+      } else {
+        INITIAL_STOCK_ITEMS.forEach((item) => {
+          setDoc(doc(db, 'stockItems', item.id), item).catch(console.error);
+        });
+      }
     });
-    const unsubSauce = subscribeToCollection<SauceItem>(COLLECTIONS.SAUCE_ITEMS, (items) => {
-      if (items.length > 0) setSauces(items);
+
+    const unsubMenu = onSnapshot(collection(db, 'menuItems'), (snapshot) => {
+      if (!snapshot.empty) {
+        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as MenuItem[];
+        setMenuItems(
+          items
+            .filter((m) => m.id !== 'menu-item-jagung' && !m.name.toLowerCase().includes('jagung'))
+            .map((m) => ({ ...m, name: fixSingkos(m.name) }))
+        );
+      } else {
+        INITIAL_MENU_ITEMS.forEach((item) => {
+          setDoc(doc(db, 'menuItems', item.id), item).catch(console.error);
+        });
+      }
     });
-    const unsubMenu = subscribeToCollection<MenuItem>(COLLECTIONS.MENU_ITEMS, (items) => {
-      if (items.length > 0) setMenuItems(items);
+
+    const unsubSauces = onSnapshot(collection(db, 'sauces'), (snapshot) => {
+      if (!snapshot.empty) {
+        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as SauceItem[];
+        setSauces(items);
+      } else {
+        INITIAL_SAUCES.forEach((item) => {
+          setDoc(doc(db, 'sauces', item.id), item).catch(console.error);
+        });
+      }
     });
-    const unsubExpense = subscribeToCollection<Expense>(COLLECTIONS.EXPENSES, (items) => {
-      if (items.length > 0) setExpenses(items);
+
+    const unsubExpenses = onSnapshot(collection(db, 'expenses'), (snapshot) => {
+      if (!snapshot.empty) {
+        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Expense[];
+        setExpenses(items);
+      } else {
+        INITIAL_EXPENSES.forEach((item) => {
+          setDoc(doc(db, 'expenses', item.id), item).catch(console.error);
+        });
+      }
     });
-    const unsubTx = subscribeToCollection<Transaction>(COLLECTIONS.TRANSACTIONS, (items) => {
-      setTransactions(items);
+
+    const unsubTransactions = onSnapshot(collection(db, 'transactions'), (snapshot) => {
+      if (!snapshot.empty) {
+        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Transaction[];
+        setTransactions(items);
+      } else {
+        INITIAL_TRANSACTIONS.forEach((item) => {
+          setDoc(doc(db, 'transactions', item.id), item).catch(console.error);
+        });
+      }
     });
-    const unsubReport = subscribeToCollection<DailyReport>(COLLECTIONS.DAILY_REPORTS, (items) => {
-      if (items.length > 0) setDailyReports(items);
+
+    const unsubDailyReports = onSnapshot(collection(db, 'dailyReports'), (snapshot) => {
+      if (!snapshot.empty) {
+        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as DailyReport[];
+        setDailyReports(items);
+      } else {
+        INITIAL_DAILY_REPORTS.forEach((item) => {
+          setDoc(doc(db, 'dailyReports', item.id), item).catch(console.error);
+        });
+      }
     });
 
     return () => {
       unsubStock();
-      unsubSauce();
       unsubMenu();
-      unsubExpense();
-      unsubTx();
-      unsubReport();
+      unsubSauces();
+      unsubExpenses();
+      unsubTransactions();
+      unsubDailyReports();
     };
   }, []);
 
-  // Multi-tab / Broadcast sync
+  // Multi-tab / Broadcast sync fallback
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (!e.key) return;
@@ -168,7 +184,7 @@ export default function App() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Sync to LocalStorage on change
+  // Sync to LocalStorage as additional client fallback
   useEffect(() => {
     localStorage.setItem('kukuslokal_stock_items', JSON.stringify(stockItems));
   }, [stockItems]);
@@ -193,7 +209,7 @@ export default function App() {
     localStorage.setItem('kukuslokal_daily_reports', JSON.stringify(dailyReports));
   }, [dailyReports]);
 
-  // Auto-sanitize menu items against current stock items (removes items not matching stock input or paket/combo/jagung)
+  // Auto-sanitize menu items against current stock items
   useEffect(() => {
     const validStockIds = new Set(stockItems.map((s) => s.id));
     setMenuItems((prevMenu) => {
@@ -225,11 +241,13 @@ export default function App() {
             const deduct = stockDeductionMap.get(s.id);
             if (deduct && deduct > 0) {
               stockChanged = true;
-              return {
+              const updatedItem = {
                 ...s,
                 currentStock: Math.max(0, Number((s.currentStock - deduct).toFixed(2))),
                 lastUpdated: new Date().toISOString(),
               };
+              setDoc(doc(db, 'stockItems', updatedItem.id), updatedItem).catch(console.error);
+              return updatedItem;
             }
             return s;
           });
@@ -250,7 +268,7 @@ export default function App() {
   const lowStockItems = stockItems.filter((i) => i.currentStock <= i.minStock);
 
   // HANDLERS FOR DAILY REPORT FINALIZATION
-  const handleFinalizeDailyReport = (report: DailyReport, resetTodaySales: boolean) => {
+  const handleFinalizeDailyReport = async (report: DailyReport, resetTodaySales: boolean) => {
     const reportWithFlag: DailyReport = { ...report, isStockDeducted: true };
 
     // Otomatis kurangi stok bahan baku (stockItems) berdasarkan item yang laku terjual
@@ -265,7 +283,7 @@ export default function App() {
             currentStock: Math.max(0, Number((s.currentStock - deduct).toFixed(2))),
             lastUpdated: new Date().toISOString(),
           };
-          saveDocument(COLLECTIONS.STOCK_ITEMS, updated);
+          setDoc(doc(db, 'stockItems', updated.id), updated).catch(console.error);
           return updated;
         }
         return s;
@@ -273,13 +291,17 @@ export default function App() {
     });
 
     setDailyReports((prev) => [reportWithFlag, ...prev]);
-    saveDocument(COLLECTIONS.DAILY_REPORTS, reportWithFlag);
+    try {
+      await setDoc(doc(db, 'dailyReports', reportWithFlag.id), reportWithFlag);
+    } catch (err) {
+      console.error('Error saving daily report to Firestore:', err);
+    }
 
     if (resetTodaySales) {
       setMenuItems((prev) =>
         prev.map((item) => {
           const updated = { ...item, soldQty: 0 };
-          saveDocument(COLLECTIONS.MENU_ITEMS, updated);
+          setDoc(doc(db, 'menuItems', updated.id), updated).catch(console.error);
           return updated;
         })
       );
@@ -288,55 +310,77 @@ export default function App() {
     setActiveTab('daily_history');
   };
 
-  const handleDeleteDailyReport = (id: string) => {
+  const handleDeleteDailyReport = async (id: string) => {
     setDailyReports((prev) => prev.filter((r) => r.id !== id));
-    deleteDocument(COLLECTIONS.DAILY_REPORTS, id);
+    try {
+      await deleteDoc(doc(db, 'dailyReports', id));
+    } catch (err) {
+      console.error('Error deleting daily report from Firestore:', err);
+    }
   };
 
   // RESET SALES TODAY (Set soldQty = 0 & clear transactions)
-  const handleResetSalesToday = () => {
+  const handleResetSalesToday = async () => {
     if (confirm('Apakah Anda yakin ingin mereset seluruh data penjualan hari ini menjadi 0 (kosong)?')) {
-      transactions.forEach((tx) => deleteDocument(COLLECTIONS.TRANSACTIONS, tx.id));
       setTransactions([]);
       setMenuItems((prev) =>
-        prev.map((item) => {
-          const updated = { ...item, soldQty: 0 };
-          saveDocument(COLLECTIONS.MENU_ITEMS, updated);
-          return updated;
-        })
+        prev.map((item) => ({
+          ...item,
+          soldQty: 0,
+        }))
       );
       localStorage.setItem('kukuslokal_transactions', JSON.stringify([]));
+
+      // Clear transactions in Firestore
+      transactions.forEach((t) => {
+        deleteDoc(doc(db, 'transactions', t.id)).catch(console.error);
+      });
     }
   };
 
   // HANDLERS FOR MENU ITEMS & PRICES
-  const handleUpdateMenuItem = (updated: MenuItem) => {
+  const handleUpdateMenuItem = async (updated: MenuItem) => {
     setMenuItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
-    saveDocument(COLLECTIONS.MENU_ITEMS, updated);
+    try {
+      await setDoc(doc(db, 'menuItems', updated.id), updated);
+    } catch (err) {
+      console.error('Error updating menu item in Firestore:', err);
+    }
   };
 
-  const handleAddMenuItem = (newItem: MenuItem) => {
+  const handleAddMenuItem = async (newItem: MenuItem) => {
     setMenuItems((prev) => [...prev, newItem]);
-    saveDocument(COLLECTIONS.MENU_ITEMS, newItem);
+    try {
+      await setDoc(doc(db, 'menuItems', newItem.id), newItem);
+    } catch (err) {
+      console.error('Error adding menu item to Firestore:', err);
+    }
   };
 
   // HANDLERS FOR INVENTORY
-  const handleAddStockItem = (item: StockItem) => {
+  const handleAddStockItem = async (item: StockItem) => {
     setStockItems((prev) => [item, ...prev]);
-    saveDocument(COLLECTIONS.STOCK_ITEMS, item);
+    try {
+      await setDoc(doc(db, 'stockItems', item.id), item);
+    } catch (err) {
+      console.error('Error adding stock item to Firestore:', err);
+    }
   };
 
-  const handleUpdateStockItem = (updated: StockItem) => {
+  const handleUpdateStockItem = async (updated: StockItem) => {
     setStockItems((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
-    saveDocument(COLLECTIONS.STOCK_ITEMS, updated);
+    try {
+      await setDoc(doc(db, 'stockItems', updated.id), updated);
+    } catch (err) {
+      console.error('Error updating stock item in Firestore:', err);
+    }
   };
 
-  const handleDeleteStockItem = (id: string) => {
+  const handleDeleteStockItem = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus item bahan baku ini?')) {
       const nextStock = stockItems.filter((item) => item.id !== id);
       const remainingStockIds = new Set(nextStock.map((s) => s.id));
       setStockItems(nextStock);
-      deleteDocument(COLLECTIONS.STOCK_ITEMS, id);
 
       setMenuItems((prevMenu) =>
         prevMenu.filter((m) => {
@@ -347,10 +391,16 @@ export default function App() {
           return true;
         })
       );
+
+      try {
+        await deleteDoc(doc(db, 'stockItems', id));
+      } catch (err) {
+        console.error('Error deleting stock item from Firestore:', err);
+      }
     }
   };
 
-  const handleRestock = (
+  const handleRestock = async (
     stockItemId: string,
     addedQty: number,
     purchaseCost: number,
@@ -361,20 +411,28 @@ export default function App() {
       ? new Date(purchaseDate + 'T12:00:00').toISOString()
       : new Date().toISOString();
 
+    let updatedStockItem: StockItem | null = null;
     setStockItems((prev) =>
       prev.map((item) => {
         if (item.id === stockItemId) {
-          const updated = {
+          updatedStockItem = {
             ...item,
             currentStock: Number((item.currentStock + addedQty).toFixed(2)),
             lastUpdated: isoDate,
           };
-          saveDocument(COLLECTIONS.STOCK_ITEMS, updated);
-          return updated;
+          return updatedStockItem;
         }
         return item;
       })
     );
+
+    if (updatedStockItem) {
+      try {
+        await setDoc(doc(db, 'stockItems', (updatedStockItem as StockItem).id), updatedStockItem);
+      } catch (err) {
+        console.error('Error updating stock item during restock in Firestore:', err);
+      }
+    }
 
     if (recordAsExpense && purchaseCost > 0) {
       const stockItem = stockItems.find((i) => i.id === stockItemId);
@@ -389,22 +447,36 @@ export default function App() {
         notes: `Restock otomatis dari modul stok ${purchaseDate ? 'tanggal ' + purchaseDate : ''}`,
       };
       setExpenses((prev) => [newExpense, ...prev]);
-      saveDocument(COLLECTIONS.EXPENSES, newExpense);
+      try {
+        await setDoc(doc(db, 'expenses', newExpense.id), newExpense);
+      } catch (err) {
+        console.error('Error adding expense during restock to Firestore:', err);
+      }
     }
   };
 
-  const handleUpdateMenuRecipe = (updatedMenu: MenuItem) => {
+  const handleUpdateMenuRecipe = async (updatedMenu: MenuItem) => {
     setMenuItems((prev) => prev.map((m) => (m.id === updatedMenu.id ? updatedMenu : m)));
-    saveDocument(COLLECTIONS.MENU_ITEMS, updatedMenu);
+    try {
+      await setDoc(doc(db, 'menuItems', updatedMenu.id), updatedMenu);
+    } catch (err) {
+      console.error('Error updating menu recipe in Firestore:', err);
+    }
   };
 
   // HANDLERS FOR POS SALES & AUTO STOCK DEDUCTION
-  const handleProcessSale = (transaction: Transaction) => {
-    // 1. Save Transaction
-    setTransactions((prev) => [transaction, ...prev]);
-    saveDocument(COLLECTIONS.TRANSACTIONS, transaction);
+  const handleProcessSale = async (transaction: Transaction) => {
+    // 1. Save Transaction to Firestore using setDoc
+    try {
+      await setDoc(doc(db, 'transactions', transaction.id), transaction);
+    } catch (err) {
+      console.error('Error saving transaction to Firestore:', err);
+    }
 
-    // 2. Automatically deduct corresponding stock items based on ingredients
+    // 2. Local state update for transaction
+    setTransactions((prev) => [transaction, ...prev]);
+
+    // 3. Automatically deduct corresponding stock items based on ingredients and sync to Firestore
     setStockItems((prevStock) => {
       const stockMap = new Map<string, number>();
 
@@ -429,18 +501,20 @@ export default function App() {
         }
       });
 
-      // Deduct stock
+      // Deduct stock and sync to Firestore
       return prevStock.map((stockItem) => {
         const deductAmt = stockMap.get(stockItem.id);
         if (deductAmt && deductAmt > 0) {
           const newQty = Math.max(0, Number((stockItem.currentStock - deductAmt).toFixed(2)));
-          const updated = {
+          const updatedItem = {
             ...stockItem,
             currentStock: newQty,
             lastUpdated: new Date().toISOString(),
           };
-          saveDocument(COLLECTIONS.STOCK_ITEMS, updated);
-          return updated;
+          setDoc(doc(db, 'stockItems', updatedItem.id), updatedItem).catch((err) =>
+            console.error('Error updating stock item in Firestore:', err)
+          );
+          return updatedItem;
         }
         return stockItem;
       });
@@ -450,31 +524,21 @@ export default function App() {
   // HANDLERS FOR EXPENSES
   const handleAddExpense = async (expense: Expense) => {
     setExpenses((prev) => [expense, ...prev]);
-    await addExpenseToFirestore(expense);
-
-    // Otomatis update stok jika expense terhubung dengan stock item
-    if (expense.stockItemId && expense.addedStockQty && expense.addedStockQty > 0) {
-      setStockItems((prevStock) =>
-        prevStock.map((s) => {
-          if (s.id === expense.stockItemId) {
-            const updated = {
-              ...s,
-              currentStock: Number((s.currentStock + expense.addedStockQty!).toFixed(2)),
-              lastUpdated: expense.date || new Date().toISOString(),
-            };
-            saveDocument(COLLECTIONS.STOCK_ITEMS, updated);
-            return updated;
-          }
-          return s;
-        })
-      );
+    try {
+      await setDoc(doc(db, 'expenses', expense.id), expense);
+    } catch (err) {
+      console.error('Error adding expense to Firestore:', err);
     }
   };
 
-  const handleDeleteExpense = (id: string) => {
+  const handleDeleteExpense = async (id: string) => {
     if (confirm('Hapus log pengeluaran ini?')) {
       setExpenses((prev) => prev.filter((e) => e.id !== id));
-      deleteDocument(COLLECTIONS.EXPENSES, id);
+      try {
+        await deleteDoc(doc(db, 'expenses', id));
+      } catch (err) {
+        console.error('Error deleting expense from Firestore:', err);
+      }
     }
   };
 
@@ -486,7 +550,6 @@ export default function App() {
       stockItems,
       expenses,
       menuItems,
-      dailyReports,
     });
   };
 
@@ -497,7 +560,6 @@ export default function App() {
       stockItems,
       expenses,
       menuItems,
-      dailyReports,
     });
   };
 
@@ -521,7 +583,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-cyan-500 selection:text-slate-950 flex flex-col">
+    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans selection:bg-emerald-500 selection:text-stone-950 flex flex-col">
       {/* Top Navigation */}
       <Navbar
         activeTab={activeTab}
@@ -557,8 +619,6 @@ export default function App() {
             onResetSalesToday={handleResetSalesToday}
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
-            onOpenManualPastReport={() => setIsManualPastReportOpen(true)}
-            onOpenInitialCapitalModal={() => setIsInitialCapitalModalOpen(true)}
           />
         )}
 
@@ -569,7 +629,6 @@ export default function App() {
             onDeleteDailyReport={handleDeleteDailyReport}
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
-            onOpenManualPastReport={() => setIsManualPastReportOpen(true)}
           />
         )}
 
@@ -590,10 +649,8 @@ export default function App() {
         {activeTab === 'expenses' && (
           <ExpenseTracker
             expenses={expenses}
-            stockItems={stockItems}
             onAddExpense={handleAddExpense}
             onDeleteExpense={handleDeleteExpense}
-            onOpenInitialCapitalModal={() => setIsInitialCapitalModalOpen(true)}
           />
         )}
       </main>
@@ -629,28 +686,12 @@ export default function App() {
         sauces={sauces}
         stockItems={stockItems}
         onFinalizeDay={handleFinalizeDailyReport}
-        onOpenManualPastReport={() => setIsManualPastReportOpen(true)}
         initialDate={finalizeModalDate}
       />
 
-      <ManualPastReportModal
-        isOpen={isManualPastReportOpen}
-        onClose={() => setIsManualPastReportOpen(false)}
-        onSaveManualReport={handleSaveManualPastReport}
-      />
-
-      <InitialCapitalModal
-        isOpen={isInitialCapitalModalOpen}
-        onClose={() => setIsInitialCapitalModalOpen(false)}
-        expenses={expenses}
-        financialSummary={financialSummary}
-        onAddExpense={handleAddExpense}
-        onDeleteExpense={handleDeleteExpense}
-      />
-
       {/* Footer */}
-      <footer className="bg-slate-900/90 border-t border-sky-900/40 text-sky-200/60 text-xs py-4 text-center mt-8 backdrop-blur-sm">
-        <p>Mood Kukus Mamuju &copy; {new Date().getFullYear()} - Sistem Manajemen Stok & Keuangan Kuliner Kukusan Sehat</p>
+      <footer className="bg-stone-900 border-t border-stone-800 text-stone-500 text-xs py-4 text-center mt-8">
+        <p>KukusLokal &copy; {new Date().getFullYear()} - Sistem Manajemen Stok & Keuangan Kuliner Alami Eco-Friendly</p>
       </footer>
     </div>
   );

@@ -1,40 +1,9 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Default match for all collections and documents
     match /{document=**} {
-      allow read, write: if true;
-    }
-
-    // Explicit collection matches
-    match /test/{testId} {
-      allow read, write: if true;
-    }
-
-    match /stockItems/{stockItemId} {
-      allow read, write: if true;
-    }
-
-    match /sauceItems/{sauceItemId} {
-      allow read, write: if true;
-    }
-
-    match /menuItems/{menuItemId} {
-      allow read, write: if true;
-    }
-
-    match /transactions/{transactionId} {
-      allow read, write: if true;
-    }
-
-    match /expenses/{expenseId} {
-      allow read, write: if true;
-    }
-
-    match /dailyReports/{dailyReportId} {
       allow read, write: if true;
     }
   }
 }
-
