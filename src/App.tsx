@@ -97,32 +97,49 @@ export default function App() {
     // 1. Verify Firestore Connection
     testConnection();
 
-    // 2. Seed initial collections if empty
-    seedCollectionIfEmpty(COLLECTIONS.STOCK_ITEMS, INITIAL_STOCK_ITEMS);
-    seedCollectionIfEmpty(COLLECTIONS.SAUCE_ITEMS, INITIAL_SAUCES);
-    seedCollectionIfEmpty(COLLECTIONS.MENU_ITEMS, INITIAL_MENU_ITEMS);
-    seedCollectionIfEmpty(COLLECTIONS.EXPENSES, INITIAL_EXPENSES);
-    seedCollectionIfEmpty(COLLECTIONS.TRANSACTIONS, INITIAL_TRANSACTIONS);
-    seedCollectionIfEmpty(COLLECTIONS.DAILY_REPORTS, INITIAL_DAILY_REPORTS);
+    // 2. Seed initial collections if empty using local storage data if available
+    const localStock = localStorage.getItem('kukuslokal_stock_items');
+    const stockToSeed = localStock ? JSON.parse(localStock) : INITIAL_STOCK_ITEMS;
+    seedCollectionIfEmpty(COLLECTIONS.STOCK_ITEMS, stockToSeed);
+
+    const localSauces = localStorage.getItem('kukuslokal_sauces');
+    const saucesToSeed = localSauces ? JSON.parse(localSauces) : INITIAL_SAUCES;
+    seedCollectionIfEmpty(COLLECTIONS.SAUCE_ITEMS, saucesToSeed);
+
+    const localMenu = localStorage.getItem('kukuslokal_menu_items');
+    const menuToSeed = localMenu ? JSON.parse(localMenu) : INITIAL_MENU_ITEMS;
+    seedCollectionIfEmpty(COLLECTIONS.MENU_ITEMS, menuToSeed);
+
+    const localExp = localStorage.getItem('kukuslokal_expenses');
+    const expToSeed = localExp ? JSON.parse(localExp) : INITIAL_EXPENSES;
+    seedCollectionIfEmpty(COLLECTIONS.EXPENSES, expToSeed);
+
+    const localTx = localStorage.getItem('kukuslokal_transactions');
+    const txToSeed = localTx ? JSON.parse(localTx) : INITIAL_TRANSACTIONS;
+    seedCollectionIfEmpty(COLLECTIONS.TRANSACTIONS, txToSeed);
+
+    const localRep = localStorage.getItem('kukuslokal_daily_reports');
+    const repToSeed = localRep ? JSON.parse(localRep) : INITIAL_DAILY_REPORTS;
+    seedCollectionIfEmpty(COLLECTIONS.DAILY_REPORTS, repToSeed);
 
     // 3. Subscribe to Firestore real-time updates
     const unsubStock = subscribeToCollection<StockItem>(COLLECTIONS.STOCK_ITEMS, (items) => {
-      setStockItems(items);
+      if (items.length > 0) setStockItems(items);
     });
     const unsubSauce = subscribeToCollection<SauceItem>(COLLECTIONS.SAUCE_ITEMS, (items) => {
-      setSauces(items);
+      if (items.length > 0) setSauces(items);
     });
     const unsubMenu = subscribeToCollection<MenuItem>(COLLECTIONS.MENU_ITEMS, (items) => {
-      setMenuItems(items);
+      if (items.length > 0) setMenuItems(items);
     });
     const unsubExpense = subscribeToCollection<Expense>(COLLECTIONS.EXPENSES, (items) => {
-      setExpenses(items);
+      if (items.length > 0) setExpenses(items);
     });
     const unsubTx = subscribeToCollection<Transaction>(COLLECTIONS.TRANSACTIONS, (items) => {
       setTransactions(items);
     });
     const unsubReport = subscribeToCollection<DailyReport>(COLLECTIONS.DAILY_REPORTS, (items) => {
-      setDailyReports(items);
+      if (items.length > 0) setDailyReports(items);
     });
 
     return () => {

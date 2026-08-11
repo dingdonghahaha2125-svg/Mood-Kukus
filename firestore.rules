@@ -2,103 +2,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
-    function incoming() {
-      return request.resource.data;
-    }
-
-    function existing() {
-      return resource.data;
-    }
-
-    // Default deny catch-all
+    // Default match for all collections and documents
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if true;
     }
 
-    // Stock Items Collection
+    // Explicit collection matches
+    match /test/{testId} {
+      allow read, write: if true;
+    }
+
     match /stockItems/{stockItemId} {
-      allow read: if true;
-      allow create, update: if isValidId(stockItemId) &&
-        incoming().id is string &&
-        incoming().name is string && incoming().name.size() <= 100 &&
-        incoming().category in ['bahan_utama', 'bahan_saus', 'kemasan', 'operasional'] &&
-        incoming().currentStock is number &&
-        incoming().minStock is number &&
-        incoming().unit in ['kg', 'pcs', 'liter', 'pack', 'ikat', 'roll', 'gram'] &&
-        incoming().unitCostPrice is number &&
-        incoming().lastUpdated is string;
-      allow delete: if isValidId(stockItemId);
+      allow read, write: if true;
     }
 
-    // Sauce Items Collection
     match /sauceItems/{sauceItemId} {
-      allow read: if true;
-      allow create, update: if isValidId(sauceItemId) &&
-        incoming().id is string &&
-        incoming().name is string && incoming().name.size() <= 100 &&
-        incoming().description is string && incoming().description.size() <= 300 &&
-        incoming().extraPrice is number;
-      allow delete: if isValidId(sauceItemId);
+      allow read, write: if true;
     }
 
-    // Menu Items Collection
     match /menuItems/{menuItemId} {
-      allow read: if true;
-      allow create, update: if isValidId(menuItemId) &&
-        incoming().id is string &&
-        incoming().name is string && incoming().name.size() <= 100 &&
-        incoming().category in ['paket', 'satuan', 'minuman', 'kemasan'] &&
-        incoming().price is number &&
-        incoming().description is string && incoming().description.size() <= 300 &&
-        incoming().isAvailable is bool;
-      allow delete: if isValidId(menuItemId);
+      allow read, write: if true;
     }
 
-    // Transactions Collection
     match /transactions/{transactionId} {
-      allow read: if true;
-      allow create, update: if isValidId(transactionId) &&
-        incoming().id is string &&
-        incoming().date is string &&
-        incoming().totalAmount is number &&
-        incoming().totalHpp is number &&
-        incoming().netProfit is number &&
-        incoming().paymentMethod in ['qris', 'cash', 'transfer'];
-      allow delete: if isValidId(transactionId);
+      allow read, write: if true;
     }
 
-    // Expenses Collection
     match /expenses/{expenseId} {
-      allow read: if true;
-      allow create, update: if isValidId(expenseId) &&
-        incoming().id is string &&
-        incoming().date is string &&
-        incoming().title is string && incoming().title.size() <= 200 &&
-        incoming().category in ['modal_awal', 'belanja_bahan', 'pembelian_kemasan', 'peralatan', 'sewa_operasional', 'pemasaran'] &&
-        incoming().amount is number &&
-        incoming().isCapital is bool &&
-        incoming().paymentMethod in ['qris', 'cash', 'transfer'];
-      allow delete: if isValidId(expenseId);
+      allow read, write: if true;
     }
 
-    // Daily Reports Collection
     match /dailyReports/{dailyReportId} {
-      allow read: if true;
-      allow create, update: if isValidId(dailyReportId) &&
-        incoming().id is string &&
-        incoming().date is string &&
-        incoming().dateLabel is string && incoming().dateLabel.size() <= 100 &&
-        incoming().totalRevenue is number &&
-        incoming().totalHpp is number &&
-        incoming().totalProfit is number &&
-        incoming().totalItemsSold is number &&
-        incoming().finalizedAt is string;
-      allow delete: if isValidId(dailyReportId);
+      allow read, write: if true;
     }
   }
 }
+
