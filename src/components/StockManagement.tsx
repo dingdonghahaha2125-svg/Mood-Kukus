@@ -844,7 +844,7 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   Pemetaan Resep (BOM) & Potong Stok Otomatis
                 </h3>
                 <p className="text-xs text-stone-400">
-                  Atur berapa kg pisang/ubi/kemasan yang terkurang tiap 1 porsi menu teruji.
+                  Atur berapa kg pisang/ubi/kemasan yang berkurang tiap 1 porsi menu.
                 </p>
               </div>
               <button onClick={() => setRecipeMenuTarget(null)} className="text-stone-400 hover:text-stone-200">

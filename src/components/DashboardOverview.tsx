@@ -417,7 +417,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </div>
 
             <div className="text-right sm:text-left text-xs text-stone-300 border-t sm:border-t-0 sm:border-l border-stone-800 pt-2 sm:pt-0 sm:pl-4 shrink-0 bg-stone-900/80 p-2.5 rounded-xl border border-stone-800">
-              <div className="text-[11px] text-stone-400">Total Kas Bersih Tersedia Saating ini:</div>
+              <div className="text-[11px] text-stone-400">Total Kas Bersih Tersedia Saat Ini:</div>
               <div className="text-sm font-black text-emerald-400 mt-0.5">
                 {formatRp(financialSummary.netCashflow || 0)}
               </div>
