@@ -40,7 +40,7 @@ export default function App() {
     if (saved !== null) {
       const items: StockItem[] = JSON.parse(saved);
       return items
-        .filter((s) => !s.name.toLowerCase().includes('jagung'))
+        .filter((s) => !/^stk-\d{1,2}$/.test(s.id) && !s.name.toLowerCase().includes('jagung'))
         .map((s) => ({ ...s, name: fixSingkos(s.name) }));
     }
     return INITIAL_STOCK_ITEMS;
@@ -128,7 +128,7 @@ export default function App() {
       const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as StockItem[];
       setStockItems(
         items
-          .filter((s) => !s.name.toLowerCase().includes('jagung'))
+          .filter((s) => !/^stk-\d{1,2}$/.test(s.id) && !s.name.toLowerCase().includes('jagung'))
           .map((s) => ({ ...s, name: fixSingkos(s.name) }))
       );
     });
