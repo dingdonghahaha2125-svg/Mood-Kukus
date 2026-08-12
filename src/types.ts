@@ -93,6 +93,10 @@ export interface FinancialSummary {
   grossProfit: number;
   netProfit: number;
   profitMargin: number;
+  initialCapital?: number;
+  netCashflow?: number;
+  remainingToBreakEven?: number;
+  isBreakEven?: boolean;
 }
 
 export interface PerItemSalesSummary {

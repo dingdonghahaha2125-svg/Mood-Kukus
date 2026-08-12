@@ -13,15 +13,18 @@ import {
   Package,
   CheckCircle2,
   AlertCircle,
+  Plus,
+  X,
 } from 'lucide-react';
 import { DailyReport } from '../types';
 import { formatRp } from '../utils/calculations';
-import { exportToExcel, exportToPdf } from '../utils/exportUtils';
+import { exportDailyReportToExcel, exportDailyReportToPdf } from '../utils/exportUtils';
 
 interface DailyHistoryProps {
   dailyReports: DailyReport[];
   onOpenFinalizeModal: () => void;
   onDeleteDailyReport: (id: string) => void;
+  onAddManualDailyReport?: (report: DailyReport) => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
 }
@@ -30,12 +33,24 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({
   dailyReports,
   onOpenFinalizeModal,
   onDeleteDailyReport,
+  onAddManualDailyReport,
 }) => {
   const [expandedReportId, setExpandedReportId] = useState<string | null>(
     dailyReports[0]?.id || null
   );
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterDate, setFilterDate] = useState<string>('');
+
+  // State for manual income input modal
+  const [isManualModalOpen, setIsManualModalOpen] = useState<boolean>(false);
+  const [manualDate, setManualDate] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().split('T')[0];
+  });
+  const [manualRevenue, setManualRevenue] = useState<number>(150000);
+  const [manualHpp, setManualHpp] = useState<number>(0);
+  const [manualNotes, setManualNotes] = useState<string>('Rekap omset manual penjualan hari lalu');
 
   // Filter reports
   const filteredReports = dailyReports.filter((rep) => {
@@ -60,6 +75,39 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({
     setExpandedReportId(expandedReportId === id ? null : id);
   };
 
+  const handleSaveManualReport = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (manualRevenue <= 0 || !manualDate) return;
+
+    const parsedDate = new Date(manualDate + 'T12:00:00');
+    const dateLabel = new Intl.DateTimeFormat('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(parsedDate);
+
+    const report: DailyReport = {
+      id: `rep-${Date.now()}`,
+      date: manualDate,
+      dateLabel,
+      totalRevenue: manualRevenue,
+      totalHpp: manualHpp,
+      totalProfit: manualRevenue - manualHpp,
+      totalItemsSold: 0,
+      items: [],
+      notes: manualNotes.trim() || 'Rekap omset manual hari lalu',
+      finalizedAt: new Date().toISOString(),
+      isStockDeducted: true,
+    };
+
+    if (onAddManualDailyReport) {
+      onAddManualDailyReport(report);
+    }
+
+    setIsManualModalOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Banner */}
@@ -77,13 +125,26 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onOpenFinalizeModal}
-          className="px-5 py-3 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-stone-950 font-black text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 shrink-0 active:scale-95"
-        >
-          <CheckCircle2 className="w-4 h-4" />
-          <span>Finalisasi Penjualan Hari Ini</span>
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setIsManualModalOpen(true)}
+            className="px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-amber-300 font-bold text-xs rounded-xl border border-amber-500/40 shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+            title="Tambah Laporan Pemasukan Nominal Langsung untuk Hari Lalu yang Belum Tercatat"
+          >
+            <Plus className="w-4 h-4 text-amber-400" />
+            <span>+ Input Omset Hari Lalu</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenFinalizeModal}
+            className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-stone-950 font-black text-xs sm:text-sm rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 shrink-0 active:scale-95 cursor-pointer"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Finalisasi Hari Ini</span>
+          </button>
+        </div>
       </div>
 
       {/* Cumulative Metrics Bar */}
@@ -217,6 +278,32 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({
 
                     <div className="flex items-center gap-2">
                       <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          exportDailyReportToExcel(report);
+                        }}
+                        className="p-1.5 bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-emerald-400 rounded-lg text-xs font-bold transition-colors flex items-center gap-1"
+                        title="Export Laporan Hari Ini ke Excel"
+                      >
+                        <FileSpreadsheet className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Excel</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          exportDailyReportToPdf(report);
+                        }}
+                        className="p-1.5 bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-400 rounded-lg text-xs font-bold transition-colors flex items-center gap-1"
+                        title="Export Laporan Hari Ini ke PDF"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">PDF</span>
+                      </button>
+
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           if (confirm(`Hapus laporan harian tanggal ${report.dateLabel}?`)) {
@@ -298,6 +385,101 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({
               </div>
             );
           })}
+        </div>
+      )}
+      {/* Modal Input Omset / Pemasukan Hari Lalu */}
+      {isManualModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-stone-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl text-stone-100">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-stone-100">Input Pemasukan / Omset Hari Lalu</h3>
+                  <p className="text-[11px] text-amber-400">Rekap Nominal Pemasukan Tanpa Detail Item</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsManualModalOpen(false)}
+                className="p-1.5 text-stone-400 hover:text-stone-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveManualReport} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-stone-300 mb-1">Tanggal Laporan Penjualan</label>
+                <input
+                  type="date"
+                  required
+                  value={manualDate}
+                  onClick={(e) => {
+                    try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                  }}
+                  onChange={(e) => setManualDate(e.target.value)}
+                  className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-100 font-bold focus:outline-none focus:border-amber-500 cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-300 mb-1">Total Pemasukan / Omset (Rp)</label>
+                <input
+                  type="number"
+                  required
+                  value={manualRevenue === 0 ? '' : manualRevenue}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setManualRevenue(parseFloat(e.target.value) || 0)}
+                  placeholder="0"
+                  className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-sm text-emerald-400 font-black focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-300 mb-1">Estimasi Modal HPP (Rp) (Opsional)</label>
+                <input
+                  type="number"
+                  value={manualHpp === 0 ? '' : manualHpp}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setManualHpp(parseFloat(e.target.value) || 0)}
+                  placeholder="0"
+                  className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-amber-300 font-bold focus:outline-none focus:border-amber-500"
+                />
+                <span className="text-[10px] text-stone-400 mt-0.5 block">
+                  Biarkan 0 jika tidak diingat, atau isi estimasi bahan baku.
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-300 mb-1">Catatan / Keterangan</label>
+                <input
+                  type="text"
+                  value={manualNotes}
+                  onChange={(e) => setManualNotes(e.target.value)}
+                  placeholder="Catatan penjualan..."
+                  className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-stone-800">
+                <button
+                  type="button"
+                  onClick={() => setIsManualModalOpen(false)}
+                  className="px-4 py-2 bg-stone-800 text-stone-300 text-xs rounded-xl font-bold"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs rounded-xl shadow-md"
+                >
+                  Simpan Laporan Hari Lalu
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

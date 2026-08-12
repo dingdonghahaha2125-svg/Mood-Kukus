@@ -59,6 +59,7 @@ interface DashboardOverviewProps {
   onResetSalesToday?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
+  onUpdateInitialCapital?: (amount: number) => void;
 }
 
 const COLORS = ['#10b981', '#14b8a6', '#06b6d4', '#f59e0b', '#ec4899', '#8b5cf6'];
@@ -82,7 +83,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onResetSalesToday,
   onExportExcel,
   onExportPdf,
+  onUpdateInitialCapital,
 }) => {
+  // State for modal awal editing
+  const [isEditingCapital, setIsEditingCapital] = React.useState<boolean>(false);
+  const [capitalInput, setCapitalInput] = React.useState<number>(financialSummary.initialCapital || 5000000);
+
   // State to filter per-item sales view (default: only show sold items today)
   const [itemFilter, setItemFilter] = React.useState<'sold_only' | 'all'>('sold_only');
   const [addSoldItemId, setAddSoldItemId] = React.useState<string>('');
@@ -190,6 +196,188 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* GROUP TOTAL AKUMULASI KEGIATAN KESELURUHAN USAHA */}
+      <div className="bg-stone-900 border border-amber-500/30 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-800 pb-3">
+          <div>
+            <h2 className="text-base sm:text-lg font-black text-amber-400 flex items-center gap-2">
+              <PieIcon className="w-5 h-5 text-amber-400" />
+              <span>Total Akumulasi Kegiatan Keseluruhan Usaha</span>
+            </h2>
+            <p className="text-xs text-stone-400">
+              Rekapan kumulatif pemasukan, pengeluaran, laba bersih, dan status balik modal sejak usaha berdiri
+            </p>
+          </div>
+
+          {/* Export File Excel & PDF Kumulatif */}
+          <div className="flex items-center gap-2 shrink-0">
+            {onExportExcel && (
+              <button
+                onClick={onExportExcel}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-950 hover:bg-emerald-900 border border-emerald-700 text-emerald-300 rounded-xl font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
+                title="Export Rekapan Total Kumulatif ke Excel (.xlsx)"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                <span>Export Excel Total</span>
+              </button>
+            )}
+
+            {onExportPdf && (
+              <button
+                onClick={onExportPdf}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-rose-950 hover:bg-rose-900 border border-rose-700 text-rose-300 rounded-xl font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
+                title="Export Rekapan Total Kumulatif ke PDF (.pdf)"
+              >
+                <FileText className="w-4 h-4 text-rose-400" />
+                <span>Export PDF Total</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 4 Core Financial Metrics Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {/* Pemasukan Total Kumulatif */}
+          <div className="bg-stone-950/80 border border-emerald-800/80 rounded-xl p-4 space-y-1">
+            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
+              Pemasukan Total Kumulatif
+            </span>
+            <div className="text-lg sm:text-xl font-black text-emerald-400">
+              {formatRp(financialSummary.totalRevenue)}
+            </div>
+            <span className="text-[10px] text-emerald-500/80 block font-medium">
+              Total Seluruh Omset Penjualan
+            </span>
+          </div>
+
+          {/* Total Uang Keluar (Pengeluaran & Belanja) */}
+          <div className="bg-stone-950/80 border border-rose-800/80 rounded-xl p-4 space-y-1">
+            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
+              Total Uang Keluar (Belanja)
+            </span>
+            <div className="text-lg sm:text-xl font-black text-rose-400">
+              {formatRp(financialSummary.totalExpenses)}
+            </div>
+            <span className="text-[10px] text-rose-500/80 block font-medium">
+              Total Pengeluaran Bahan & Peralatan
+            </span>
+          </div>
+
+          {/* Laba Bersih Total Kumulatif */}
+          <div className="bg-stone-950/80 border border-teal-800/80 rounded-xl p-4 space-y-1">
+            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
+              Laba Bersih Total Kumulatif
+            </span>
+            <div className={`text-lg sm:text-xl font-black ${financialSummary.netProfit >= 0 ? 'text-teal-300' : 'text-rose-400'}`}>
+              {formatRp(financialSummary.netProfit)}
+            </div>
+            <span className="text-[10px] text-teal-400/80 block font-medium">
+              Laba Bersih Keseluruhan Usaha
+            </span>
+          </div>
+
+          {/* Margin Total Kumulatif */}
+          <div className="bg-stone-950/80 border border-amber-800/80 rounded-xl p-4 space-y-1">
+            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
+              Margin Profit Total
+            </span>
+            <div className="text-lg sm:text-xl font-black text-amber-400">
+              {financialSummary.profitMargin}%
+            </div>
+            <span className="text-[10px] text-amber-500/80 block font-medium">
+              Rasio Keuntungan Terhadap Omset
+            </span>
+          </div>
+        </div>
+
+        {/* Modal Awal & Break-Even Status Card */}
+        <div className="bg-stone-950/90 border border-amber-500/40 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-amber-300 uppercase">Modal Awal Usaha (Investasi Awal):</span>
+              <span className="text-sm font-black text-amber-400">
+                {formatRp(financialSummary.initialCapital || 0)}
+              </span>
+              {onUpdateInitialCapital && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCapitalInput(financialSummary.initialCapital || 5000000);
+                    setIsEditingCapital(true);
+                  }}
+                  className="text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded border border-amber-500/40 cursor-pointer transition-colors"
+                >
+                  ✏️ Ubah Modal Awal
+                </button>
+              )}
+            </div>
+
+            <div className="text-xs text-stone-300 font-medium flex items-center gap-2 flex-wrap">
+              <span>Status Balik Modal (BEP):</span>
+              {financialSummary.isBreakEven ? (
+                <span className="text-emerald-400 font-black bg-emerald-950 px-2.5 py-0.5 rounded-full border border-emerald-700">
+                  🎉 SUDAH BALIK MODAL & IMPAS!
+                </span>
+              ) : (
+                <span className="text-amber-300 font-black bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-700">
+                  ⏳ BELUM BALIK MODAL (Kurang {formatRp(financialSummary.remainingToBreakEven || 0)} lagi untuk Impas)
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="text-right sm:text-left text-xs text-stone-400 border-t sm:border-t-0 sm:border-l border-stone-800 pt-2 sm:pt-0 sm:pl-4 shrink-0">
+            <div>Kas Bersih Tersedia: <span className="font-extrabold text-stone-100">{formatRp(financialSummary.netCashflow || 0)}</span></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal Edit Modal Awal */}
+      {isEditingCapital && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-stone-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl text-stone-100">
+            <h3 className="font-bold text-base text-amber-400">Input / Ubah Modal Awal Usaha</h3>
+            <p className="text-xs text-stone-300">
+              Masukkan total modal investasi awal yang dikeluarkan saat merintis Mood Kukus Mamuju (misalnya biaya peralatan awal, booth, banner, dsb).
+            </p>
+
+            <div>
+              <label className="block text-xs font-bold text-stone-400 mb-1">Nominal Modal Awal (Rp)</label>
+              <input
+                type="number"
+                value={capitalInput === 0 ? '' : capitalInput}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => setCapitalInput(parseFloat(e.target.value) || 0)}
+                placeholder="0"
+                className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-800">
+              <button
+                type="button"
+                onClick={() => setIsEditingCapital(false)}
+                className="px-4 py-2 bg-stone-800 text-stone-300 text-xs rounded-xl hover:bg-stone-700 font-bold"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onUpdateInitialCapital) {
+                    onUpdateInitialCapital(capitalInput);
+                  }
+                  setIsEditingCapital(false);
+                }}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs rounded-xl shadow-md"
+              >
+                Simpan Modal Awal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* DEDICATED DAILY REPORT CARD WITH CLEAN DATE SELECTOR */}
       <div className="bg-stone-900 border border-emerald-800/60 rounded-2xl p-5 sm:p-6 space-y-4 shadow-xl relative overflow-hidden">

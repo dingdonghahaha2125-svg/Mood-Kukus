@@ -290,8 +290,10 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
                   <input
                     type="number"
                     required
-                    value={formData.amount}
+                    value={formData.amount === 0 ? '' : formData.amount}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                    placeholder="0"
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-rose-500 font-bold"
                   />
                 </div>
@@ -317,8 +319,9 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
                     type="date"
                     required
                     value={formData.date}
+                    onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch {} }}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-rose-500"
+                    className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-rose-500 cursor-pointer"
                   />
                 </div>
               </div>

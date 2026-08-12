@@ -69,6 +69,11 @@ export default function App() {
     return saved ? JSON.parse(saved) : INITIAL_DAILY_REPORTS;
   });
 
+  const [initialCapital, setInitialCapital] = useState<number>(() => {
+    const saved = localStorage.getItem('kukuslokal_initial_capital');
+    return saved ? Number(saved) : 5000000;
+  });
+
   // UI state
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isAiAdvisorOpen, setIsAiAdvisorOpen] = useState<boolean>(false);
@@ -84,6 +89,14 @@ export default function App() {
 
   // Firestore Real-time Listeners and Auto-Seeding
   useEffect(() => {
+    const unsubCapital = onSnapshot(doc(db, 'settings', 'initialCapital'), (docSnap) => {
+      if (docSnap.exists() && typeof docSnap.data().amount === 'number') {
+        setInitialCapital(docSnap.data().amount);
+      } else {
+        setDoc(doc(db, 'settings', 'initialCapital'), { amount: 5000000 }).catch(console.error);
+      }
+    });
+
     const unsubStock = onSnapshot(collection(db, 'stockItems'), (snapshot) => {
       if (!snapshot.empty) {
         const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as StockItem[];
@@ -159,6 +172,7 @@ export default function App() {
     });
 
     return () => {
+      unsubCapital();
       unsubStock();
       unsubMenu();
       unsubSauces();
@@ -264,8 +278,37 @@ export default function App() {
   }, [dailyReports, menuItems]);
 
   // Derived financial calculation
-  const financialSummary = calculateFinancialSummary(transactions, expenses, menuItems, sauces, stockItems, dailyReports);
+  const financialSummary = calculateFinancialSummary(
+    transactions,
+    expenses,
+    menuItems,
+    sauces,
+    stockItems,
+    dailyReports,
+    initialCapital
+  );
   const lowStockItems = stockItems.filter((i) => i.currentStock <= i.minStock);
+
+  // HANDLER FOR INITIAL CAPITAL UPDATE
+  const handleUpdateInitialCapital = async (amount: number) => {
+    setInitialCapital(amount);
+    localStorage.setItem('kukuslokal_initial_capital', amount.toString());
+    try {
+      await setDoc(doc(db, 'settings', 'initialCapital'), { amount });
+    } catch (err) {
+      console.error('Error saving initial capital to Firestore:', err);
+    }
+  };
+
+  // HANDLER FOR MANUAL DAILY REPORT
+  const handleAddManualDailyReport = async (report: DailyReport) => {
+    setDailyReports((prev) => [report, ...prev]);
+    try {
+      await setDoc(doc(db, 'dailyReports', report.id), report);
+    } catch (err) {
+      console.error('Error adding manual daily report to Firestore:', err);
+    }
+  };
 
   // HANDLERS FOR DAILY REPORT FINALIZATION
   const handleFinalizeDailyReport = async (report: DailyReport, resetTodaySales: boolean) => {
@@ -619,6 +662,7 @@ export default function App() {
             onResetSalesToday={handleResetSalesToday}
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
+            onUpdateInitialCapital={handleUpdateInitialCapital}
           />
         )}
 
@@ -627,6 +671,7 @@ export default function App() {
             dailyReports={dailyReports}
             onOpenFinalizeModal={handleOpenFinalizeModal}
             onDeleteDailyReport={handleDeleteDailyReport}
+            onAddManualDailyReport={handleAddManualDailyReport}
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
           />

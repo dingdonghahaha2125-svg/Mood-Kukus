@@ -50,7 +50,8 @@ export function calculateFinancialSummary(
   menuItems: MenuItem[] = [],
   sauces: SauceItem[] = [],
   stockItems: StockItem[] = [],
-  dailyReports: DailyReport[] = []
+  dailyReports: DailyReport[] = [],
+  initialCapital: number = 0
 ): FinancialSummary {
   // 1. Calculate cumulative revenue and HPP from all finalized daily reports
   const reportsRevenue = dailyReports.reduce((sum, r) => sum + (r.totalRevenue || 0), 0);
@@ -89,6 +90,13 @@ export function calculateFinancialSummary(
 
   const profitMargin = totalRevenue > 0 ? Math.round((netProfit / totalRevenue) * 100) : 0;
 
+  // Break Even & Investment Capital Return Calculation
+  const totalInvestmentRequired = initialCapital + totalExpenses;
+  const netCashflow = initialCapital + totalRevenue - totalExpenses;
+  const breakEvenDifference = totalRevenue - totalExpenses; // or totalRevenue - totalInvestmentRequired
+  const remainingToBreakEven = Math.max(0, totalInvestmentRequired - totalRevenue);
+  const isBreakEven = totalRevenue >= totalInvestmentRequired;
+
   return {
     totalRevenue,
     totalExpenses,
@@ -96,6 +104,10 @@ export function calculateFinancialSummary(
     grossProfit,
     netProfit,
     profitMargin,
+    initialCapital,
+    netCashflow,
+    remainingToBreakEven,
+    isBreakEven,
   };
 }
 

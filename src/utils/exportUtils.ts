@@ -1,128 +1,82 @@
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { FinancialSummary, Transaction, StockItem, Expense, MenuItem } from '../types';
+import { FinancialSummary, Transaction, StockItem, Expense, MenuItem, DailyReport } from '../types';
 import { calculatePerItemSales, formatRp, formatDateOnly } from './calculations';
 
 /**
- * Export full business data to Excel (.xlsx) file
+ * Export full cumulative business report to Excel (.xlsx) file
+ * Focused purely on essential totals: Pemasukan, Pengeluaran, Laba Bersih, and Daily Summaries
  */
 export function exportToExcel({
   financialSummary,
-  transactions,
-  stockItems,
+  dailyReports,
   expenses,
-  menuItems,
 }: {
   financialSummary: FinancialSummary;
-  transactions: Transaction[];
-  stockItems: StockItem[];
-  expenses: Expense[];
-  menuItems: MenuItem[];
+  dailyReports?: DailyReport[];
+  expenses?: Expense[];
 }) {
   const wb = XLSX.utils.book_new();
   const dateStr = new Date().toISOString().split('T')[0];
 
-  // 1. RINGKASAN KEUANGAN SHEET
+  // 1. REKAPAN UTAMA KEUANGAN (Pemasukan, Pengeluaran, Laba Bersih)
   const summaryData = [
-    ['MOOD KUKUS MAMUJU - RINGKASAN KEUANGAN'],
-    [`Tanggal Export: ${new Date().toLocaleDateString('id-ID')}`],
+    ['MOOD KUKUS MAMUJU - REKAPAN KUMULATIF USAN'],
+    [`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}`],
     [''],
-    ['Metrik Keuangan', 'Nilai (Rp)'],
-    ['Total Pemasukan (Revenue)', financialSummary.totalRevenue],
-    ['Laba Kotor (Gross Profit)', financialSummary.grossProfit],
-    ['Total Pengeluaran Operasional', financialSummary.totalExpenses],
-    ['Pengeluaran Modal / Investasi', financialSummary.totalCapital],
-    ['Laba Bersih (Net Profit)', financialSummary.netProfit],
-    ['Margin Keuntungan (%)', `${financialSummary.profitMargin}%`],
+    ['Keterangan', 'Jumlah (Rp)'],
+    ['TOTAL PEMASUKAN (REVENUE)', financialSummary.totalRevenue],
+    ['TOTAL PENGELUARAN (EXPENSE)', financialSummary.totalExpenses],
+    ['LABA BERSIH (NET PROFIT)', financialSummary.netProfit],
+    ['MARGIN KEUNTUNGAN (%)', `${financialSummary.profitMargin}%`],
   ];
   const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan Keuangan');
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'Rekapan Keuangan');
 
-  // 2. LAKU TERJUAL PER ITEM SHEET
-  const perItemSales = calculatePerItemSales(menuItems, transactions);
-  const perItemRows = perItemSales.map((item) => ({
-    'Nama Item Bahan': item.itemName,
-    'Kategori': item.category,
-    'Harga per Unit (Rp)': item.pricePerUnit,
-    'Disiapkan (Siap Jual)': item.preparedQty,
-    'Laku Terjual': item.soldQty,
-    'Sisa Stok Siap Jual': item.remainingQty,
-    'Satuan': item.unitName,
-    'Persentase Terjual (%)': `${item.sellRatePct}%`,
-    'Total Omzet (Rp)': item.totalRevenue,
-  }));
-  const wsPerItem = XLSX.utils.json_to_sheet(perItemRows);
-  XLSX.utils.book_append_sheet(wb, wsPerItem, 'Penjualan Per Item');
+  // 2. REKAPAN PENJUALAN PER HARI
+  if (dailyReports && dailyReports.length > 0) {
+    const dailyRows = dailyReports.map((r) => ({
+      'Tanggal': r.dateLabel,
+      'Total Item Terjual (Unit)': r.totalItemsSold,
+      'Total Pemasukan / Omset (Rp)': r.totalRevenue,
+      'Total HPP / Modal (Rp)': r.totalHpp,
+      'Laba Bersih (Rp)': r.totalProfit,
+      'Catatan': r.notes || '-',
+    }));
+    const wsDaily = XLSX.utils.json_to_sheet(dailyRows);
+    XLSX.utils.book_append_sheet(wb, wsDaily, 'Laporan Per Hari');
+  }
 
-  // 3. LOG TRANSAKSI PENJUALAN SHEET
-  const transactionRows = transactions.flatMap((tr) =>
-    tr.items.map((it) => ({
-      'ID Transaksi': tr.id,
-      'Tanggal': formatDateOnly(tr.date),
-      'Pelanggan': tr.customerName || 'Walk-In',
-      'Item Terjual': it.menuName,
-      'Jumlah Qty': it.quantity,
-      'Satuan': it.unitName || 'biji',
-      'Harga Satuan (Rp)': it.pricePerUnit,
-      'Saus / Cocolan': it.sauceName || 'Tanpa Saus',
-      'Ekstra Saus (Rp)': it.extraPrice || 0,
-      'Kemasan': it.packagingType || 'Paper Box',
-      'Subtotal (Rp)': (it.pricePerUnit + (it.extraPrice || 0)) * it.quantity,
-      'Metode Bayar': tr.paymentMethod.toUpperCase(),
-    }))
-  );
-  const wsTransactions = XLSX.utils.json_to_sheet(transactionRows);
-  XLSX.utils.book_append_sheet(wb, wsTransactions, 'Riwayat Transaksi');
-
-  // 4. STOK BAHAN BAKU SHEET
-  const stockRows = stockItems.map((stk) => ({
-    'Kode Stok': stk.id,
-    'Nama Bahan Baku / Kemasan': stk.name,
-    'Kategori': stk.category,
-    'Stok Saat Ini': stk.currentStock,
-    'Batas Min. Restock': stk.minStock,
-    'Satuan': stk.unit,
-    'Harga Beli Satuan (Rp)': stk.unitCostPrice,
-    'Total Nilai Stok (Rp)': stk.currentStock * stk.unitCostPrice,
-    'Pemasok / Supplier': stk.supplier || '-',
-    'Status Stok': stk.currentStock <= stk.minStock ? '⚠️ MENIPIS / PERLU RESTOCK' : '✅ AMAN',
-  }));
-  const wsStock = XLSX.utils.json_to_sheet(stockRows);
-  XLSX.utils.book_append_sheet(wb, wsStock, 'Stok Bahan Baku');
-
-  // 5. PENGELUARAN & MODAL SHEET
-  const expenseRows = expenses.map((exp) => ({
-    'Tanggal': formatDateOnly(exp.date),
-    'Judul Pengeluaran': exp.title,
-    'Kategori': exp.category,
-    'Jumlah (Rp)': exp.amount,
-    'Tipe': exp.isCapital ? 'Modal / Investasi' : 'Operasional',
-    'Metode Pembayaran': exp.paymentMethod.toUpperCase(),
-    'Catatan': exp.notes || '-',
-  }));
-  const wsExpenses = XLSX.utils.json_to_sheet(expenseRows);
-  XLSX.utils.book_append_sheet(wb, wsExpenses, 'Catatan Pengeluaran');
+  // 3. REKAPAN PENGELUARAN
+  if (expenses && expenses.length > 0) {
+    const expRows = expenses.map((e) => ({
+      'Tanggal': formatDateOnly(e.date),
+      'Nama Pengeluaran': e.title,
+      'Kategori': e.category,
+      'Biaya (Rp)': e.amount,
+      'Metode Pembayaran': e.paymentMethod.toUpperCase(),
+      'Catatan': e.notes || '-',
+    }));
+    const wsExp = XLSX.utils.json_to_sheet(expRows);
+    XLSX.utils.book_append_sheet(wb, wsExp, 'Rekapan Pengeluaran');
+  }
 
   // Download XLSX
-  XLSX.writeFile(wb, `MoodKukusMamuju_Laporan_${dateStr}.xlsx`);
+  XLSX.writeFile(wb, `MoodKukusMamuju_Rekapan_Kumulatif_${dateStr}.xlsx`);
 }
 
 /**
- * Export clean professional PDF report using jsPDF and jspdf-autotable
+ * Export clean professional PDF report for cumulative totals
  */
 export function exportToPdf({
   financialSummary,
-  transactions,
-  stockItems,
+  dailyReports,
   expenses,
-  menuItems,
 }: {
   financialSummary: FinancialSummary;
-  transactions: Transaction[];
-  stockItems: StockItem[];
-  expenses: Expense[];
-  menuItems: MenuItem[];
+  dailyReports?: DailyReport[];
+  expenses?: Expense[];
 }) {
   const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
   const dateStr = new Date().toLocaleDateString('id-ID', {
@@ -138,125 +92,175 @@ export function exportToPdf({
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.text('MOOD KUKUS MAMUJU', 14, 15);
+  doc.text('MOOD KUKUS MAMUJU', 14, 14);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.text('Laporan Ringkasan Keuangan & Penjualan Per Item Kuliner Kukusan', 14, 22);
-
-  doc.setFontSize(9);
-  doc.text(`Tanggal Export: ${dateStr}`, 150, 15);
+  doc.text('Laporan Rekapan Kumulatif Keuangan & Penjualan Usaha', 14, 21);
+  doc.text(`Tanggal Cetak: ${dateStr}`, 140, 14);
 
   let currentY = 36;
 
   // METRICS SUMMARY BOX
   doc.setDrawColor(220, 220, 220);
   doc.setFillColor(248, 250, 252);
-  doc.roundedRect(14, currentY, 182, 32, 3, 3, 'FD');
+  doc.roundedRect(14, currentY, 182, 34, 3, 3, 'FD');
+
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(30, 41, 59);
+  doc.text('REKAPAN UTAMA KEUANGAN KUMULATIF', 18, currentY + 8);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`• TOTAL PEMASUKAN : ${formatRp(financialSummary.totalRevenue)}`, 18, currentY + 17);
+  doc.text(`• TOTAL PENGELUARAN : ${formatRp(financialSummary.totalExpenses)}`, 18, currentY + 25);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(16, 185, 129);
+  doc.text(`• LABA BERSIH TOTAL : ${formatRp(financialSummary.netProfit)}`, 105, currentY + 17);
+  doc.setTextColor(14, 165, 233);
+  doc.text(`• MARGIN PROFIT TOTAL : ${financialSummary.profitMargin}%`, 105, currentY + 25);
+
+  currentY += 42;
+
+  // TABLE: LAPORAN PENJUALAN PER HARI
+  if (dailyReports && dailyReports.length > 0) {
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('1. Rekapan Laporan Penjualan Per Hari', 14, currentY);
+    currentY += 4;
+
+    const dailyTableData = dailyReports.map((r) => [
+      r.dateLabel,
+      `${r.totalItemsSold} unit`,
+      formatRp(r.totalRevenue),
+      formatRp(r.totalHpp),
+      formatRp(r.totalProfit),
+    ]);
+
+    autoTable(doc, {
+      startY: currentY,
+      head: [['Tanggal', 'Volume Terjual', 'Pemasukan (Omset)', 'Modal (HPP)', 'Laba Bersih']],
+      body: dailyTableData,
+      theme: 'striped',
+      headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontStyle: 'bold' },
+      styles: { fontSize: 8, cellPadding: 2.5 },
+    });
+
+    // @ts-ignore
+    currentY = doc.lastAutoTable.finalY + 10;
+  }
+
+  // Save PDF file
+  const dateFile = new Date().toISOString().split('T')[0];
+  doc.save(`MoodKukusMamuju_Rekapan_Kumulatif_${dateFile}.pdf`);
+}
+
+/**
+ * Export single daily report to Excel (.xlsx)
+ */
+export function exportDailyReportToExcel(report: DailyReport) {
+  const wb = XLSX.utils.book_new();
+
+  const summaryData = [
+    ['MOOD KUKUS MAMUJU - LAPORAN PENJUALAN HARIAN'],
+    [`Tanggal Penjualan: ${report.dateLabel}`],
+    [`Catatan Harian: ${report.notes || '-'}`],
+    [''],
+    ['Metrik Harian', 'Nilai (Rp)'],
+    ['Total Pemasukan (Omset)', report.totalRevenue],
+    ['Total Modal HPP', report.totalHpp],
+    ['Laba Bersih Harian', report.totalProfit],
+    ['Total Item Terjual', `${report.totalItemsSold} unit`],
+  ];
+  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan Harian');
+
+  if (report.items && report.items.length > 0) {
+    const itemRows = report.items.map((item) => ({
+      'Nama Item Jualan': item.menuName,
+      'Harga per Unit (Rp)': item.pricePerUnit,
+      'Modal HPP per Unit (Rp)': item.costPricePerUnit,
+      'Jumlah Terjual': item.soldQty,
+      'Satuan': item.unitName,
+      'Total Omset (Rp)': item.totalRevenue,
+      'Laba Bersih (Rp)': item.totalProfit,
+    }));
+    const wsItems = XLSX.utils.json_to_sheet(itemRows);
+    XLSX.utils.book_append_sheet(wb, wsItems, 'Rincian Item Terjual');
+  }
+
+  XLSX.writeFile(wb, `Laporan_Harian_MoodKukus_${report.date.split('T')[0]}.xlsx`);
+}
+
+/**
+ * Export single daily report to PDF (.pdf)
+ */
+export function exportDailyReportToPdf(report: DailyReport) {
+  const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+  // HEADER TITLE
+  doc.setFillColor(245, 158, 11); // Amber-500
+  doc.rect(0, 0, 210, 28, 'F');
+
+  doc.setTextColor(30, 41, 59);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('MOOD KUKUS MAMUJU', 14, 14);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text(`LAPORAN PENJUALAN HARIAN: ${report.dateLabel}`, 14, 21);
+
+  let currentY = 36;
+
+  // SUMMARY BOX
+  doc.setDrawColor(220, 220, 220);
+  doc.setFillColor(254, 243, 199);
+  doc.roundedRect(14, currentY, 182, 30, 3, 3, 'FD');
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(30, 41, 59);
-  doc.text('RINGKASAN PERFORMANSA KEUANGAN', 18, currentY + 7);
+  doc.text(`• TOTAL PEMASUKAN : ${formatRp(report.totalRevenue)}`, 18, currentY + 11);
+  doc.text(`• TOTAL MODAL (HPP) : ${formatRp(report.totalHpp)}`, 18, currentY + 20);
 
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`• Total Pemasukan : ${formatRp(financialSummary.totalRevenue)}`, 18, currentY + 15);
-  doc.text(`• Laba Kotor      : ${formatRp(financialSummary.grossProfit)}`, 18, currentY + 22);
-  doc.text(`• Total Pengeluaran: ${formatRp(financialSummary.totalExpenses)}`, 105, currentY + 15);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(16, 185, 129);
-  doc.text(`• LABA BERSIH     : ${formatRp(financialSummary.netProfit)} (Margin ${financialSummary.profitMargin}%)`, 105, currentY + 22);
+  doc.text(`• LABA BERSIH HARIAN : ${formatRp(report.totalProfit)}`, 105, currentY + 11);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`• VOLUME TERJUAL    : ${report.totalItemsSold} unit`, 105, currentY + 20);
 
-  currentY += 40;
+  currentY += 38;
 
-  // TABLE 1: PENJUALAN PER ITEM
-  doc.setTextColor(30, 41, 59);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text('1. Laporan Laku Terjual per Item Bahan Kukusan', 14, currentY);
-  currentY += 4;
+  // ITEM TABLE
+  if (report.items && report.items.length > 0) {
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Rincian Item Jualan Terjual:', 14, currentY);
+    currentY += 4;
 
-  const perItemSales = calculatePerItemSales(menuItems, transactions);
-  const perItemTableData = perItemSales.map((item) => [
-    item.itemName,
-    formatRp(item.pricePerUnit),
-    `${item.preparedQty} ${item.unitName}`,
-    `${item.soldQty} ${item.unitName}`,
-    `${item.remainingQty} ${item.unitName}`,
-    `${item.sellRatePct}%`,
-    formatRp(item.totalRevenue),
-  ]);
+    const itemTableData = report.items.map((item) => [
+      item.menuName,
+      formatRp(item.pricePerUnit),
+      `${item.soldQty} ${item.unitName}`,
+      formatRp(item.totalRevenue),
+      formatRp(item.totalProfit),
+    ]);
 
-  autoTable(doc, {
-    startY: currentY,
-    head: [['Nama Item Bahan', 'Harga/Unit', 'Disiapkan', 'Terjual', 'Sisa', 'Laku (%)', 'Omzet']],
-    body: perItemTableData,
-    theme: 'striped',
-    headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontStyle: 'bold' },
-    styles: { fontSize: 8, cellPadding: 2 },
-  });
-
-  // @ts-ignore
-  currentY = doc.lastAutoTable.finalY + 10;
-
-  // TABLE 2: RIWAYAT TRANSAKSI PENJUALAN
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text('2. Riwayat Transaksi Penjualan Kasir POS', 14, currentY);
-  currentY += 4;
-
-  const trTableData = transactions.slice(0, 15).map((tr) => [
-    formatDateOnly(tr.date),
-    tr.customerName || 'Walk-In',
-    tr.items.map((i) => `${i.menuName} (${i.quantity}x)`).join(', '),
-    tr.paymentMethod.toUpperCase(),
-    formatRp(tr.totalAmount),
-    formatRp(tr.netProfit),
-  ]);
-
-  autoTable(doc, {
-    startY: currentY,
-    head: [['Tanggal', 'Pelanggan', 'Rincian Item', 'Bayar', 'Total', 'Laba']],
-    body: trTableData,
-    theme: 'grid',
-    headStyles: { fillColor: [30, 41, 59], textColor: [255, 255, 255] },
-    styles: { fontSize: 8, cellPadding: 2 },
-  });
-
-  // @ts-ignore
-  currentY = doc.lastAutoTable.finalY + 10;
-
-  // TABLE 3: STOK MENIPIS & INVENTARIS BAHAN BAKU
-  if (currentY > 230) {
-    doc.addPage();
-    currentY = 20;
+    autoTable(doc, {
+      startY: currentY,
+      head: [['Nama Item', 'Harga/Unit', 'Terjual', 'Total Omset', 'Laba Bersih']],
+      body: itemTableData,
+      theme: 'striped',
+      headStyles: { fillColor: [245, 158, 11], textColor: [30, 41, 59], fontStyle: 'bold' },
+      styles: { fontSize: 8, cellPadding: 2.5 },
+    });
   }
 
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text('3. Status Inventaris Stok Bahan Baku & Kemasan', 14, currentY);
-  currentY += 4;
-
-  const stockTableData = stockItems.map((stk) => [
-    stk.name,
-    stk.category,
-    `${stk.currentStock} ${stk.unit}`,
-    `${stk.minStock} ${stk.unit}`,
-    formatRp(stk.unitCostPrice),
-    stk.currentStock <= stk.minStock ? 'MENIPIS' : 'AMAN',
-  ]);
-
-  autoTable(doc, {
-    startY: currentY,
-    head: [['Bahan / Kemasan', 'Kategori', 'Stok Saat Ini', 'Batas Min', 'HPP Satuan', 'Status']],
-    body: stockTableData,
-    theme: 'striped',
-    headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255] },
-    styles: { fontSize: 8, cellPadding: 2 },
-  });
-
-  // Save PDF file
-  const dateFile = new Date().toISOString().split('T')[0];
-  doc.save(`MoodKukusMamuju_Laporan_${dateFile}.pdf`);
+  doc.save(`Laporan_Harian_MoodKukus_${report.date.split('T')[0]}.pdf`);
 }
+
