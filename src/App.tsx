@@ -659,6 +659,7 @@ export default function App() {
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
             onUpdateInitialCapital={handleUpdateInitialCapital}
+            onAddManualDailyReport={handleAddManualDailyReport}
           />
         )}
 

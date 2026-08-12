@@ -37,7 +37,7 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { FinancialSummary, StockItem, Transaction, Expense, MenuItem, SauceItem } from '../types';
+import { FinancialSummary, StockItem, Transaction, Expense, MenuItem, SauceItem, DailyReport } from '../types';
 import { formatRp, formatDate, calculatePerItemSales } from '../utils/calculations';
 
 interface DashboardOverviewProps {
@@ -60,6 +60,7 @@ interface DashboardOverviewProps {
   onExportExcel?: () => void;
   onExportPdf?: () => void;
   onUpdateInitialCapital?: (amount: number) => void;
+  onAddManualDailyReport?: (report: DailyReport) => void;
 }
 
 const COLORS = ['#10b981', '#14b8a6', '#06b6d4', '#f59e0b', '#ec4899', '#8b5cf6'];
@@ -84,10 +85,22 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onExportExcel,
   onExportPdf,
   onUpdateInitialCapital,
+  onAddManualDailyReport,
 }) => {
   // State for modal awal editing
   const [isEditingCapital, setIsEditingCapital] = React.useState<boolean>(false);
   const [capitalInput, setCapitalInput] = React.useState<number>(financialSummary.initialCapital || 5000000);
+
+  // State for manual daily income report modal (when item details are lost)
+  const [isManualModalOpen, setIsManualModalOpen] = React.useState<boolean>(false);
+  const [manualDate, setManualDate] = React.useState<string>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().split('T')[0];
+  });
+  const [manualRevenue, setManualRevenue] = React.useState<number>(150000);
+  const [manualHpp, setManualHpp] = React.useState<number>(0);
+  const [manualNotes, setManualNotes] = React.useState<string>('Rekap omset manual penjualan hari lalu');
 
   // State to filter per-item sales view (default: only show sold items today)
   const [itemFilter, setItemFilter] = React.useState<'sold_only' | 'all'>('sold_only');
@@ -96,6 +109,39 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   const [selectedReportDate, setSelectedReportDate] = React.useState<string>(
     () => new Date().toISOString().split('T')[0]
   );
+
+  const handleSaveManualReport = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (manualRevenue <= 0 || !manualDate) return;
+
+    const parsedDate = new Date(manualDate + 'T12:00:00');
+    const dateLabel = new Intl.DateTimeFormat('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(parsedDate);
+
+    const report: DailyReport = {
+      id: `rep-${Date.now()}`,
+      date: manualDate,
+      dateLabel,
+      totalRevenue: manualRevenue,
+      totalHpp: manualHpp,
+      totalProfit: manualRevenue - manualHpp,
+      totalItemsSold: 0,
+      items: [],
+      notes: manualNotes.trim() || 'Rekap omset manual hari lalu',
+      finalizedAt: new Date().toISOString(),
+      isStockDeducted: true,
+    };
+
+    if (onAddManualDailyReport) {
+      onAddManualDailyReport(report);
+    }
+
+    setIsManualModalOpen(false);
+  };
 
   // Selected Date Full Label
   const selectedDateObj = new Date(selectedReportDate + 'T12:00:00');
@@ -434,27 +480,47 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {onAddManualDailyReport && (
+              <button
+                type="button"
+                onClick={() => {
+                  const d = new Date();
+                  d.setDate(d.getDate() - 1);
+                  setManualDate(d.toISOString().split('T')[0]);
+                  setManualRevenue(150000);
+                  setManualHpp(0);
+                  setManualNotes('Omset hari lalu tanpa rincian item');
+                  setIsManualModalOpen(true);
+                }}
+                className="px-3.5 py-2 bg-amber-950/90 hover:bg-amber-900 border border-amber-500/60 text-amber-300 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
+                title="Tambah laporan omset uang masuk hari lalu jika catatan per item bahan hilang"
+              >
+                <Plus className="w-4 h-4 text-amber-400" />
+                <span>+ Input Omset Hari Lalu</span>
+              </button>
+            )}
+
             {onOpenFinalizeModal && (
               <button
                 onClick={() => onOpenFinalizeModal(selectedReportDate)}
-                className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-stone-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95"
+                className="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-emerald-500 hover:from-amber-400 hover:to-emerald-400 text-stone-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
               >
-                <span>🏁 Finalisasi Laporan Tanggal {selectedDateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+                <span>🏁 Finalisasi Tanggal {selectedDateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
               </button>
             )}
 
             <button
               onClick={() => onNavigateToTab('daily_history')}
-              className="px-3 py-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5"
+              className="px-3 py-2 bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Calendar className="w-3.5 h-3.5 text-amber-400" />
-              <span>📅 Histori Laporan Per Hari</span>
+              <span>📅 Histori Laporan</span>
             </button>
 
             {onResetSalesToday && (
               <button
                 onClick={onResetSalesToday}
-                className="px-3 py-2 bg-rose-950/80 hover:bg-rose-900/90 border border-rose-800/80 text-rose-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-2 bg-rose-950/80 hover:bg-rose-900/90 border border-rose-800/80 text-rose-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
                 title="Reset/Kosongkan seluruh data penjualan hari ini menjadi 0"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
@@ -465,7 +531,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             {onOpenMenuEditor && (
               <button
                 onClick={onOpenMenuEditor}
-                className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
+                className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
               >
                 <span>✏️ Atur Harga & Menu</span>
               </button>
@@ -1401,6 +1467,107 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Modal Input Omset / Pemasukan Hari Lalu (Tanpa Detail Item) */}
+      {isManualModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="bg-stone-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-5 space-y-4 shadow-2xl text-stone-100">
+            <div className="flex items-center justify-between border-b border-stone-800 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-stone-100">Input Pemasukan / Omset Hari Lalu</h3>
+                  <p className="text-[11px] text-amber-400">Pencatatan Nominal Tanpa Detail Item Terjual</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsManualModalOpen(false)}
+                className="p-1.5 text-stone-400 hover:text-stone-100 rounded-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-stone-300 leading-relaxed bg-stone-950 p-3 rounded-xl border border-stone-800">
+              Gunakan menu ini jika catatan per item bahan sebelumnya hilang/lupa, namun Anda masih mengingat nominal uang masuk. Omset ini akan langsung masuk ke hitungan Laba & Kas Keseluruhan Usaha.
+            </p>
+
+            <form onSubmit={handleSaveManualReport} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-stone-300 mb-1">Tanggal Penjualan</label>
+                <input
+                  type="date"
+                  required
+                  value={manualDate}
+                  onClick={(e) => {
+                    try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                  }}
+                  onChange={(e) => setManualDate(e.target.value)}
+                  className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-100 font-bold focus:outline-none focus:border-amber-500 cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-300 mb-1">Total Pemasukan / Omset Uang Masuk (Rp)</label>
+                <input
+                  type="number"
+                  required
+                  value={manualRevenue === 0 ? '' : manualRevenue}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setManualRevenue(parseFloat(e.target.value) || 0)}
+                  placeholder="0"
+                  className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-sm text-emerald-400 font-black focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-300 mb-1">Estimasi Modal HPP (Rp) (Opsional)</label>
+                <input
+                  type="number"
+                  value={manualHpp === 0 ? '' : manualHpp}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setManualHpp(parseFloat(e.target.value) || 0)}
+                  placeholder="0"
+                  className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-amber-300 font-bold focus:outline-none focus:border-amber-500"
+                />
+                <span className="text-[10px] text-stone-400 mt-0.5 block">
+                  Isi 0 jika tidak diingat, atau masukkan estimasi modal bahan baku.
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-300 mb-1">Catatan Laporan</label>
+                <input
+                  type="text"
+                  value={manualNotes}
+                  onChange={(e) => setManualNotes(e.target.value)}
+                  placeholder="Keterangan..."
+                  className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-stone-800">
+                <button
+                  type="button"
+                  onClick={() => setIsManualModalOpen(false)}
+                  className="px-4 py-2 bg-stone-800 text-stone-300 text-xs rounded-xl font-bold cursor-pointer hover:bg-stone-700"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs rounded-xl shadow-md cursor-pointer"
+                >
+                  Simpan Laporan Omset
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
