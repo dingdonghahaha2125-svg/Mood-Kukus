@@ -605,8 +605,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     type="number"
                     step="any"
                     required
-                    value={formData.currentStock}
+                    value={formData.currentStock === 0 ? '' : formData.currentStock}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => setFormData({ ...formData, currentStock: parseFloat(e.target.value) || 0 })}
+                    placeholder="0"
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500 font-bold"
                   />
                 </div>
@@ -617,8 +619,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     type="number"
                     step="any"
                     required
-                    value={formData.minStock}
+                    value={formData.minStock === 0 ? '' : formData.minStock}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => setFormData({ ...formData, minStock: parseFloat(e.target.value) || 0 })}
+                    placeholder="0"
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -628,8 +632,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   <input
                     type="number"
                     required
-                    value={formData.unitCostPrice}
+                    value={formData.unitCostPrice === 0 ? '' : formData.unitCostPrice}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => setFormData({ ...formData, unitCostPrice: parseFloat(e.target.value) || 0 })}
+                    placeholder="0"
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -718,12 +724,14 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                   <input
                     type="number"
                     step="any"
-                    value={restockQty}
+                    value={restockQty === 0 ? '' : restockQty}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) => {
                       const qty = parseFloat(e.target.value) || 0;
                       setRestockQty(qty);
                       setRestockCost(qty * restockTargetItem.unitCostPrice);
                     }}
+                    placeholder="0"
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500"
                   />
                   <span className="font-bold text-stone-300 shrink-0">{restockTargetItem.unit}</span>
@@ -773,8 +781,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                 <label className="block text-stone-400 mb-1 font-medium">Total Biaya Pembelian (Rp)</label>
                 <input
                   type="number"
-                  value={restockCost}
+                  value={restockCost === 0 ? '' : restockCost}
+                  onFocus={(e) => e.target.select()}
                   onChange={(e) => setRestockCost(parseFloat(e.target.value) || 0)}
+                  placeholder="0"
                   className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                 />
               </div>

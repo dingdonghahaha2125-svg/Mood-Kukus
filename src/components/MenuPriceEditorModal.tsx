@@ -192,8 +192,10 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
                     min="0"
                     step="500"
                     required
-                    value={newPrice}
-                    onChange={(e) => setNewPrice(Number(e.target.value))}
+                    value={newPrice === 0 ? '' : newPrice}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setNewPrice(parseFloat(e.target.value) || 0)}
+                    placeholder="0"
                     className="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-stone-100 font-bold text-emerald-400 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
@@ -265,8 +267,10 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
                               type="number"
                               min="0"
                               step="500"
-                              value={tempPrice}
-                              onChange={(e) => setTempPrice(Number(e.target.value))}
+                              value={tempPrice === 0 ? '' : tempPrice}
+                              onFocus={(e) => e.target.select()}
+                              onChange={(e) => setTempPrice(parseFloat(e.target.value) || 0)}
+                              placeholder="0"
                               className="w-24 bg-stone-800 border border-amber-500 rounded px-2 py-1 text-xs font-bold text-amber-300 focus:outline-none"
                             />
                             <button

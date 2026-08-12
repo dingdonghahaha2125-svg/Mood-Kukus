@@ -589,20 +589,16 @@ export default function App() {
   const handleExportExcel = () => {
     exportToExcel({
       financialSummary,
-      transactions,
-      stockItems,
+      dailyReports,
       expenses,
-      menuItems,
     });
   };
 
   const handleExportPdf = () => {
     exportToPdf({
       financialSummary,
-      transactions,
-      stockItems,
+      dailyReports,
       expenses,
-      menuItems,
     });
   };
 
