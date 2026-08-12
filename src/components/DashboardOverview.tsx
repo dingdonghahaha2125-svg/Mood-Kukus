@@ -381,27 +381,28 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         {/* Modal Awal & Break-Even Status Card */}
         <div className="bg-stone-950/90 border border-amber-500/40 rounded-xl p-4 space-y-3">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-bold text-amber-300 uppercase">Modal Awal Investasi:</span>
                 <span className="text-sm font-black text-amber-400">
                   {formatRp(financialSummary.initialCapital || 0)}
                 </span>
-                {onUpdateInitialCapital && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCapitalInput(financialSummary.initialCapital || 5000000);
-                      setIsEditingCapital(true);
-                    }}
-                    className="text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded border border-amber-500/40 cursor-pointer transition-colors"
-                  >
-                    ✏️ Ubah Modal Awal
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => onNavigateToTab('expenses')}
+                  className="text-[10px] font-bold px-2.5 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 rounded-lg border border-indigo-500/40 cursor-pointer transition-colors flex items-center gap-1"
+                  title="Buka menu Catat Belanja & Pengeluaran untuk menambah/mengedit modal awal & aset"
+                >
+                  <Receipt className="w-3 h-3 text-indigo-400" />
+                  <span>📋 Catat & Kelola Modal Awal di Pengeluaran</span>
+                </button>
               </div>
 
-              <div className="text-xs text-stone-300 font-medium flex items-center gap-2 flex-wrap">
+              <p className="text-[10px] text-stone-400">
+                ✓ Otomatis terhitung dari pengeluaran bertipe <strong className="text-indigo-400">Modal Awal / Aset</strong> di menu Catat Belanja & Pengeluaran.
+              </p>
+
+              <div className="text-xs text-stone-300 font-medium flex items-center gap-2 flex-wrap pt-0.5">
                 <span>Status Balik Modal (BEP):</span>
                 {financialSummary.isBreakEven ? (
                   <span className="text-emerald-400 font-black bg-emerald-950 px-2.5 py-0.5 rounded-full border border-emerald-700">

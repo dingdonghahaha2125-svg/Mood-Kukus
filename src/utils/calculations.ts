@@ -91,9 +91,12 @@ export function calculateFinancialSummary(
   const profitMargin = totalRevenue > 0 ? Math.round((netProfit / totalRevenue) * 100) : 0;
 
   // Break Even & Investment Capital Return Calculation
-  const totalInvestmentRequired = initialCapital + totalExpenses;
-  const netCashflow = initialCapital + totalRevenue - totalExpenses;
-  const breakEvenDifference = totalRevenue - totalExpenses; // or totalRevenue - totalInvestmentRequired
+  // Effective initial capital uses logged capital expenses if available, or manual initialCapital fallback
+  const effectiveInitialCapital = totalCapital > 0 ? totalCapital : initialCapital;
+  const totalInvestmentRequired = totalCapital > 0 
+    ? totalExpenses 
+    : (initialCapital + totalExpenses);
+  const netCashflow = effectiveInitialCapital + totalRevenue - totalExpenses;
   const remainingToBreakEven = Math.max(0, totalInvestmentRequired - totalRevenue);
   const isBreakEven = totalRevenue >= totalInvestmentRequired;
 
@@ -104,7 +107,7 @@ export function calculateFinancialSummary(
     grossProfit,
     netProfit,
     profitMargin,
-    initialCapital,
+    initialCapital: effectiveInitialCapital,
     netCashflow,
     remainingToBreakEven,
     isBreakEven,
