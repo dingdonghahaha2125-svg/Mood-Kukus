@@ -3,6 +3,8 @@ import {
   collection,
   doc,
   setDoc,
+  getDoc,
+  getDocs,
   deleteDoc,
   onSnapshot,
 } from 'firebase/firestore';
@@ -35,38 +37,44 @@ export default function App() {
   // Load state from LocalStorage with fallback to initialData
   const [stockItems, setStockItems] = useState<StockItem[]>(() => {
     const saved = localStorage.getItem('kukuslokal_stock_items');
-    const items: StockItem[] = saved ? JSON.parse(saved) : INITIAL_STOCK_ITEMS;
-    return items
-      .filter((s) => !s.name.toLowerCase().includes('jagung'))
-      .map((s) => ({ ...s, name: fixSingkos(s.name) }));
+    if (saved !== null) {
+      const items: StockItem[] = JSON.parse(saved);
+      return items
+        .filter((s) => !s.name.toLowerCase().includes('jagung'))
+        .map((s) => ({ ...s, name: fixSingkos(s.name) }));
+    }
+    return INITIAL_STOCK_ITEMS;
   });
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>(() => {
     const saved = localStorage.getItem('kukuslokal_menu_items');
-    const items: MenuItem[] = saved ? JSON.parse(saved) : INITIAL_MENU_ITEMS;
-    return items
-      .filter((m) => m.id !== 'menu-item-jagung' && !m.name.toLowerCase().includes('jagung'))
-      .map((m) => ({ ...m, name: fixSingkos(m.name) }));
+    if (saved !== null) {
+      const items: MenuItem[] = JSON.parse(saved);
+      return items
+        .filter((m) => m.id !== 'menu-item-jagung' && !m.name.toLowerCase().includes('jagung'))
+        .map((m) => ({ ...m, name: fixSingkos(m.name) }));
+    }
+    return INITIAL_MENU_ITEMS;
   });
 
   const [sauces, setSauces] = useState<SauceItem[]>(() => {
     const saved = localStorage.getItem('kukuslokal_sauces');
-    return saved ? JSON.parse(saved) : INITIAL_SAUCES;
+    return saved !== null ? JSON.parse(saved) : INITIAL_SAUCES;
   });
 
   const [expenses, setExpenses] = useState<Expense[]>(() => {
     const saved = localStorage.getItem('kukuslokal_expenses');
-    return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
+    return saved !== null ? JSON.parse(saved) : INITIAL_EXPENSES;
   });
 
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     const saved = localStorage.getItem('kukuslokal_transactions');
-    return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+    return saved !== null ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
   });
 
   const [dailyReports, setDailyReports] = useState<DailyReport[]>(() => {
     const saved = localStorage.getItem('kukuslokal_daily_reports');
-    return saved ? JSON.parse(saved) : INITIAL_DAILY_REPORTS;
+    return saved !== null ? JSON.parse(saved) : INITIAL_DAILY_REPORTS;
   });
 
   const [initialCapital, setInitialCapital] = useState<number>(() => {
@@ -87,7 +95,26 @@ export default function App() {
     setIsFinalizeModalOpen(true);
   };
 
-  // Firestore Real-time Listeners and Auto-Seeding
+  // One-time initial DB seed check (runs only if database was never initialized)
+  useEffect(() => {
+    const initRef = doc(db, 'settings', 'systemInit');
+    getDoc(initRef).then(async (snap) => {
+      if (!snap.exists()) {
+        await setDoc(initRef, { initialized: true, date: new Date().toISOString() });
+        const stockSnap = await getDocs(collection(db, 'stockItems'));
+        if (stockSnap.empty) {
+          INITIAL_STOCK_ITEMS.forEach((item) => setDoc(doc(db, 'stockItems', item.id), item).catch(console.error));
+          INITIAL_MENU_ITEMS.forEach((item) => setDoc(doc(db, 'menuItems', item.id), item).catch(console.error));
+          INITIAL_SAUCES.forEach((item) => setDoc(doc(db, 'sauces', item.id), item).catch(console.error));
+          INITIAL_EXPENSES.forEach((item) => setDoc(doc(db, 'expenses', item.id), item).catch(console.error));
+          INITIAL_TRANSACTIONS.forEach((item) => setDoc(doc(db, 'transactions', item.id), item).catch(console.error));
+          INITIAL_DAILY_REPORTS.forEach((item) => setDoc(doc(db, 'dailyReports', item.id), item).catch(console.error));
+        }
+      }
+    }).catch(console.error);
+  }, []);
+
+  // Firestore Real-time Listeners
   useEffect(() => {
     const unsubCapital = onSnapshot(doc(db, 'settings', 'initialCapital'), (docSnap) => {
       if (docSnap.exists() && typeof docSnap.data().amount === 'number') {
@@ -98,77 +125,41 @@ export default function App() {
     });
 
     const unsubStock = onSnapshot(collection(db, 'stockItems'), (snapshot) => {
-      if (!snapshot.empty) {
-        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as StockItem[];
-        setStockItems(
-          items
-            .filter((s) => !s.name.toLowerCase().includes('jagung'))
-            .map((s) => ({ ...s, name: fixSingkos(s.name) }))
-        );
-      } else {
-        INITIAL_STOCK_ITEMS.forEach((item) => {
-          setDoc(doc(db, 'stockItems', item.id), item).catch(console.error);
-        });
-      }
+      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as StockItem[];
+      setStockItems(
+        items
+          .filter((s) => !s.name.toLowerCase().includes('jagung'))
+          .map((s) => ({ ...s, name: fixSingkos(s.name) }))
+      );
     });
 
     const unsubMenu = onSnapshot(collection(db, 'menuItems'), (snapshot) => {
-      if (!snapshot.empty) {
-        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as MenuItem[];
-        setMenuItems(
-          items
-            .filter((m) => m.id !== 'menu-item-jagung' && !m.name.toLowerCase().includes('jagung'))
-            .map((m) => ({ ...m, name: fixSingkos(m.name) }))
-        );
-      } else {
-        INITIAL_MENU_ITEMS.forEach((item) => {
-          setDoc(doc(db, 'menuItems', item.id), item).catch(console.error);
-        });
-      }
+      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as MenuItem[];
+      setMenuItems(
+        items
+          .filter((m) => m.id !== 'menu-item-jagung' && !m.name.toLowerCase().includes('jagung'))
+          .map((m) => ({ ...m, name: fixSingkos(m.name) }))
+      );
     });
 
     const unsubSauces = onSnapshot(collection(db, 'sauces'), (snapshot) => {
-      if (!snapshot.empty) {
-        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as SauceItem[];
-        setSauces(items);
-      } else {
-        INITIAL_SAUCES.forEach((item) => {
-          setDoc(doc(db, 'sauces', item.id), item).catch(console.error);
-        });
-      }
+      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as SauceItem[];
+      setSauces(items);
     });
 
     const unsubExpenses = onSnapshot(collection(db, 'expenses'), (snapshot) => {
-      if (!snapshot.empty) {
-        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Expense[];
-        setExpenses(items);
-      } else {
-        INITIAL_EXPENSES.forEach((item) => {
-          setDoc(doc(db, 'expenses', item.id), item).catch(console.error);
-        });
-      }
+      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Expense[];
+      setExpenses(items);
     });
 
     const unsubTransactions = onSnapshot(collection(db, 'transactions'), (snapshot) => {
-      if (!snapshot.empty) {
-        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Transaction[];
-        setTransactions(items);
-      } else {
-        INITIAL_TRANSACTIONS.forEach((item) => {
-          setDoc(doc(db, 'transactions', item.id), item).catch(console.error);
-        });
-      }
+      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Transaction[];
+      setTransactions(items);
     });
 
     const unsubDailyReports = onSnapshot(collection(db, 'dailyReports'), (snapshot) => {
-      if (!snapshot.empty) {
-        const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as DailyReport[];
-        setDailyReports(items);
-      } else {
-        INITIAL_DAILY_REPORTS.forEach((item) => {
-          setDoc(doc(db, 'dailyReports', item.id), item).catch(console.error);
-        });
-      }
+      const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as DailyReport[];
+      setDailyReports(items);
     });
 
     return () => {

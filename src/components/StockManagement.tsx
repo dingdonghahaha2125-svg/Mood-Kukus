@@ -378,8 +378,17 @@ export const StockManagement: React.FC<StockManagementProps> = ({
       </div>
 
       {/* Stock Items Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredItems.map((item) => {
+      {filteredItems.length === 0 ? (
+        <div className="bg-stone-900 border border-stone-800 rounded-2xl p-8 text-center space-y-3">
+          <Boxes className="w-10 h-10 text-stone-500 mx-auto" />
+          <h3 className="text-base font-bold text-stone-300">Stok Bahan Baku & Kemasan Kosong</h3>
+          <p className="text-xs text-stone-400 max-w-md mx-auto">
+            Belum ada data bahan baku yang tersimpan. Klik tombol <strong className="text-emerald-400">+ Tambah Bahan</strong> di atas untuk menambahkan bahan baku atau kemasan baru.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredItems.map((item) => {
           // Calculate amount sold today based on menu items soldQty and recipes
           const soldDeductionToday = menuItems.reduce((sum, menu) => {
             const qty = menu.soldQty || 0;
@@ -488,7 +497,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* MODAL 1: Add/Edit Stock Item */}
       {isAddModalOpen && (
