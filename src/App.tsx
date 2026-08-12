@@ -225,9 +225,11 @@ export default function App() {
         if (m.ingredients && m.ingredients.length > 0) {
           return m.ingredients.some((ing) => validStockIds.has(ing.stockItemId));
         }
-        return true;
+        return false;
       });
       if (sanitized.length !== prevMenu.length) {
+        const removed = prevMenu.filter((m) => !sanitized.some((s) => s.id === m.id));
+        removed.forEach((m) => deleteDoc(doc(db, 'menuItems', m.id)).catch(console.error));
         return sanitized;
       }
       return prevMenu;
@@ -422,7 +424,7 @@ export default function App() {
           if (m.ingredients && m.ingredients.length > 0) {
             return m.ingredients.some((ing) => remainingStockIds.has(ing.stockItemId));
           }
-          return true;
+          return false;
         })
       );
 

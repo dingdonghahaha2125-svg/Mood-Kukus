@@ -44,10 +44,22 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
   const [newName, setNewName] = useState('');
   const [newCategory, setNewCategory] = useState<'satuan' | 'minuman' | 'kemasan'>('satuan');
   const [newPrice, setNewPrice] = useState<number>(5000);
-  const [newUnitName, setNewUnitName] = useState('botol');
+  const [newUnitName, setNewUnitName] = useState('biji');
   const [newDescription, setNewDescription] = useState('');
+  const [selectedStockId, setSelectedStockId] = useState<string>(stockItems[0]?.id || '');
 
   if (!isOpen) return null;
+
+  const validStockItemIds = new Set(stockItems.map((s) => s.id));
+
+  const displayableMenuItems = menuItems.filter((item) => {
+    if (item.category === 'paket' || item.category === 'kemasan') return false;
+    const nameLower = item.name.toLowerCase();
+    if (nameLower.includes('paket') || nameLower.includes('combo') || nameLower.includes('jagung')) return false;
+
+    if (!item.ingredients || item.ingredients.length === 0) return false;
+    return item.ingredients.some((ing) => validStockItemIds.has(ing.stockItemId));
+  });
 
   const handleStartEdit = (item: MenuItem) => {
     setEditingId(item.id);
@@ -66,6 +78,12 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
     e.preventDefault();
     if (!newName.trim()) return;
 
+    const chosenStockId = selectedStockId || stockItems[0]?.id;
+    if (!chosenStockId) {
+      alert('Silakan tambah bahan baku terlebih dahulu di menu Stok & Bahan Kukusan!');
+      return;
+    }
+
     const created: MenuItem = {
       id: `menu-custom-${Date.now()}`,
       name: newName,
@@ -76,7 +94,7 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
       isAvailable: true,
       preparedQty: 30,
       soldQty: 0,
-      ingredients: [],
+      ingredients: [{ stockItemId: chosenStockId, amount: 1 }],
     };
 
     onAddMenuItem(created);
@@ -210,6 +228,25 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
                     className="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
+
+                <div className="sm:col-span-2">
+                  <label className="text-stone-400 block mb-1">Bahan Baku Utama (dari Stok & Bahan Kukusan):</label>
+                  <select
+                    value={selectedStockId}
+                    onChange={(e) => setSelectedStockId(e.target.value)}
+                    className="w-full bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-stone-100 focus:outline-none focus:border-emerald-500 font-bold text-amber-300"
+                  >
+                    {stockItems.length === 0 ? (
+                      <option value="">(Belum ada bahan di Stok & Bahan Kukusan)</option>
+                    ) : (
+                      stockItems.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} ({s.unitCostPrice ? formatRp(s.unitCostPrice) : 'Rp 0'}/{s.unit})
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
@@ -225,14 +262,20 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
 
           {/* Menu Items Table List */}
           <div className="space-y-3">
-            {menuItems
-              .filter(
-                (item) =>
-                  item.category !== 'paket' &&
-                  !item.name.toLowerCase().includes('paket') &&
-                  !item.name.toLowerCase().includes('combo')
-              )
-              .map((item) => {
+            {displayableMenuItems.length === 0 ? (
+              <div className="bg-stone-800/40 border border-stone-700/60 rounded-xl p-8 text-center space-y-3">
+                <div className="p-3 bg-stone-800 w-12 h-12 rounded-2xl text-amber-400 mx-auto flex items-center justify-center border border-stone-700 shadow-sm">
+                  <Package className="w-6 h-6" />
+                </div>
+                <h3 className="text-sm font-bold text-stone-200">
+                  Belum Ada Bahan Item Jualan yang Diinput
+                </h3>
+                <p className="text-xs text-stone-400 max-w-md mx-auto leading-relaxed">
+                  Menu <span className="text-amber-300 font-semibold">Atur Harga & Menu</span> secara otomatis hanya menampilkan item jualan dari bahan yang telah Anda input di bagian <span className="text-amber-300 font-semibold">Stok & Bahan Kukusan</span>. Silakan input data bahan stok terlebih dahulu melalui menu Stok & Bahan Kukusan.
+                </p>
+              </div>
+            ) : (
+              displayableMenuItems.map((item) => {
               const hpp = calculateMenuItemHpp(item, item.defaultSauceId, sauces, stockItems);
               const isEditing = editingId === item.id;
               const currentPrice = isEditing ? tempPrice : item.price;
@@ -321,7 +364,7 @@ export const MenuPriceEditorModal: React.FC<MenuPriceEditorModalProps> = ({
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
         </div>
 
