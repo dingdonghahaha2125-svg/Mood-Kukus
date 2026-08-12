@@ -9,6 +9,9 @@ import {
   FileSpreadsheet,
   FileText,
   DollarSign,
+  Download,
+  Upload,
+  ShieldCheck,
 } from 'lucide-react';
 import { FinancialSummary, StockItem } from '../types';
 import { formatRp } from '../utils/calculations';
@@ -24,6 +27,8 @@ interface NavbarProps {
   onOpenMenuEditor?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
+  onBackupData?: () => void;
+  onRestoreData?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -35,6 +40,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenMenuEditor,
   onExportExcel,
   onExportPdf,
+  onBackupData,
+  onRestoreData,
 }) => {
   const navItems = [
     { id: 'dashboard', label: '🏠 Ringkasan Usaha', icon: LayoutDashboard },
@@ -59,6 +66,18 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Backup Data Button */}
+            {onBackupData && (
+              <button
+                onClick={onBackupData}
+                className="flex items-center gap-1.5 px-3 py-2 bg-stone-800 hover:bg-amber-950/80 text-amber-300 border border-amber-600/50 rounded-xl font-bold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
+                title="Unduh Cadangan File JSON Seluruh Data Aplikasi"
+              >
+                <Download className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden md:inline">Backup Data</span>
+              </button>
+            )}
+
             {/* AI Advisor Button */}
             <button
               onClick={onOpenAiAdvisor}

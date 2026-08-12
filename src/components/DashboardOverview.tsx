@@ -23,6 +23,10 @@ import {
   Eye,
   Plus,
   Award,
+  Download,
+  Database,
+  ShieldCheck,
+  Upload,
 } from 'lucide-react';
 import {
   BarChart,
@@ -60,6 +64,8 @@ interface DashboardOverviewProps {
   onResetSalesToday?: () => void;
   onExportExcel?: () => void;
   onExportPdf?: () => void;
+  onBackupData?: () => void;
+  onRestoreData?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onUpdateInitialCapital?: (amount: number) => void;
   onAddManualDailyReport?: (report: DailyReport) => void;
 }
@@ -85,6 +91,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   onResetSalesToday,
   onExportExcel,
   onExportPdf,
+  onBackupData,
+  onRestoreData,
   onUpdateInitialCapital,
   onAddManualDailyReport,
 }) => {
@@ -257,8 +265,19 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             </p>
           </div>
 
-          {/* Export File Excel & PDF Kumulatif */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Export File Excel, PDF & Backup JSON */}
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            {onBackupData && (
+              <button
+                onClick={onBackupData}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-950 hover:bg-amber-900 border border-amber-600/70 text-amber-300 rounded-xl font-bold text-xs transition-all shadow-sm active:scale-95 cursor-pointer"
+                title="Unduh File JSON Cadangan Seluruh Data Aplikasi ke Perangkat Lokal"
+              >
+                <Download className="w-4 h-4 text-amber-400" />
+                <span>📦 Backup Data (JSON)</span>
+              </button>
+            )}
+
             {onExportExcel && (
               <button
                 onClick={onExportExcel}
@@ -425,6 +444,49 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 (Modal Awal + Omset Masuk - Total Uang Keluar)
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Card Pencegahan Kehilangan Data & Backup */}
+        <div className="bg-stone-900/90 border border-stone-800 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 shrink-0 mt-0.5">
+              <ShieldCheck className="w-5 h-5 text-amber-400" />
+            </div>
+            <div className="space-y-0.5">
+              <h3 className="text-xs font-extrabold text-stone-200 uppercase tracking-wider flex items-center gap-1.5">
+                <span>🛡️ Pencegahan Kehilangan Data & Cadangan (Backup)</span>
+              </h3>
+              <p className="text-[11.5px] text-stone-400 max-w-2xl leading-relaxed">
+                Unduh salinan cadangan file JSON berisi seluruh stok, resep, pengeluaran, dan histori laporan harian ke perangkat lokal Anda untuk tindakan pencegahan data hilang.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+            {onBackupData && (
+              <button
+                onClick={onBackupData}
+                className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-500 text-stone-950 font-black text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+                title="Unduh File JSON Cadangan Seluruh Data Aplikasi"
+              >
+                <Download className="w-4 h-4 text-stone-950" />
+                <span>Unduh Backup Data (.json)</span>
+              </button>
+            )}
+
+            {onRestoreData && (
+              <label className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 border border-stone-700 font-bold text-xs rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer" title="Pulihkan Data Aplikasi dari File JSON Backup">
+                <Upload className="w-4 h-4 text-amber-400" />
+                <span>Restore Data</span>
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={onRestoreData}
+                  className="hidden"
+                />
+              </label>
+            )}
           </div>
         </div>
       </div>

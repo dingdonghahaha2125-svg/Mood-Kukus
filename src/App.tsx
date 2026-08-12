@@ -593,6 +593,91 @@ export default function App() {
     });
   };
 
+  // BACKUP & RESTORE DATA HANDLERS
+  const handleBackupData = () => {
+    const backupData = {
+      appName: 'Mood Kukus Mamuju - KukusLokal',
+      backupVersion: '1.0',
+      exportedAt: new Date().toISOString(),
+      initialCapital,
+      stockItems,
+      menuItems,
+      sauces,
+      expenses,
+      transactions,
+      dailyReports,
+    };
+
+    const jsonString = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Backup_MoodKukusMamuju_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleRestoreData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const content = event.target?.result as string;
+        const data = JSON.parse(content);
+
+        if (!data || typeof data !== 'object') {
+          alert('Format file JSON tidak valid!');
+          return;
+        }
+
+        if (confirm('Apakah Anda yakin ingin memulihkan/restore seluruh data aplikasi dari file backup ini? Data saat ini akan diperbarui.')) {
+          if (Array.isArray(data.stockItems)) {
+            setStockItems(data.stockItems);
+            data.stockItems.forEach((item: any) => setDoc(doc(db, 'stockItems', item.id), item).catch(console.error));
+          }
+          if (Array.isArray(data.menuItems)) {
+            setMenuItems(data.menuItems);
+            data.menuItems.forEach((item: any) => setDoc(doc(db, 'menuItems', item.id), item).catch(console.error));
+          }
+          if (Array.isArray(data.sauces)) {
+            setSauces(data.sauces);
+            data.sauces.forEach((item: any) => setDoc(doc(db, 'sauces', item.id), item).catch(console.error));
+          }
+          if (Array.isArray(data.expenses)) {
+            setExpenses(data.expenses);
+            data.expenses.forEach((item: any) => setDoc(doc(db, 'expenses', item.id), item).catch(console.error));
+          }
+          if (Array.isArray(data.transactions)) {
+            setTransactions(data.transactions);
+            data.transactions.forEach((item: any) => setDoc(doc(db, 'transactions', item.id), item).catch(console.error));
+          }
+          if (Array.isArray(data.dailyReports)) {
+            setDailyReports(data.dailyReports);
+            data.dailyReports.forEach((item: any) => setDoc(doc(db, 'dailyReports', item.id), item).catch(console.error));
+          }
+          if (typeof data.initialCapital === 'number') {
+            setInitialCapital(data.initialCapital);
+            setDoc(doc(db, 'settings', 'initialCapital'), { amount: data.initialCapital }).catch(console.error);
+          }
+
+          alert('🎉 Berhasil memulihkan/restore seluruh data aplikasi dari file backup JSON!');
+        }
+      } catch (err) {
+        console.error('Error parsing JSON backup file:', err);
+        alert('Gagal membaca file backup JSON. Pastikan file JSON dalam kondisi baik.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // Reset input value so re-selecting same file triggers onChange
+  };
+
   // RESET DEMO DATA
   const handleResetDemoData = () => {
     if (confirm('Kembalikan semua data stok, menu, dan transaksi ke data contoh awal Mood Kukus Mamuju?')) {
@@ -625,6 +710,8 @@ export default function App() {
         onOpenMenuEditor={() => setIsMenuEditorOpen(true)}
         onExportExcel={handleExportExcel}
         onExportPdf={handleExportPdf}
+        onBackupData={handleBackupData}
+        onRestoreData={handleRestoreData}
       />
 
       {/* Main Body */}
@@ -649,6 +736,8 @@ export default function App() {
             onResetSalesToday={handleResetSalesToday}
             onExportExcel={handleExportExcel}
             onExportPdf={handleExportPdf}
+            onBackupData={handleBackupData}
+            onRestoreData={handleRestoreData}
             onUpdateInitialCapital={handleUpdateInitialCapital}
             onAddManualDailyReport={handleAddManualDailyReport}
           />
