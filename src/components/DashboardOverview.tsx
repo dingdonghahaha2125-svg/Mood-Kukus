@@ -22,6 +22,7 @@ import {
   Trash2,
   Eye,
   Plus,
+  Award,
 } from 'lucide-react';
 import {
   BarChart,
@@ -283,98 +284,146 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         </div>
 
         {/* 4 Core Financial Metrics Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* Pemasukan Total Kumulatif */}
-          <div className="bg-stone-950/80 border border-emerald-800/80 rounded-xl p-4 space-y-1">
-            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
-              Pemasukan Total Kumulatif
-            </span>
-            <div className="text-lg sm:text-xl font-black text-emerald-400">
+          <div className="bg-stone-950/90 border border-emerald-500/40 rounded-xl p-4 space-y-2 shadow-md relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-emerald-400 uppercase tracking-wider block">
+                Pemasukan Total
+              </span>
+              <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-400">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-emerald-400 tracking-tight">
               {formatRp(financialSummary.totalRevenue)}
             </div>
-            <span className="text-[10px] text-emerald-500/80 block font-medium">
-              Total Seluruh Omset Penjualan
-            </span>
+            <div className="text-[10px] text-stone-300 font-medium bg-stone-900/80 p-2 rounded-lg border border-stone-800/80 space-y-0.5">
+              <div className="flex justify-between text-emerald-400 font-bold">
+                <span>✓ Hasil Seluruh Omset</span>
+              </div>
+              <p className="text-stone-400 leading-tight text-[9.5px]">
+                Dihitung otomatis dari transaksi laku terjual & histori laporan harian.
+              </p>
+            </div>
           </div>
 
           {/* Total Uang Keluar (Pengeluaran & Belanja) */}
-          <div className="bg-stone-950/80 border border-rose-800/80 rounded-xl p-4 space-y-1">
-            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
-              Total Uang Keluar (Belanja)
-            </span>
-            <div className="text-lg sm:text-xl font-black text-rose-400">
+          <div className="bg-stone-950/90 border border-rose-500/40 rounded-xl p-4 space-y-2 shadow-md relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-rose-400 uppercase tracking-wider block">
+                Total Uang Keluar
+              </span>
+              <div className="p-1.5 bg-rose-500/10 rounded-lg text-rose-400">
+                <DollarSign className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-rose-400 tracking-tight">
               {formatRp(financialSummary.totalExpenses)}
             </div>
-            <span className="text-[10px] text-rose-500/80 block font-medium">
-              Total Pengeluaran Bahan & Peralatan
-            </span>
+            <div className="text-[10px] text-stone-300 font-medium bg-stone-900/80 p-2 rounded-lg border border-stone-800/80 space-y-0.5">
+              <div className="flex justify-between text-rose-400 font-bold">
+                <span>✓ Belanja & Biaya</span>
+              </div>
+              <p className="text-stone-400 leading-tight text-[9.5px]">
+                Dihitung dari gabungan input belanja bahan baku, peralatan & biaya operasional.
+              </p>
+            </div>
           </div>
 
           {/* Laba Bersih Total Kumulatif */}
-          <div className="bg-stone-950/80 border border-teal-800/80 rounded-xl p-4 space-y-1">
-            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
-              Laba Bersih Total Kumulatif
-            </span>
-            <div className={`text-lg sm:text-xl font-black ${financialSummary.netProfit >= 0 ? 'text-teal-300' : 'text-rose-400'}`}>
+          <div className="bg-stone-950/90 border border-teal-500/40 rounded-xl p-4 space-y-2 shadow-md relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-teal-300 uppercase tracking-wider block">
+                Laba Bersih Total
+              </span>
+              <div className="p-1.5 bg-teal-500/10 rounded-lg text-teal-300">
+                <PieIcon className="w-4 h-4" />
+              </div>
+            </div>
+            <div className={`text-xl sm:text-2xl font-black tracking-tight ${financialSummary.netProfit >= 0 ? 'text-teal-300' : 'text-rose-400'}`}>
               {formatRp(financialSummary.netProfit)}
             </div>
-            <span className="text-[10px] text-teal-400/80 block font-medium">
-              Laba Bersih Keseluruhan Usaha
-            </span>
+            <div className="text-[10px] text-stone-300 font-medium bg-stone-900/80 p-2 rounded-lg border border-stone-800/80 space-y-0.5">
+              <div className="flex justify-between text-teal-300 font-bold">
+                <span>✓ Untung Bersih Kas</span>
+              </div>
+              <p className="text-stone-400 leading-tight text-[9.5px]">
+                Keuntungan bersih riil = Total Pemasukan dikurangi Modal Bahan Terjual & Pengeluaran.
+              </p>
+            </div>
           </div>
 
           {/* Margin Total Kumulatif */}
-          <div className="bg-stone-950/80 border border-amber-800/80 rounded-xl p-4 space-y-1">
-            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider block">
-              Margin Profit Total
-            </span>
-            <div className="text-lg sm:text-xl font-black text-amber-400">
+          <div className="bg-stone-950/90 border border-amber-500/40 rounded-xl p-4 space-y-2 shadow-md relative overflow-hidden">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold text-amber-300 uppercase tracking-wider block">
+                Margin Profit
+              </span>
+              <div className="p-1.5 bg-amber-500/10 rounded-lg text-amber-300">
+                <Award className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-amber-400 tracking-tight">
               {financialSummary.profitMargin}%
             </div>
-            <span className="text-[10px] text-amber-500/80 block font-medium">
-              Rasio Keuntungan Terhadap Omset
-            </span>
+            <div className="text-[10px] text-stone-300 font-medium bg-stone-900/80 p-2 rounded-lg border border-stone-800/80 space-y-0.5">
+              <div className="flex justify-between text-amber-300 font-bold">
+                <span>✓ Persentase Untung</span>
+              </div>
+              <p className="text-stone-400 leading-tight text-[9.5px]">
+                Persentase efisiensi laba dari total omset penjualan yang telah dihasilkan.
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Modal Awal & Break-Even Status Card */}
-        <div className="bg-stone-950/90 border border-amber-500/40 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-bold text-amber-300 uppercase">Modal Awal Usaha (Investasi Awal):</span>
-              <span className="text-sm font-black text-amber-400">
-                {formatRp(financialSummary.initialCapital || 0)}
-              </span>
-              {onUpdateInitialCapital && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCapitalInput(financialSummary.initialCapital || 5000000);
-                    setIsEditingCapital(true);
-                  }}
-                  className="text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded border border-amber-500/40 cursor-pointer transition-colors"
-                >
-                  ✏️ Ubah Modal Awal
-                </button>
-              )}
+        <div className="bg-stone-950/90 border border-amber-500/40 rounded-xl p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-amber-300 uppercase">Modal Awal Investasi:</span>
+                <span className="text-sm font-black text-amber-400">
+                  {formatRp(financialSummary.initialCapital || 0)}
+                </span>
+                {onUpdateInitialCapital && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCapitalInput(financialSummary.initialCapital || 5000000);
+                      setIsEditingCapital(true);
+                    }}
+                    className="text-[10px] font-bold px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded border border-amber-500/40 cursor-pointer transition-colors"
+                  >
+                    ✏️ Ubah Modal Awal
+                  </button>
+                )}
+              </div>
+
+              <div className="text-xs text-stone-300 font-medium flex items-center gap-2 flex-wrap">
+                <span>Status Balik Modal (BEP):</span>
+                {financialSummary.isBreakEven ? (
+                  <span className="text-emerald-400 font-black bg-emerald-950 px-2.5 py-0.5 rounded-full border border-emerald-700">
+                    🎉 SUDAH BALIK MODAL & IMPAS!
+                  </span>
+                ) : (
+                  <span className="text-amber-300 font-black bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-700">
+                    ⏳ BELUM BALIK MODAL (Sisa {formatRp(financialSummary.remainingToBreakEven || 0)} lagi)
+                  </span>
+                )}
+              </div>
             </div>
 
-            <div className="text-xs text-stone-300 font-medium flex items-center gap-2 flex-wrap">
-              <span>Status Balik Modal (BEP):</span>
-              {financialSummary.isBreakEven ? (
-                <span className="text-emerald-400 font-black bg-emerald-950 px-2.5 py-0.5 rounded-full border border-emerald-700">
-                  🎉 SUDAH BALIK MODAL & IMPAS!
-                </span>
-              ) : (
-                <span className="text-amber-300 font-black bg-amber-950/80 px-2.5 py-0.5 rounded-full border border-amber-700">
-                  ⏳ BELUM BALIK MODAL (Kurang {formatRp(financialSummary.remainingToBreakEven || 0)} lagi untuk Impas)
-                </span>
-              )}
+            <div className="text-right sm:text-left text-xs text-stone-300 border-t sm:border-t-0 sm:border-l border-stone-800 pt-2 sm:pt-0 sm:pl-4 shrink-0 bg-stone-900/80 p-2.5 rounded-xl border border-stone-800">
+              <div className="text-[11px] text-stone-400">Total Kas Bersih Tersedia Saating ini:</div>
+              <div className="text-sm font-black text-emerald-400 mt-0.5">
+                {formatRp(financialSummary.netCashflow || 0)}
+              </div>
+              <div className="text-[9.5px] text-stone-400">
+                (Modal Awal + Omset Masuk - Total Uang Keluar)
+              </div>
             </div>
-          </div>
-
-          <div className="text-right sm:text-left text-xs text-stone-400 border-t sm:border-t-0 sm:border-l border-stone-800 pt-2 sm:pt-0 sm:pl-4 shrink-0">
-            <div>Kas Bersih Tersedia: <span className="font-extrabold text-stone-100">{formatRp(financialSummary.netCashflow || 0)}</span></div>
           </div>
         </div>
       </div>
