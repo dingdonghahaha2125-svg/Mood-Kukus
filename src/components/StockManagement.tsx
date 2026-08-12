@@ -72,16 +72,16 @@ export const StockManagement: React.FC<StockManagementProps> = ({
   }>({
     name: '',
     category: 'bahan_utama',
-    currentStock: 10,
-    minStock: 5,
+    currentStock: 0,
+    minStock: 0,
     unit: 'kg',
-    unitCostPrice: 15000,
+    unitCostPrice: 0,
     supplier: '',
     notes: '',
   });
 
   // Restock modal state
-  const [restockQty, setRestockQty] = useState<number>(5);
+  const [restockQty, setRestockQty] = useState<number>(0);
   const [restockCost, setRestockCost] = useState<number>(0);
   const [recordExpense, setRecordExpense] = useState<boolean>(true);
   const [restockDate, setRestockDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
@@ -116,10 +116,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
     setFormData({
       name: '',
       category: 'bahan_utama',
-      currentStock: 10,
-      minStock: 5,
+      currentStock: 0,
+      minStock: 0,
       unit: 'kg',
-      unitCostPrice: 15000,
+      unitCostPrice: 0,
       supplier: '',
       notes: '',
     });
@@ -205,8 +205,8 @@ export const StockManagement: React.FC<StockManagementProps> = ({
 
   const handleOpenRestockModal = (item: StockItem) => {
     setRestockTargetItem(item);
-    setRestockQty(5);
-    setRestockCost(5 * item.unitCostPrice);
+    setRestockQty(0);
+    setRestockCost(0);
     setRecordExpense(true);
     setRestockDate(new Date().toISOString().split('T')[0]);
   };
