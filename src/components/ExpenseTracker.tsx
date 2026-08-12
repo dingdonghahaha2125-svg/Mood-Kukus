@@ -320,7 +320,9 @@ export const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({
                     required
                     value={formData.date}
                     onClick={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch {} }}
+                    onFocus={(e) => { try { (e.target as HTMLInputElement).showPicker(); } catch {} }}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    style={{ colorScheme: 'dark' }}
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 focus:outline-none focus:border-rose-500 cursor-pointer"
                   />
                 </div>

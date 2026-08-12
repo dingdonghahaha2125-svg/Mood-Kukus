@@ -764,6 +764,10 @@ export const StockManagement: React.FC<StockManagementProps> = ({
                     onClick={(e) => {
                       try { (e.target as HTMLInputElement).showPicker(); } catch {}
                     }}
+                    onFocus={(e) => {
+                      try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                    }}
+                    style={{ colorScheme: 'dark' }}
                     className="w-full bg-stone-800 border border-stone-700 rounded-xl px-3 py-2 text-stone-100 font-bold focus:outline-none focus:border-emerald-500 text-xs sm:text-sm cursor-pointer"
                   />
                   <button

@@ -508,6 +508,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     e.stopPropagation();
                     try { (e.target as HTMLInputElement).showPicker(); } catch {}
                   }}
+                  onFocus={(e) => {
+                    try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                  }}
+                  style={{ colorScheme: 'dark' }}
                   className="bg-stone-900 text-amber-200 border border-amber-700/80 rounded px-2.5 py-1 text-xs font-bold focus:outline-none focus:border-amber-400 cursor-pointer"
                 />
               </div>
@@ -1555,7 +1559,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   onClick={(e) => {
                     try { (e.target as HTMLInputElement).showPicker(); } catch {}
                   }}
+                  onFocus={(e) => {
+                    try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                  }}
                   onChange={(e) => setManualDate(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
                   className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-100 font-bold focus:outline-none focus:border-amber-500 cursor-pointer"
                 />
               </div>

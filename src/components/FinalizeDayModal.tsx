@@ -163,6 +163,10 @@ export const FinalizeDayModal: React.FC<FinalizeDayModalProps> = ({
                   onClick={(e) => {
                     try { (e.target as HTMLInputElement).showPicker(); } catch {}
                   }}
+                  onFocus={(e) => {
+                    try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                  }}
+                  style={{ colorScheme: 'dark' }}
                   className="flex-1 bg-stone-900 border border-stone-700 rounded-lg px-3 py-2 text-xs font-bold text-stone-100 focus:outline-none focus:border-amber-500 cursor-pointer"
                 />
                 <div className="flex items-center gap-1 text-[11px]">

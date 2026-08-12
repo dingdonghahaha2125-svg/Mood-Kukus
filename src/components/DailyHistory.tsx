@@ -208,7 +208,14 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({
             type="date"
             value={filterDate}
             onChange={(e) => setFilterDate(e.target.value)}
-            className="bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-200 focus:outline-none focus:border-amber-500"
+            onClick={(e) => {
+              try { (e.target as HTMLInputElement).showPicker(); } catch {}
+            }}
+            onFocus={(e) => {
+              try { (e.target as HTMLInputElement).showPicker(); } catch {}
+            }}
+            style={{ colorScheme: 'dark' }}
+            className="bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-200 focus:outline-none focus:border-amber-500 cursor-pointer"
           />
           {filterDate && (
             <button
@@ -419,7 +426,11 @@ export const DailyHistory: React.FC<DailyHistoryProps> = ({
                   onClick={(e) => {
                     try { (e.target as HTMLInputElement).showPicker(); } catch {}
                   }}
+                  onFocus={(e) => {
+                    try { (e.target as HTMLInputElement).showPicker(); } catch {}
+                  }}
                   onChange={(e) => setManualDate(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
                   className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-100 font-bold focus:outline-none focus:border-amber-500 cursor-pointer"
                 />
               </div>
